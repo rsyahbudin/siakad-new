@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\User;
 use App\Models\Classroom;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
@@ -166,5 +167,110 @@ class StudentController extends Controller
         $siswa->delete();
         if ($user) $user->delete();
         return redirect()->route('siswa.index')->with('success', 'Siswa berhasil dihapus.');
+    }
+
+    /**
+     * Show and edit profile for logged-in student
+     */
+    public function profilSiswa()
+    {
+        $user = auth()->user();
+        $siswa = $user->student;
+        return view('siswa.profil', compact('siswa'));
+    }
+
+    /**
+     * Update profile for logged-in student
+     */
+    public function updateProfilSiswa(Request $request)
+    {
+        $user = auth()->user();
+        $siswa = $user->student;
+        $request->validate([
+            'full_name' => 'required|string|max:100',
+            'gender' => 'required|in:L,P',
+            'birth_place' => 'required|string',
+            'birth_date' => 'required|date',
+            'religion' => 'required|string',
+            'address' => 'nullable|string',
+            'parent_name' => 'nullable|string',
+            'parent_phone' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+        ]);
+        $siswa->update($request->only([
+            'full_name',
+            'gender',
+            'birth_place',
+            'birth_date',
+            'religion',
+            'address',
+            'parent_name',
+            'parent_phone',
+            'phone_number'
+        ]));
+        return redirect()->route('profil.siswa')->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Change password for logged-in student
+     */
+    public function changePasswordSiswa(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+        $user = auth()->user();
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return back()->with('password_error', 'Password lama salah.');
+        }
+        $user->password = bcrypt($request->password);
+        $user->save();
+        return back()->with('password_success', 'Password berhasil diubah.');
+    }
+
+    /**
+     * Show weekly schedule for logged-in student
+     */
+    public function jadwalMingguanSiswa()
+    {
+        $user = auth()->user();
+        $student = $user->student;
+        $classroom = $student->classrooms()->latest('id')->first();
+        $weeklySchedules = [];
+        if ($classroom) {
+            $allSchedules = \App\Models\Schedule::with(['subject', 'teacher'])
+                ->where('classroom_id', $classroom->id)
+                ->orderBy('day')
+                ->orderBy('time_start')
+                ->get();
+            $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            foreach ($days as $day) {
+                $weeklySchedules[$day] = $allSchedules->where('day', $day)->values();
+            }
+        }
+        return view('siswa.jadwal', compact('weeklySchedules'));
+    }
+
+    /**
+     * Show academic grades for logged-in student (semester berjalan)
+     */
+    public function nilaiAkademikSiswa()
+    {
+        $user = auth()->user();
+        $student = $user->student;
+        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        $grades = collect();
+        $subjectSettings = [];
+        if ($activeYear) {
+            $grades = \App\Models\Grade::with('subject')
+                ->where('student_id', $student->id)
+                ->where('academic_year_id', $activeYear->id)
+                ->get();
+            $subjectSettings = \App\Models\SubjectSetting::where('academic_year_id', $activeYear->id)
+                ->get()
+                ->keyBy('subject_id');
+        }
+        return view('siswa.nilai', compact('grades', 'subjectSettings'));
     }
 }

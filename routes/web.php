@@ -48,9 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/input-absensi', [GuruAbsensiController::class, 'index'])->name('absensi.input');
     Route::post('/input-absensi', [GuruAbsensiController::class, 'store'])->name('absensi.input.store');
     // Siswa
-    Route::view('/profil-siswa', 'siswa.profil')->name('profil.siswa');
-    Route::view('/jadwal-siswa', 'siswa.jadwal')->name('jadwal.siswa');
-    Route::view('/nilai-siswa', 'siswa.nilai')->name('nilai.siswa');
+    Route::get('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'profilSiswa'])->name('profil.siswa');
+    Route::post('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'updateProfilSiswa'])->name('profil.siswa.update');
+    Route::post('/profil-siswa/password', [\App\Http\Controllers\StudentController::class, 'changePasswordSiswa'])->name('profil.siswa.password');
+    Route::get('/jadwal-siswa', [\App\Http\Controllers\StudentController::class, 'jadwalMingguanSiswa'])->name('jadwal.siswa');
+    Route::get('/nilai-siswa', [\App\Http\Controllers\StudentController::class, 'nilaiAkademikSiswa'])->name('nilai.siswa');
     Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('raport.siswa');
     // Admin
     Route::prefix('jadwal-admin')->name('jadwal.admin.')->group(function () {
