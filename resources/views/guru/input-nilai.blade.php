@@ -62,9 +62,12 @@
                     <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uts]" value="{{ $grades[$siswa->id]->uts_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center"></td>
                     <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uas]" value="{{ $grades[$siswa->id]->uas_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center"></td>
                     @php
-                    $nilaiAkhir = 0;
+                    $nilaiAkhir = null;
                     $status = null;
                     if($bobot) {
+                    if(isset($grades[$siswa->id]) && !is_null($grades[$siswa->id]->final_grade)) {
+                    $nilaiAkhir = $grades[$siswa->id]->final_grade;
+                    } else {
                     $tugas = $grades[$siswa->id]->assignment_grade ?? 0;
                     $uts = $grades[$siswa->id]->uts_grade ?? 0;
                     $uas = $grades[$siswa->id]->uas_grade ?? 0;
@@ -72,10 +75,11 @@
                     $bobotUts = $bobot->uts_weight ?? 0;
                     $bobotUas = $bobot->uas_weight ?? 0;
                     $nilaiAkhir = ($tugas * $bobotTugas + $uts * $bobotUts + $uas * $bobotUas) / 100;
+                    }
                     $status = $nilaiAkhir >= $bobot->kkm;
                     }
                     @endphp
-                    <td class="py-2 px-4 font-semibold text-center">{{ number_format($nilaiAkhir, 2) }}</td>
+                    <td class="py-2 px-4 font-semibold text-center">{{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}</td>
                     <td class="py-2 px-4 text-center">
                         @if($bobot)
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">

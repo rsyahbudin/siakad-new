@@ -38,7 +38,7 @@
                 <td class="py-2 px-4 text-center">{{ $nilai->assignment_grade ?? '-' }}</td>
                 <td class="py-2 px-4 text-center">{{ $nilai->uts_grade ?? '-' }}</td>
                 <td class="py-2 px-4 text-center">{{ $nilai->uas_grade ?? '-' }}</td>
-                <td class="py-2 px-4 text-center">{{ $nilai->final_grade ?? '-' }}</td>
+                <td class="py-2 px-4 text-center">{{ $nilai->final_grade !== null ? number_format($nilai->final_grade, 2) : '-' }}</td>
                 <td class="py-2 px-4 text-center">
                     @if($nilai->is_passed === null)
                     <span class="text-gray-400 italic">-</span>

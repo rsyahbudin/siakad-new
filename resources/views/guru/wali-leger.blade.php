@@ -36,9 +36,13 @@
                     $setting = $subjectSettings[$mapel->id] ?? null;
                     $nilaiAkhir = null;
                     if ($grade && $setting) {
+                    if (!is_null($grade->final_grade)) {
+                    $nilaiAkhir = $grade->final_grade;
+                    } else {
                     $nilaiAkhir = ($grade->assignment_grade * $setting->assignment_weight +
                     $grade->uts_grade * $setting->uts_weight +
                     $grade->uas_grade * $setting->uas_weight) / 100;
+                    }
                     }
                     $isTuntas = $nilaiAkhir !== null && $setting ? $nilaiAkhir >= $setting->kkm : null;
                     @endphp

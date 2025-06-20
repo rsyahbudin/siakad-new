@@ -82,12 +82,16 @@
             @forelse($grades as $index => $grade)
             @php
             $setting = $subjectSettings->get($grade->subject_id);
-            $nilaiAkhir = 0;
+            $nilaiAkhir = null;
             $status = false;
             if ($setting) {
+            if (!is_null($grade->final_grade)) {
+            $nilaiAkhir = $grade->final_grade;
+            } else {
             $nilaiAkhir = ($grade->assignment_grade * $setting->assignment_weight +
             $grade->uts_grade * $setting->uts_weight +
             $grade->uas_grade * $setting->uas_weight) / 100;
+            }
             $status = $nilaiAkhir >= $setting->kkm;
             }
             @endphp
@@ -95,7 +99,7 @@
                 <td class="border px-4 py-2 text-center">{{ $index + 1 }}</td>
                 <td class="border px-4 py-2">{{ $grade->subject->name }}</td>
                 <td class="border px-4 py-2 text-center">{{ $setting->kkm ?? '-' }}</td>
-                <td class="border px-4 py-2 text-center font-semibold">{{ number_format($nilaiAkhir, 2) }}</td>
+                <td class="border px-4 py-2 text-center font-semibold">{{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}</td>
                 <td class="border px-4 py-2 text-center font-medium {{ $status ? 'text-green-600' : 'text-red-600' }}">
                     {{ $status ? 'Tuntas' : 'Tidak Tuntas' }}
                 </td>

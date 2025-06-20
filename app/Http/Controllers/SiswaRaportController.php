@@ -36,11 +36,14 @@ class SiswaRaportController extends Controller
             ->where('academic_year_id', $activeYear->id)
             ->first();
 
-        // Ambil semua nilai
-        $grades = Grade::with('subject')
+        // Ambil semua nilai dengan prioritas: input_guru > konversi
+        $allGrades = Grade::with('subject')
             ->where('student_id', $student->id)
             ->where('academic_year_id', $activeYear->id)
+            ->orderByRaw("FIELD(source, 'input_guru', 'konversi')")
             ->get();
+        // Ambil satu nilai per mapel (prioritas input_guru)
+        $grades = $allGrades->unique('subject_id')->values();
 
         // Ambil semua pengaturan KKM dan bobot
         $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear->id)
