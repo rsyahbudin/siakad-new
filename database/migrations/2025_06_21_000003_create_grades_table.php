@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(Classroom::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
+            $table->foreignId('classroom_assignment_id')->constrained('classroom_assignments')->onDelete('cascade');
+            $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
 
             // Component grades (stored as decimal for more precise calculations)
             $table->decimal('assignment_grade', 5, 2)->nullable()->comment('Nilai Tugas');

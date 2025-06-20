@@ -38,7 +38,6 @@
                     <li><a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('dashboard') ? 'bg-blue-900' : '' }}">Dashboard</a></li>
                     <li><a href="{{ route('jadwal.guru') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('jadwal.guru') ? 'bg-blue-900' : '' }}">Jadwal Mengajar</a></li>
                     <li><a href="{{ route('nilai.input') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('nilai.input') ? 'bg-blue-900' : '' }}">Input Nilai</a></li>
-                    <li><a href="{{ route('absensi.input') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('absensi.input') ? 'bg-blue-900' : '' }}">Input Absensi</a></li>
                     @if(Auth::user()->isHomeroomTeacher())
                     <li class="mt-4 font-bold text-xs uppercase tracking-wider text-blue-200">Menu Wali Kelas</li>
                     <li><a href="{{ route('wali.dashboard') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.dashboard') ? 'bg-blue-900' : '' }}">Dashboard Wali Kelas</a></li>

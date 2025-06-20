@@ -22,6 +22,7 @@ use App\Http\Controllers\GuruNilaiController;
 use App\Http\Controllers\WaliKelasController;
 use App\Http\Controllers\SiswaRaportController;
 use App\Http\Controllers\GuruAbsensiController;
+use App\Http\Controllers\SemesterController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -45,8 +46,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/jadwal-guru', [GuruJadwalController::class, 'index'])->name('jadwal.guru');
     Route::get('/input-nilai', [GuruNilaiController::class, 'index'])->name('nilai.input');
     Route::post('/input-nilai', [GuruNilaiController::class, 'store'])->name('nilai.input.store');
-    Route::get('/input-absensi', [GuruAbsensiController::class, 'index'])->name('absensi.input');
-    Route::post('/input-absensi', [GuruAbsensiController::class, 'store'])->name('absensi.input.store');
     // Siswa
     Route::get('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'profilSiswa'])->name('profil.siswa');
     Route::post('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'updateProfilSiswa'])->name('profil.siswa.update');
@@ -85,6 +84,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'storeKonversi'])->name('wali.pindahan.store');
     Route::get('/nilai-admin', [GradeController::class, 'index'])->name('nilai.admin');
     Route::post('/admin/user/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.user.reset-password')->middleware('auth');
+    Route::post('semesters/{semester}/set-active', [\App\Http\Controllers\SemesterController::class, 'setActive'])->name('semesters.set-active');
 });
 
 Route::prefix('pengaturan-mapel')->name('pengaturan.mapel.')->group(function () {

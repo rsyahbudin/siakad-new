@@ -15,12 +15,6 @@ class ClassroomSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get current academic year
-        $academicYear = AcademicYear::where('is_active', true)->first();
-
-        // Get teachers for homeroom assignments
-        $teachers = Teacher::all();
-
         // Get majors
         $ipa = Major::where('short_name', 'IPA')->first();
         $ips = Major::where('short_name', 'IPS')->first();
@@ -32,51 +26,39 @@ class ClassroomSeeder extends Seeder
                 'name' => 'X-1',
                 'grade_level' => 10,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'homeroom_teacher_id' => $teachers[0]->id ?? null,
+                'major_id' => null,
             ],
             [
                 'name' => 'X-2',
                 'grade_level' => 10,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'homeroom_teacher_id' => $teachers[1]->id ?? null,
+                'major_id' => null,
             ],
-
             // Grade XI (11)
             [
                 'name' => 'XI IPA-1',
                 'grade_level' => 11,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'major_id' => $ipa->id,
-                'homeroom_teacher_id' => $teachers[0]->id ?? null,
+                'major_id' => $ipa->id ?? null,
             ],
             [
                 'name' => 'XI IPS-1',
                 'grade_level' => 11,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'major_id' => $ips->id,
-                'homeroom_teacher_id' => $teachers[1]->id ?? null,
+                'major_id' => $ips->id ?? null,
             ],
-
             // Grade XII (12)
             [
                 'name' => 'XII IPA-1',
                 'grade_level' => 12,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'major_id' => $ipa->id,
-                'homeroom_teacher_id' => $teachers[0]->id ?? null,
+                'major_id' => $ipa->id ?? null,
             ],
             [
                 'name' => 'XII IPS-1',
                 'grade_level' => 12,
                 'capacity' => 32,
-                'academic_year_id' => $academicYear->id,
-                'major_id' => $ips->id,
-                'homeroom_teacher_id' => $teachers[1]->id ?? null,
+                'major_id' => $ips->id ?? null,
             ],
         ];
 

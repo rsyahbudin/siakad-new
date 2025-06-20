@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
-use App\Models\Classroom;
+use App\Models\ClassroomAssignment;
 use App\Models\AcademicYear;
+use App\Models\ClassStudent;
 use Illuminate\Http\Request;
 
 class ClassAssignmentController extends Controller
@@ -13,8 +14,10 @@ class ClassAssignmentController extends Controller
     public function index(Request $request)
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
-        $classrooms = Classroom::where('academic_year_id', $activeYear?->id)->orderBy('name')->get();
-        $query = Student::with(['user', 'classrooms' => function ($q) use ($activeYear) {
+        $classroomAssignments = ClassroomAssignment::with('classroom', 'homeroomTeacher')
+            ->where('academic_year_id', $activeYear?->id)
+            ->get();
+        $query = Student::with(['user', 'classStudents' => function ($q) use ($activeYear) {
             $q->where('academic_year_id', $activeYear?->id);
         }]);
         // Filter by search
@@ -29,27 +32,34 @@ class ClassAssignmentController extends Controller
         }
         // Filter by kelas
         if ($request->filled('kelas_filter')) {
-            $kelasId = $request->kelas_filter;
-            $query->whereHas('classrooms', function ($c) use ($kelasId) {
-                $c->where('classroom_id', $kelasId);
+            $assignmentId = $request->kelas_filter;
+            $query->whereHas('classStudents', function ($c) use ($assignmentId) {
+                $c->where('classroom_assignment_id', $assignmentId);
             });
         }
         $students = $query->orderBy('user_id')->paginate(20)->withQueryString();
-        return view('admin.pembagian-kelas', compact('students', 'classrooms', 'activeYear'));
+        return view('admin.pembagian-kelas', compact('students', 'classroomAssignments', 'activeYear'));
     }
 
     // Proses bulk assign siswa ke kelas
     public function store(Request $request)
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
-        $classrooms = Classroom::where('academic_year_id', $activeYear?->id)->pluck('id')->toArray();
+        $assignmentIds = ClassroomAssignment::where('academic_year_id', $activeYear?->id)->pluck('id')->toArray();
         $data = $request->input('assignments', []);
-        foreach ($data as $studentId => $classroomId) {
+        foreach ($data as $studentId => $assignmentId) {
             $student = Student::find($studentId);
-            if ($student && in_array($classroomId, $classrooms)) {
-                // Detach semua kelas tahun ajaran aktif, lalu attach yang baru
-                $student->classrooms()->detach($classrooms);
-                $student->classrooms()->attach($classroomId);
+            if ($student && in_array($assignmentId, $assignmentIds)) {
+                // Hapus penempatan lama di tahun ajaran aktif
+                ClassStudent::where('student_id', $studentId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->delete();
+                // Assign baru
+                ClassStudent::create([
+                    'classroom_assignment_id' => $assignmentId,
+                    'academic_year_id' => $activeYear->id,
+                    'student_id' => $studentId,
+                ]);
             }
         }
         return redirect()->route('pembagian.kelas')->with('success', 'Pembagian kelas berhasil disimpan.');

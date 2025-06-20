@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\AcademicYear;
+use App\Models\Semester;
 use Carbon\Carbon;
 
 class AcademicYearSeeder extends Seeder
@@ -13,43 +14,45 @@ class AcademicYearSeeder extends Seeder
      */
     public function run(): void
     {
-        // Current Academic Year
-        $currentYear = Carbon::now()->year;
-        $nextYear = $currentYear + 1;
+        // Tahun ajaran
+        $years = [
+            [
+                'year' => '2023/2024',
+                'start_date' => '2023-07-01',
+                'end_date' => '2024-06-30',
+            ],
+            [
+                'year' => '2024/2025',
+                'start_date' => '2024-07-01',
+                'end_date' => '2025-06-30',
+            ],
+        ];
 
-        // Create Academic Year 2024/2025
-        $academicYear = AcademicYear::create([
-            'year' => "{$currentYear}/{$nextYear}",
-            'semester' => 1, // Ganjil
-            'is_active' => true,
-            'start_date' => Carbon::create($currentYear, 7, 1), // July 1st
-            'end_date' => Carbon::create($currentYear, 12, 31), // December 31st
-        ]);
+        foreach ($years as $i => $data) {
+            $isActiveYear = $i === (count($years) - 1); // Hanya tahun ajaran terakhir yang aktif
+            $academicYear = AcademicYear::create([
+                'year' => $data['year'],
+                'is_active' => $isActiveYear,
+                'start_date' => $data['start_date'],
+                'end_date' => $data['end_date'],
+            ]);
 
-        // Create Semester 2
-        AcademicYear::create([
-            'year' => "{$currentYear}/{$nextYear}",
-            'semester' => 2, // Genap
-            'is_active' => false,
-            'start_date' => Carbon::create($nextYear, 1, 1), // January 1st
-            'end_date' => Carbon::create($nextYear, 6, 30), // June 30th
-        ]);
-
-        // Create next year's semesters (inactive)
-        AcademicYear::create([
-            'year' => "{$nextYear}/" . ($nextYear + 1),
-            'semester' => 1,
-            'is_active' => false,
-            'start_date' => Carbon::create($nextYear, 7, 1),
-            'end_date' => Carbon::create($nextYear, 12, 31),
-        ]);
-
-        AcademicYear::create([
-            'year' => "{$nextYear}/" . ($nextYear + 1),
-            'semester' => 2,
-            'is_active' => false,
-            'start_date' => Carbon::create($nextYear + 1, 1, 1),
-            'end_date' => Carbon::create($nextYear + 1, 6, 30),
-        ]);
+            // Semester Ganjil
+            Semester::create([
+                'academic_year_id' => $academicYear->id,
+                'name' => 'Ganjil',
+                'is_active' => $isActiveYear, // Semester Ganjil tahun ajaran terakhir aktif
+                'start_date' => $data['start_date'],
+                'end_date' => date('Y-m-d', strtotime($data['start_date'] . ' +5 months')), // Jan 1
+            ]);
+            // Semester Genap
+            Semester::create([
+                'academic_year_id' => $academicYear->id,
+                'name' => 'Genap',
+                'is_active' => false,
+                'start_date' => date('Y-m-d', strtotime($data['start_date'] . ' +6 months')),
+                'end_date' => $data['end_date'],
+            ]);
+        }
     }
 }

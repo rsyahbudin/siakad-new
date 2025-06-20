@@ -10,12 +10,13 @@ use App\Models\Grade;
 use App\Models\Raport;
 use App\Models\StudentPromotion;
 use App\Models\Attendance;
+use App\Models\Semester;
+use App\Models\ClassroomAssignment;
 
 class AcademicYear extends Model
 {
     protected $fillable = [
         'year',
-        'semester',
         'is_active',
         'start_date',
         'end_date'
@@ -57,6 +58,16 @@ class AcademicYear extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function semesters()
+    {
+        return $this->hasMany(Semester::class);
+    }
+
+    public function classroomAssignments()
+    {
+        return $this->hasMany(ClassroomAssignment::class);
+    }
+
     /**
      * Set this academic year as active and deactivate others
      */
@@ -89,14 +100,6 @@ class AcademicYear extends Model
     }
 
     /**
-     * Get formatted year string
-     */
-    public function getYearString(): string
-    {
-        return $this->year . ' Semester ' . $this->semester;
-    }
-
-    /**
      * Check if grades can be input for this academic year
      */
     public function canInputGrades(): bool
@@ -107,26 +110,5 @@ class AcademicYear extends Model
 
         $now = now();
         return $now->between($this->start_date, $this->end_date);
-    }
-
-    /**
-     * Get next semester or year
-     */
-    public function getNext()
-    {
-        if ($this->semester == 1) {
-            // Next semester in same year
-            return self::where('year', $this->year)
-                ->where('semester', 2)
-                ->first();
-        }
-
-        // Next year, semester 1
-        $nextYear = substr($this->year, 0, 4) + 1;
-        $nextYearString = $nextYear . '/' . ($nextYear + 1);
-
-        return self::where('year', $nextYearString)
-            ->where('semester', 1)
-            ->first();
     }
 }

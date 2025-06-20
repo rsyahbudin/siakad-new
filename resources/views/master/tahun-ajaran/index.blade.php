@@ -14,7 +14,7 @@
             <tr>
                 <th class="py-2 px-4 text-left">#</th>
                 <th class="py-2 px-4 text-left">Tahun</th>
-                <th class="py-2 px-4 text-left">Semester</th>
+                <th class="py-2 px-4 text-left">Semester Aktif</th>
                 <th class="py-2 px-4 text-left">Tanggal Mulai</th>
                 <th class="py-2 px-4 text-left">Tanggal Selesai</th>
                 <th class="py-2 px-4 text-left">Status Aktif</th>
@@ -26,7 +26,20 @@
             <tr class="border-b hover:bg-gray-50">
                 <td class="py-2 px-4">{{ $i+1 }}</td>
                 <td class="py-2 px-4">{{ $year->year }}</td>
-                <td class="py-2 px-4">{{ $year->semester == 1 ? 'Ganjil' : 'Genap' }}</td>
+                <td class="py-2 px-4">
+                    @php $activeSemester = $year->semesters->where('is_active', true)->first(); @endphp
+                    <span class="font-semibold">{{ $activeSemester?->name ?? '-' }}</span>
+                    <div class="flex gap-1 mt-1">
+                        @foreach($year->semesters as $semester)
+                        @if(!$semester->is_active)
+                        <form action="{{ route('semesters.set-active', $semester) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 bg-gray-200 hover:bg-blue-500 hover:text-white text-gray-800 rounded text-xs">Aktifkan {{ $semester->name }}</button>
+                        </form>
+                        @endif
+                        @endforeach
+                    </div>
+                </td>
                 <td class="py-2 px-4">{{ $year->start_date }}</td>
                 <td class="py-2 px-4">{{ $year->end_date }}</td>
                 <td class="py-2 px-4">

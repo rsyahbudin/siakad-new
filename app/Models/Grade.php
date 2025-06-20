@@ -21,7 +21,9 @@ class Grade extends Model
         'student_id',
         'subject_id',
         'classroom_id',
+        'classroom_assignment_id',
         'academic_year_id',
+        'semester_id',
         'assignment_grade',
         'uts_grade',
         'uas_grade',
@@ -127,5 +129,17 @@ class Grade extends Model
             ($this->uas_grade * $uasWeight / 100);
 
         return round($final, 2);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($grade) {
+            if (empty($grade->classroom_id) && !empty($grade->classroom_assignment_id)) {
+                $assignment = \App\Models\ClassroomAssignment::find($grade->classroom_assignment_id);
+                if ($assignment) {
+                    $grade->classroom_id = $assignment->classroom_id;
+                }
+            }
+        });
     }
 }

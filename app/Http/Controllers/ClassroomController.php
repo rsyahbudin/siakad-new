@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Classroom;
 use App\Models\Major;
 use App\Models\Teacher;
+use App\Models\ClassroomAssignment;
+use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class ClassroomController extends Controller
@@ -14,8 +16,12 @@ class ClassroomController extends Controller
      */
     public function index()
     {
-        $classrooms = Classroom::with(['major', 'homeroomTeacher'])->orderBy('name')->get();
-        return view('master.kelas.index', compact('classrooms'));
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+        $classrooms = \App\Models\Classroom::with(['major', 'classroomAssignments' => function ($q) use ($activeYearId) {
+            $q->where('academic_year_id', $activeYearId)->with('homeroomTeacher');
+        }])->orderBy('name')->get();
+        return view('master.kelas.index', compact('classrooms', 'activeSemester'));
     }
 
     /**
@@ -43,7 +49,13 @@ class ClassroomController extends Controller
             'homeroom_teacher_id.required' => 'Wali kelas wajib dipilih.',
             'major_id.required' => 'Jurusan wajib dipilih.',
         ]);
-        Classroom::create($request->only('name', 'homeroom_teacher_id', 'major_id'));
+        $kelas = Classroom::create($request->only('name', 'grade_level', 'capacity', 'major_id'));
+        $activeYear = AcademicYear::getActive();
+        ClassroomAssignment::create([
+            'classroom_id' => $kelas->id,
+            'academic_year_id' => $activeYear->id,
+            'homeroom_teacher_id' => $request->homeroom_teacher_id,
+        ]);
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil ditambahkan.');
     }
 
@@ -62,7 +74,18 @@ class ClassroomController extends Controller
     {
         $majors = Major::orderBy('short_name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
-        return view('master.kelas.form', ['kelas' => $kelas, 'majors' => $majors, 'teachers' => $teachers]);
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+        $assignment = ClassroomAssignment::where('classroom_id', $kelas->id)
+            ->where('academic_year_id', $activeYearId)
+            ->first();
+        $homeroom_teacher_id = $assignment?->homeroom_teacher_id;
+        return view('master.kelas.form', [
+            'kelas' => $kelas,
+            'majors' => $majors,
+            'teachers' => $teachers,
+            'homeroom_teacher_id' => $homeroom_teacher_id,
+        ]);
     }
 
     /**
@@ -80,7 +103,21 @@ class ClassroomController extends Controller
             'homeroom_teacher_id.required' => 'Wali kelas wajib dipilih.',
             'major_id.required' => 'Jurusan wajib dipilih.',
         ]);
-        $kelas->update($request->only('name', 'homeroom_teacher_id', 'major_id'));
+        $kelas->update($request->only('name', 'grade_level', 'capacity', 'major_id'));
+        $activeYear = AcademicYear::getActive();
+        $assignment = ClassroomAssignment::where('classroom_id', $kelas->id)
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+        if ($assignment) {
+            $assignment->homeroom_teacher_id = $request->homeroom_teacher_id;
+            $assignment->save();
+        } else {
+            ClassroomAssignment::create([
+                'classroom_id' => $kelas->id,
+                'academic_year_id' => $activeYear->id,
+                'homeroom_teacher_id' => $request->homeroom_teacher_id,
+            ]);
+        }
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil diupdate.');
     }
 

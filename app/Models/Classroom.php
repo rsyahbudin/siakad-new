@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Schedule;
 use App\Models\Major;
 use App\Models\AcademicYear;
+use App\Models\ClassroomAssignment;
 
 class Classroom extends Model
 {
@@ -19,9 +20,9 @@ class Classroom extends Model
      */
     protected $fillable = [
         'name',
-        'academic_year_id',
+        'grade_level',
+        'capacity',
         'major_id',
-        'homeroom_teacher_id',
     ];
 
     public function academicYear()
@@ -34,12 +35,6 @@ class Classroom extends Model
         return $this->belongsTo(Major::class);
     }
 
-    public function homeroomTeacher()
-    {
-        // Relasi ke wali kelas
-        return $this->belongsTo(Teacher::class, 'homeroom_teacher_id');
-    }
-
     public function students()
     {
         // Relasi many-to-many ke siswa
@@ -49,5 +44,10 @@ class Classroom extends Model
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    public function classroomAssignments()
+    {
+        return $this->hasMany(ClassroomAssignment::class);
     }
 }

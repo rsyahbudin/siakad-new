@@ -2,31 +2,31 @@
 @section('title', 'Input Nilai Siswa')
 @section('content')
 <h2 class="text-2xl font-bold mb-4">Input Nilai Siswa</h2>
-<p class="mb-4">Tahun Ajaran Aktif: <span class="font-semibold">{{ $activeYear->year ?? '-' }} Semester {{ $activeYear->semester ?? '-' }}</span></p>
+<p class="mb-4">Semester Aktif: <span class="font-semibold">{{ $activeSemester->academicYear->year ?? '-' }} (Semester {{ $activeSemester->name ?? '-' }})</span></p>
 @if(session('success'))
 <div class="mb-4 p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
 @endif
 <form method="GET" class="mb-6 flex gap-2 items-end">
     <div>
         <label class="block font-semibold mb-1">Kelas</label>
-        <select name="kelas_id" class="border rounded px-3 py-2" onchange="this.form.submit()">
+        <select name="assignment_id" class="border rounded px-3 py-2" onchange="this.form.submit()">
             <option value="">- Pilih Kelas -</option>
-            @foreach($kelasMapel as $item)
-            <option value="{{ $item['classroom_id'] }}" {{ $selectedClass == $item['classroom_id'] ? 'selected' : '' }}>{{ $item['classroom_name'] }}</option>
+            @foreach($assignments as $assignment)
+            <option value="{{ $assignment->id }}" {{ $selectedAssignment == $assignment->id ? 'selected' : '' }}>{{ $assignment->classroom->name }} ({{ $assignment->academicYear->year ?? '' }})</option>
             @endforeach
         </select>
     </div>
     <div>
         <label class="block font-semibold mb-1">Mata Pelajaran</label>
-        <select name="mapel_id" class="border rounded px-3 py-2" onchange="this.form.submit()">
+        <select name="subject_id" class="border rounded px-3 py-2" onchange="this.form.submit()">
             <option value="">- Pilih Mapel -</option>
-            @foreach($kelasMapel->where('classroom_id', $selectedClass) as $item)
-            <option value="{{ $item['subject_id'] }}" {{ $selectedSubject == $item['subject_id'] ? 'selected' : '' }}>{{ $item['subject_name'] }}</option>
+            @foreach($subjects as $subject)
+            <option value="{{ $subject->id }}" {{ $selectedSubject == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
             @endforeach
         </select>
     </div>
 </form>
-@if($selectedClass && $selectedSubject)
+@if($selectedAssignment && $selectedSubject)
 @if($bobot)
 <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
     Bobot: <strong>Tugas {{ $bobot->assignment_weight }}%</strong>, <strong>UTS {{ $bobot->uts_weight }}%</strong>, <strong>UAS {{ $bobot->uas_weight }}%</strong> | KKM: <strong class="font-bold">{{ $bobot->kkm }}</strong>
@@ -38,8 +38,8 @@
 @endif
 <form method="POST" action="{{ route('nilai.input.store') }}">
     @csrf
-    <input type="hidden" name="kelas_id" value="{{ $selectedClass }}">
-    <input type="hidden" name="mapel_id" value="{{ $selectedSubject }}">
+    <input type="hidden" name="assignment_id" value="{{ $selectedAssignment }}">
+    <input type="hidden" name="subject_id" value="{{ $selectedSubject }}">
     <div class="overflow-x-auto bg-white rounded shadow">
         <table class="min-w-full text-sm">
             <thead class="bg-blue-100">

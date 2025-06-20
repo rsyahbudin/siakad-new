@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Classroom;
 use App\Models\Schedule;
 use App\Models\Attendance;
+use App\Models\ClassroomAssignment;
 
 class Teacher extends Model
 {
@@ -44,5 +45,10 @@ class Teacher extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function classroomAssignments()
+    {
+        return $this->hasMany(ClassroomAssignment::class, 'homeroom_teacher_id');
     }
 }

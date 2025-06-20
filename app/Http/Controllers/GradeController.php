@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
+use App\Models\ClassroomAssignment;
+use App\Models\Semester;
 use Illuminate\Http\Request;
 
 class GradeController extends Controller
@@ -12,19 +14,22 @@ class GradeController extends Controller
      */
     public function index(Request $request)
     {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
-        $classrooms = \App\Models\Classroom::where('academic_year_id', $activeYear?->id)->orderBy('name')->get();
-        $selectedClass = $request->kelas_id ?? $classrooms->first()?->id;
+        $activeSemester = Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+        $assignments = ClassroomAssignment::with('classroom')
+            ->where('academic_year_id', $activeYearId)
+            ->get();
+        $selectedAssignment = $request->assignment_id ?? $assignments->first()?->id;
         $grades = [];
-        if ($selectedClass) {
-            $grades = \App\Models\Grade::with(['student.user', 'subject'])
-                ->where('classroom_id', $selectedClass)
-                ->where('academic_year_id', $activeYear?->id)
+        if ($selectedAssignment) {
+            $grades = Grade::with(['student.user', 'subject'])
+                ->where('classroom_assignment_id', $selectedAssignment)
+                ->where('semester_id', $activeSemester?->id)
                 ->orderBy('student_id')
                 ->orderBy('subject_id')
                 ->get();
         }
-        return view('admin.nilai', compact('classrooms', 'selectedClass', 'grades', 'activeYear'));
+        return view('admin.nilai', compact('assignments', 'selectedAssignment', 'grades', 'activeSemester'));
     }
 
     /**

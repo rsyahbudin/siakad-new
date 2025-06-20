@@ -9,6 +9,8 @@ use App\Models\Grade;
 use App\Models\SubjectSetting;
 use App\Models\Raport;
 use App\Models\Student;
+use App\Models\Semester;
+use App\Models\Attendance;
 
 class SiswaRaportController extends Controller
 {
@@ -21,36 +23,47 @@ class SiswaRaportController extends Controller
             return redirect()->route('dashboard')->with('error', 'Hanya siswa yang dapat mengakses halaman ini.');
         }
 
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        if (!$activeYear) {
-            return view('siswa.raport-empty', ['message' => 'Tahun ajaran aktif belum ditentukan.']);
+        $activeSemester = Semester::where('is_active', true)->first();
+        if (!$activeSemester) {
+            return view('siswa.raport-empty', ['message' => 'Tahun ajaran/semester aktif belum ditentukan.']);
         }
-
-        $classroom = $student->classrooms()->where('academic_year_id', $activeYear->id)->first();
-        if (!$classroom) {
+        $activeYear = $activeSemester->academicYear;
+        $assignment = $student->classStudents()->where('academic_year_id', $activeYear->id)->first();
+        $kelas = $assignment?->classroomAssignment?->classroom;
+        $waliKelas = $assignment?->classroomAssignment?->homeroomTeacher;
+        if (!$kelas) {
             return view('siswa.raport-empty', ['message' => 'Anda tidak terdaftar di kelas manapun pada tahun ajaran ini.']);
         }
-
-        // Ambil data raport (jika sudah dibuat oleh wali kelas)
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
         $raport = Raport::where('student_id', $student->id)
+            ->where('classroom_id', $kelas->id)
             ->where('academic_year_id', $activeYear->id)
+            ->where('semester', $semesterInt)
             ->first();
-
-        // Ambil semua nilai dengan prioritas: input_guru > konversi
         $allGrades = Grade::with('subject')
             ->where('student_id', $student->id)
-            ->where('academic_year_id', $activeYear->id)
-            ->orderByRaw("FIELD(source, 'input_guru', 'konversi')")
+            ->where('semester_id', $activeSemester->id)
             ->get();
-        // Ambil satu nilai per mapel (prioritas input_guru)
         $grades = $allGrades->unique('subject_id')->values();
-
-        // Ambil semua pengaturan KKM dan bobot
         $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear->id)
             ->whereIn('subject_id', $grades->pluck('subject_id'))
             ->get()
             ->keyBy('subject_id');
-
-        return view('siswa.raport', compact('student', 'activeYear', 'classroom', 'raport', 'grades', 'subjectSettings'));
+        // Absensi: rekap langsung jika raport kosong atau field absensi kosong
+        if (!$raport || (!$raport->attendance_sick && !$raport->attendance_permit && !$raport->attendance_absent)) {
+            $attendance = Attendance::where('student_id', $student->id)
+                ->where('semester_id', $activeSemester->id)
+                ->selectRaw(
+                    "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
+                )->first();
+            $attendance_sick = $attendance->sakit ?? 0;
+            $attendance_permit = $attendance->izin ?? 0;
+            $attendance_absent = $attendance->alpha ?? 0;
+        } else {
+            $attendance_sick = $raport->attendance_sick;
+            $attendance_permit = $raport->attendance_permit;
+            $attendance_absent = $raport->attendance_absent;
+        }
+        return view('siswa.raport', compact('student', 'activeSemester', 'kelas', 'waliKelas', 'raport', 'grades', 'subjectSettings', 'attendance_sick', 'attendance_permit', 'attendance_absent'));
     }
 }

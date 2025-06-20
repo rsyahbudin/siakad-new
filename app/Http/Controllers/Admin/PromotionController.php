@@ -9,6 +9,8 @@ use App\Models\StudentPromotion;
 use App\Models\Classroom;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Models\ClassroomAssignment;
+use App\Models\Semester;
 
 class PromotionController extends Controller
 {
@@ -92,9 +94,12 @@ class PromotionController extends Controller
     public function index(Request $request)
     {
         $activeYear = \App\Models\AcademicYear::getActive();
-        $classrooms = \App\Models\Classroom::where('academic_year_id', $activeYear?->id)
-            ->orderBy('grade_level')
-            ->orderBy('name')
+        if (!$activeYear) {
+            return redirect()->route('kenaikan-kelas.index')->with('error', 'Tahun ajaran aktif belum diatur.');
+        }
+        $activeSemester = Semester::where('is_active', true)->first();
+        $classroomAssignments = \App\Models\ClassroomAssignment::with('classroom')
+            ->where('academic_year_id', $activeYear?->id)
             ->get();
         $selectedKelas12 = $request->kelas12_id;
         $selectedKelasNon12 = $request->kelasnon12_id;
@@ -106,16 +111,21 @@ class PromotionController extends Controller
         if ($selectedKelas12) {
             $kelas12Promotions = $kelas12Promotions->where('fromClassroom.id', $selectedKelas12);
         }
-        $kelas12 = $kelas12Promotions->groupBy('fromClassroom.id');
+        $kelas12 = $kelas12Promotions->groupBy('fromClassroom.id')->map(function ($group) {
+            return $group->filter(fn($p) => is_object($p) && $p instanceof \App\Models\StudentPromotion);
+        });
         // Filter kelas 10&11
         $kelasNon12Promotions = $promotions->whereIn('fromClassroom.grade_level', [10, 11]);
         if ($selectedKelasNon12) {
             $kelasNon12Promotions = $kelasNon12Promotions->where('fromClassroom.id', $selectedKelasNon12);
         }
-        $kelasNon12 = $kelasNon12Promotions->groupBy('fromClassroom.id');
+        $kelasNon12 = $kelasNon12Promotions->groupBy('fromClassroom.id')->map(function ($group) {
+            return $group->filter(fn($p) => is_object($p) && $p instanceof \App\Models\StudentPromotion);
+        });
         return view('admin.kenaikan-kelas', [
             'activeYear' => $activeYear,
-            'classrooms' => $classrooms,
+            'activeSemester' => $activeSemester,
+            'classroomAssignments' => $classroomAssignments,
             'selectedKelas12' => $selectedKelas12,
             'selectedKelasNon12' => $selectedKelasNon12,
             'kelas12' => $kelas12,

@@ -4,7 +4,7 @@
 @section('content')
 <div class="container mx-auto p-4">
     <h2 class="text-2xl font-bold mb-2">Proses Kenaikan Kelas & Kelulusan</h2>
-    <p class="mb-4 text-gray-600">Tahun Ajaran yang akan diproses: <span class="font-semibold">{{ $activeYear->year ?? '-' }} Semester {{ $activeYear->semester ?? '-' }}</span></p>
+    <p class="mb-4 text-gray-600">Semester yang akan diproses: <span class="font-semibold">{{ $activeSemester->academicYear->year ?? '-' }} (Semester {{ $activeSemester->name ?? '-' }})</span></p>
 
     <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
         <h4 class="font-bold">Perhatian!</h4>

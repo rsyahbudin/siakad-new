@@ -16,7 +16,7 @@ class GuruJadwalController extends Controller
         $activeYear = AcademicYear::where('is_active', true)->first();
         $schedules = $teacher ? Schedule::with(['classroom', 'subject'])
             ->where('teacher_id', $teacher->id)
-            ->whereHas('classroom', function ($q) use ($activeYear) {
+            ->whereHas('classroomAssignment', function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear?->id);
             })->get() : collect();
         return view('guru.jadwal', compact('schedules', 'activeYear'));

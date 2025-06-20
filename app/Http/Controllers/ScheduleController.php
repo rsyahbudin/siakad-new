@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
-use App\Models\Classroom;
+use App\Models\ClassroomAssignment;
 use App\Models\Subject;
 use App\Models\Teacher;
-use App\Models\AcademicYear;
+use App\Models\Semester;
+use App\Models\Classroom;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
@@ -16,13 +17,16 @@ class ScheduleController extends Controller
      */
     public function index(Request $request)
     {
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $classrooms = Classroom::where('academic_year_id', $activeYear?->id)->orderBy('name')->get();
-        $selectedClass = $request->kelas_id ?? $classrooms->first()?->id;
-        $schedules = $selectedClass ? Schedule::where('classroom_id', $selectedClass)->get() : collect();
+        $activeSemester = Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+        $assignments = ClassroomAssignment::with('classroom')
+            ->where('academic_year_id', $activeYearId)
+            ->get();
+        $selectedAssignment = $request->assignment_id ?? $assignments->first()?->id;
+        $schedules = $selectedAssignment ? Schedule::where('classroom_assignment_id', $selectedAssignment)->get() : collect();
         $subjects = Subject::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
-        return view('admin.jadwal', compact('classrooms', 'selectedClass', 'schedules', 'subjects', 'teachers', 'activeYear'));
+        return view('admin.jadwal', compact('assignments', 'selectedAssignment', 'schedules', 'subjects', 'teachers', 'activeSemester'));
     }
 
     /**
@@ -30,10 +34,13 @@ class ScheduleController extends Controller
      */
     public function create(Request $request)
     {
-        $classroom = Classroom::findOrFail($request->kelas_id);
+        $assignment = ClassroomAssignment::findOrFail($request->assignment_id);
+        $classroom = $assignment->classroom;
         $subjects = Subject::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
-        return view('admin.jadwal-form', compact('classroom', 'subjects', 'teachers'));
+        $day = $request->day;
+        $jam = $request->jam;
+        return view('admin.jadwal-form', compact('assignment', 'classroom', 'subjects', 'teachers', 'day', 'jam'));
     }
 
     /**
@@ -42,15 +49,15 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'classroom_id' => 'required|exists:classrooms,id',
+            'classroom_assignment_id' => 'required|exists:classroom_assignments,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
             'day' => 'required',
             'time_start' => 'required',
             'time_end' => 'required',
         ]);
-        Schedule::create($request->only('classroom_id', 'subject_id', 'teacher_id', 'day', 'time_start', 'time_end'));
-        return redirect()->route('jadwal.admin.index', ['kelas_id' => $request->classroom_id])->with('success', 'Slot jadwal berhasil ditambahkan.');
+        Schedule::create($request->only('classroom_assignment_id', 'subject_id', 'teacher_id', 'day', 'time_start', 'time_end'));
+        return redirect()->route('jadwal.admin.index', ['assignment_id' => $request->classroom_assignment_id])->with('success', 'Slot jadwal berhasil ditambahkan.');
     }
 
     /**

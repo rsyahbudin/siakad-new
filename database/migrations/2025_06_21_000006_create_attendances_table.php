@@ -18,16 +18,23 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Student::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Schedule::class)->constrained()->onDelete('cascade');
+            $table->foreignIdFor(Schedule::class)->nullable()->constrained()->onDelete('cascade');
             $table->foreignIdFor(Teacher::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
             $table->date('attendance_date');
             $table->enum('status', ['Hadir', 'Sakit', 'Izin', 'Alpha']);
             $table->text('notes')->nullable();
+            $table->unsignedBigInteger('classroom_assignment_id');
+            $table->foreign('classroom_assignment_id')->references('id')->on('classroom_assignments')->onDelete('cascade');
+            $table->unsignedBigInteger('semester_id');
+            $table->foreign('semester_id')->references('id')->on('semesters')->onDelete('cascade');
             $table->timestamps();
 
-            // Unique constraint to prevent duplicate entries for the same student, on the same schedule, on the same day
-            $table->unique(['student_id', 'schedule_id', 'attendance_date']);
+            // Unique constraint to prevent duplicate entries for the same student, in the same class, on the same day and semester
+            $table->unique(
+                ['student_id', 'classroom_assignment_id', 'semester_id', 'attendance_date'],
+                'uniq_attendance_sksd'
+            );
         });
     }
 

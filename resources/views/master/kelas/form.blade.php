@@ -18,7 +18,7 @@
             <select name="homeroom_teacher_id" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 @error('homeroom_teacher_id') border-red-500 @enderror">
                 <option value="">- Pilih Wali Kelas -</option>
                 @foreach($teachers as $guru)
-                <option value="{{ $guru->id }}" {{ old('homeroom_teacher_id', $kelas->homeroom_teacher_id ?? '') == $guru->id ? 'selected' : '' }}>{{ $guru->name ?? $guru->user->name ?? '-' }}</option>
+                <option value="{{ $guru->id }}" {{ old('homeroom_teacher_id', $homeroom_teacher_id ?? '') == $guru->id ? 'selected' : '' }}>{{ $guru->name ?? $guru->user->name ?? '-' }}</option>
                 @endforeach
             </select>
             @error('homeroom_teacher_id')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror

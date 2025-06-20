@@ -11,8 +11,8 @@
         <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama/NIS..." class="border rounded px-3 py-2 w-full md:w-64 focus:outline-none focus:ring focus:border-blue-400">
         <select name="kelas_filter" class="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400">
             <option value="">- Semua Kelas -</option>
-            @foreach($classrooms as $kelas)
-            <option value="{{ $kelas->id }}" {{ request('kelas_filter') == $kelas->id ? 'selected' : '' }}>{{ $kelas->name }}</option>
+            @foreach($classroomAssignments as $assignment)
+            <option value="{{ $assignment->id }}" {{ request('kelas_filter') == $assignment->id ? 'selected' : '' }}>{{ $assignment->classroom->name }}</option>
             @endforeach
         </select>
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold">Cari</button>
@@ -44,8 +44,8 @@
                     <td class="py-2 px-4">
                         <select name="assignments[{{ $siswa->id }}]" class="border rounded px-2 py-1">
                             <option value="">- Pilih Kelas -</option>
-                            @foreach($classrooms as $kelas)
-                            <option value="{{ $kelas->id }}" {{ (optional($siswa->classrooms->first())->id ?? '') == $kelas->id ? 'selected' : '' }}>{{ $kelas->name }}</option>
+                            @foreach($classroomAssignments as $assignment)
+                            <option value="{{ $assignment->id }}" {{ (optional($siswa->classStudents->first())->classroom_assignment_id ?? '') == $assignment->id ? 'selected' : '' }}>{{ $assignment->classroom->name }}</option>
                             @endforeach
                         </select>
                     </td>

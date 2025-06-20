@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('academic_years', function (Blueprint $table) {
+        Schema::create('semesters', function (Blueprint $table) {
             $table->id();
-            $table->string('year', 9); // Format: "2024/2025"
+            $table->foreignId('academic_year_id')->constrained()->onDelete('cascade');
+            $table->enum('name', ['Ganjil', 'Genap']);
             $table->boolean('is_active')->default(false);
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->timestamps();
-
-            // Ensure only one active academic year
+            $table->unique(['academic_year_id', 'name']);
             $table->index('is_active');
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('academic_years');
+        Schema::dropIfExists('semesters');
     }
 };

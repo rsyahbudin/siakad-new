@@ -18,6 +18,7 @@ class Schedule extends Model
      */
     protected $fillable = [
         'classroom_id',
+        'classroom_assignment_id',
         'subject_id',
         'teacher_id',
         'day',
@@ -43,5 +44,22 @@ class Schedule extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function classroomAssignment()
+    {
+        return $this->belongsTo(\App\Models\ClassroomAssignment::class);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($schedule) {
+            if (empty($schedule->classroom_id) && !empty($schedule->classroom_assignment_id)) {
+                $assignment = \App\Models\ClassroomAssignment::find($schedule->classroom_assignment_id);
+                if ($assignment) {
+                    $schedule->classroom_id = $assignment->classroom_id;
+                }
+            }
+        });
     }
 }

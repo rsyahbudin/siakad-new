@@ -8,6 +8,7 @@
 @if(session('success'))
 <div class="mb-4 p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
 @endif
+<div class="mb-2 text-gray-600">Tahun Ajaran Aktif: <span class="font-semibold">{{ $activeSemester->academicYear->year ?? '-' }} Semester {{ $activeSemester->name ?? '-' }}</span></div>
 <div class="overflow-x-auto bg-white rounded shadow">
     <table class="min-w-full text-sm">
         <thead class="bg-blue-100">
@@ -26,8 +27,9 @@
                 <td class="py-2 px-4">{{ $i+1 }}</td>
                 <td class="py-2 px-4">{{ $kelas->name }}</td>
                 <td class="py-2 px-4">
-                    @if($kelas->homeroomTeacher)
-                    <div class="font-semibold">{{ $kelas->homeroomTeacher->full_name }}</div>
+                    @php $assignment = $kelas->classroomAssignments->first(); @endphp
+                    @if($assignment && $assignment->homeroomTeacher)
+                    <div class="font-semibold">{{ $assignment->homeroomTeacher->full_name }}</div>
                     @else
                     <span class="text-gray-400 italic">-</span>
                     @endif

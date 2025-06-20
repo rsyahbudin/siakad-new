@@ -3,7 +3,7 @@
 @section('content')
 <div class="px-4 py-6">
     <h2 class="text-2xl font-bold mb-4">Data Siswa Kelas Perwalian: {{ $kelas->name ?? '-' }}</h2>
-    <p class="mb-6 text-gray-600">Tahun Ajaran Aktif: <span class="font-semibold">{{ $activeYear->year ?? '-' }} Semester {{ $activeYear->semester ?? '-' }}</span></p>
+    <p class="mb-6 text-gray-600">Tahun Ajaran Aktif: <span class="font-semibold">{{ $activeSemester->academicYear->year ?? '-' }} Semester {{ $activeSemester->name ?? '-' }}</span></p>
 
     @if($students->count() > 0)
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -27,18 +27,18 @@
                 <tbody class="divide-y divide-gray-200">
                     @foreach($students as $i => $student)
                     <tr class="hover:bg-gray-50">
-                        <td class="py-3 px-4">{{ $students->firstItem() + $i }}</td>
-                        <td class="py-3 px-4">{{ $student->nis }}</td>
-                        <td class="py-3 px-4">{{ $student->nisn }}</td>
-                        <td class="py-3 px-4 font-medium">{{ $student->full_name }}</td>
-                        <td class="py-3 px-4">{{ $student->gender }}</td>
-                        <td class="py-3 px-4">{{ $student->birth_place }}, {{ \Carbon\Carbon::parse($student->birth_date)->isoFormat('D MMMM Y') }}</td>
-                        <td class="py-3 px-4">{{ $student->phone_number }}</td>
-                        <td class="py-3 px-4">{{ $student->religion }}</td>
-                        <td class="py-3 px-4">{{ $student->parent_name }}</td>
-                        <td class="py-3 px-4">{{ $student->parent_phone }}</td>
+                        <td class="py-3 px-4">{{ $loop->iteration }}</td>
+                        <td class="py-3 px-4">{{ $student->student->nis }}</td>
+                        <td class="py-3 px-4">{{ $student->student->nisn }}</td>
+                        <td class="py-3 px-4 font-medium">{{ $student->student->full_name }}</td>
+                        <td class="py-3 px-4">{{ $student->student->gender }}</td>
+                        <td class="py-3 px-4">{{ $student->student->birth_place }}, {{ \Carbon\Carbon::parse($student->student->birth_date)->isoFormat('D MMMM Y') }}</td>
+                        <td class="py-3 px-4">{{ $student->student->phone_number }}</td>
+                        <td class="py-3 px-4">{{ $student->student->religion }}</td>
+                        <td class="py-3 px-4">{{ $student->student->parent_name }}</td>
+                        <td class="py-3 px-4">{{ $student->student->parent_phone }}</td>
                         <td class="py-3 px-4 text-center">
-                            <a href="{{ route('wali.raport.show', $student->id) }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">Lihat Raport</a>
+                            <a href="{{ route('wali.raport.show', $student->student->id) }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">Lihat Raport</a>
                         </td>
                     </tr>
                     @endforeach

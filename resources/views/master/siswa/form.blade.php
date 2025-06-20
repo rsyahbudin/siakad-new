@@ -29,14 +29,16 @@
             @error('email')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="mb-4">
-            <label class="block mb-1 font-semibold">Kelas <span class="text-red-500">*</span></label>
-            <select name="classroom_id" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 @error('classroom_id') border-red-500 @enderror">
-                <option value="">- Pilih Kelas -</option>
-                @foreach($classrooms as $kelas)
-                <option value="{{ $kelas->id }}" {{ old('classroom_id', $siswa->classroom_id ?? '') == $kelas->id ? 'selected' : '' }}>{{ $kelas->name }}</option>
+            <label class="block mb-1 font-semibold">Kelas & Tahun Ajaran <span class="text-red-500">*</span></label>
+            <select name="assignment_id" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 @error('assignment_id') border-red-500 @enderror">
+                <option value="">- Pilih Kelas & Tahun Ajaran -</option>
+                @foreach($assignments as $assignment)
+                <option value="{{ $assignment->id }}" {{ old('assignment_id', ($siswa->classStudents->first()->classroom_assignment_id ?? '') ) == $assignment->id ? 'selected' : '' }}>
+                    {{ $assignment->classroom->name }} ({{ $assignment->academicYear->year ?? '' }})
+                </option>
                 @endforeach
             </select>
-            @error('classroom_id')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
+            @error('assignment_id')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="mb-4">
             <label class="block mb-1 font-semibold">Jenis Kelamin <span class="text-red-500">*</span></label>
@@ -54,7 +56,7 @@
         </div>
         <div class="mb-4">
             <label class="block mb-1 font-semibold">Tanggal Lahir <span class="text-red-500">*</span></label>
-            <input type="date" name="birth_date" value="{{ old('birth_date', $siswa->birth_date ?? '') }}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 @error('birth_date') border-red-500 @enderror">
+            <input type="date" name="birth_date" value="{{ old('birth_date', isset($siswa->birth_date) ? (is_object($siswa->birth_date) ? $siswa->birth_date->format('Y-m-d') : $siswa->birth_date) : '') }}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 @error('birth_date') border-red-500 @enderror">
             @error('birth_date')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="mb-4">

@@ -108,7 +108,7 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->teacher->homeroomClassrooms()
+        return \App\Models\ClassroomAssignment::where('homeroom_teacher_id', $this->teacher->id)
             ->where('academic_year_id', $activeYear->id)
             ->exists();
     }

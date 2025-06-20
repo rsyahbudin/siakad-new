@@ -12,7 +12,7 @@ class AcademicYearController extends Controller
      */
     public function index()
     {
-        $years = AcademicYear::orderByDesc('year')->orderByDesc('semester')->get();
+        $years = AcademicYear::orderByDesc('year')->get();
         return view('master.tahun-ajaran.index', compact('years'));
     }
 
@@ -29,26 +29,27 @@ class AcademicYearController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'year' => 'required|string|max:9',
-            'semester' => 'required|in:1,2',
-            'is_active' => 'nullable|boolean',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ], [
-            'year.required' => 'Tahun ajaran wajib diisi.',
-            'semester.required' => 'Semester wajib dipilih.',
-            'start_date.required' => 'Tanggal mulai wajib diisi.',
-            'end_date.required' => 'Tanggal selesai wajib diisi.',
-            'end_date.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
-        ]);
-
-        AcademicYear::create([
+        $academicYear = AcademicYear::create([
             'year' => $request->year,
-            'semester' => $request->semester,
             'is_active' => $request->has('is_active'),
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+        ]);
+
+        // Otomatis buat dua semester
+        $academicYear->semesters()->createMany([
+            [
+                'name' => 'Ganjil',
+                'is_active' => $request->semester == 1,
+                'start_date' => $request->start_date,
+                'end_date' => null,
+            ],
+            [
+                'name' => 'Genap',
+                'is_active' => $request->semester == 2,
+                'start_date' => null,
+                'end_date' => $request->end_date,
+            ],
         ]);
 
         return redirect()->route('tahun-ajaran.index')->with('success', 'Tahun ajaran berhasil ditambahkan.');
@@ -75,23 +76,8 @@ class AcademicYearController extends Controller
      */
     public function update(Request $request, AcademicYear $tahun_ajaran)
     {
-        $request->validate([
-            'year' => 'required|string|max:9',
-            'semester' => 'required|in:1,2',
-            'is_active' => 'nullable|boolean',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ], [
-            'year.required' => 'Tahun ajaran wajib diisi.',
-            'semester.required' => 'Semester wajib dipilih.',
-            'start_date.required' => 'Tanggal mulai wajib diisi.',
-            'end_date.required' => 'Tanggal selesai wajib diisi.',
-            'end_date.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
-        ]);
-
         $tahun_ajaran->update([
             'year' => $request->year,
-            'semester' => $request->semester,
             'is_active' => $request->has('is_active'),
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,

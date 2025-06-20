@@ -64,7 +64,7 @@
     <div class="text-center mb-8 border-b pb-4">
         <h1 class="text-2xl font-bold text-gray-800">LAPORAN HASIL BELAJAR SISWA</h1>
         <h2 class="text-xl font-semibold text-gray-700">SMA NEGERI HARAPAN BANGSA</h2>
-        <p class="text-sm text-gray-500">Tahun Ajaran {{ $activeYear->year }} - Semester {{ $activeYear->semester }}</p>
+        <p class="text-sm text-gray-500">Tahun Ajaran {{ $activeSemester->academicYear->year }} - Semester {{ $activeSemester->name }}</p>
     </div>
 
     <!-- Status Finalisasi Raport -->
@@ -82,8 +82,8 @@
     <div class="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 text-sm">
         <div><span class="font-semibold w-32 inline-block">Nama Siswa</span>: {{ $student->full_name }}</div>
         <div><span class="font-semibold w-32 inline-block">NIS / NISN</span>: {{ $student->nis }} / {{ $student->nisn }}</div>
-        <div><span class="font-semibold w-32 inline-block">Kelas</span>: {{ $classroom->name }}</div>
-        <div><span class="font-semibold w-32 inline-block">Wali Kelas</span>: {{ $classroom->homeroomTeacher->full_name ?? '-' }}</div>
+        <div><span class="font-semibold w-32 inline-block">Kelas</span>: {{ $kelas->name }}</div>
+        <div><span class="font-semibold w-32 inline-block">Wali Kelas</span>: {{ $waliKelas->full_name ?? '-' }}</div>
     </div>
 
     <!-- Tabel Nilai -->
@@ -139,15 +139,15 @@
             <table class="w-full border">
                 <tr class="border-b">
                     <td class="px-4 py-2 border-r">Sakit</td>
-                    <td class="px-4 py-2 text-center">{{ $raport->attendance_sick ?? 0 }} hari</td>
+                    <td class="px-4 py-2 text-center">{{ $attendance_sick }} hari</td>
                 </tr>
                 <tr class="border-b">
                     <td class="px-4 py-2 border-r">Izin</td>
-                    <td class="px-4 py-2 text-center">{{ $raport->attendance_permit ?? 0 }} hari</td>
+                    <td class="px-4 py-2 text-center">{{ $attendance_permit }} hari</td>
                 </tr>
                 <tr>
                     <td class="px-4 py-2 border-r">Tanpa Keterangan</td>
-                    <td class="px-4 py-2 text-center">{{ $raport->attendance_absent ?? 0 }} hari</td>
+                    <td class="px-4 py-2 text-center">{{ $attendance_absent }} hari</td>
                 </tr>
             </table>
         </div>
@@ -171,8 +171,8 @@
             <p>Jakarta, {{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY') }}</p>
             <p>Wali Kelas,</p>
             <br><br><br>
-            <p class="font-semibold underline">{{ $classroom->homeroomTeacher->full_name ?? '..............................' }}</p>
-            <p>NIP. {{ $classroom->homeroomTeacher->nip ?? '..............................' }}</p>
+            <p class="font-semibold underline">{{ $waliKelas->full_name ?? '..............................' }}</p>
+            <p>NIP. {{ $waliKelas->nip ?? '..............................' }}</p>
         </div>
     </div>
 

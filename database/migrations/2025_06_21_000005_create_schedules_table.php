@@ -17,13 +17,14 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Classroom::class)->constrained()->onDelete('cascade');
+            $table->foreignId('classroom_assignment_id')->constrained('classroom_assignments')->onDelete('cascade');
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(Teacher::class)->constrained()->onDelete('cascade');
-            
+
             $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
             $table->time('time_start');
             $table->time('time_end');
-            
+
             $table->timestamps();
         });
     }

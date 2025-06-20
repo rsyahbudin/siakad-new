@@ -19,12 +19,8 @@ return new class extends Migration
             $table->string('name'); // Contoh: "X-1", "XI IPA 2"
             $table->integer('grade_level'); // 10, 11, 12
             $table->integer('capacity')->nullable();
-            // Relasi ke tahun ajaran
-            $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
             // Relasi ke jurusan (nullable karena kelas X mungkin belum punya jurusan)
             $table->foreignIdFor(Major::class)->nullable()->constrained()->onDelete('set null');
-            // Relasi ke guru sebagai wali kelas (homeroom teacher)
-            $table->foreignIdFor(Teacher::class, 'homeroom_teacher_id')->nullable()->constrained('teachers')->onDelete('set null');
             $table->timestamps();
         });
     }

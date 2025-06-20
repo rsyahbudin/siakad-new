@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AcademicYear;
-use App\Models\Classroom;
+use App\Models\ClassroomAssignment;
 use App\Models\Schedule;
 use App\Models\Grade;
 use App\Models\SubjectSetting;
@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\StudentPromotion;
 use Illuminate\Support\Facades\DB;
+use App\Models\Semester;
 
 class WaliKelasController extends Controller
 {
@@ -21,238 +22,212 @@ class WaliKelasController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        // Ambil kelas yang diampu sebagai wali
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
-        if (!$kelas) {
+        $kelas = $assignment?->classroom;
+        if (!$assignment || !$kelas) {
             return view('guru.wali-leger-empty');
         }
-        // Ambil semua siswa di kelas tsb
-        $students = $kelas ? $kelas->students()->with('user')->orderBy('full_name')->get() : collect();
-        // Ambil semua mapel yang diajarkan di kelas tsb
+        $students = $assignment->classStudents()->with('student.user')->get()->pluck('student');
         $mapels = $kelas ? Schedule::where('classroom_id', $kelas->id)
             ->with('subject')
             ->get()
             ->pluck('subject')
             ->unique('id')
             ->sortBy('name') : collect();
-        // Ambil semua nilai untuk kelas, mapel, tahun ajaran aktif
         $grades = Grade::where('classroom_id', $kelas?->id)
-            ->where('academic_year_id', $activeYear?->id)
+            ->where('semester_id', $activeSemester?->id)
             ->get()
             ->groupBy(['student_id', 'subject_id']);
-        // Ambil bobot per mapel
-        $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear?->id)
+        $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester?->academic_year_id)
             ->whereIn('subject_id', $mapels->pluck('id'))
             ->get()
             ->keyBy('subject_id');
-        return view('guru.wali-leger', compact('kelas', 'students', 'mapels', 'grades', 'subjectSettings', 'activeYear'));
+        return view('guru.wali-leger', compact('kelas', 'students', 'mapels', 'grades', 'subjectSettings', 'activeSemester'));
     }
+
     public function kelas(Request $request)
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
-        if (!$kelas) {
+        $kelas = $assignment?->classroom;
+        if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
-        $students = $kelas->students()->with('user')->orderBy('full_name')->paginate(20);
-        return view('guru.wali-kelas', compact('kelas', 'students', 'activeYear'));
+        $students = $assignment->classStudents()->with('student.user')->paginate(20);
+        return view('guru.wali-kelas', compact('kelas', 'students', 'activeSemester'));
     }
 
-    public function absensi()
+    public function absensi(Request $request)
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
-
-        if (!$kelas) {
+        $kelas = $assignment?->classroom;
+        if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
-
-        $students = $kelas->students()->orderBy('full_name')->get();
-
-        // Ambil rekapitulasi dari tabel attendances
-        $rekapAbsensi = Attendance::whereIn('student_id', $students->pluck('id'))
-            ->where('academic_year_id', $activeYear->id)
+        $tab = $request->get('tab', 'input');
+        $q = $request->get('q');
+        $studentsQuery = $assignment->classStudents()->with('student');
+        if ($q) {
+            $studentsQuery->whereHas('student', function ($query) use ($q) {
+                $query->where('full_name', 'like', "%$q%")
+                    ->orWhere('nis', 'like', "%$q%")
+                    ->orWhere('nisn', 'like', "%$q%");
+            });
+        }
+        $students = $studentsQuery->paginate(20)->appends(['tab' => $tab, 'q' => $q]);
+        $studentList = $students->pluck('student');
+        // Absensi harian (input hari ini)
+        $today = now()->format('Y-m-d');
+        $absensiHarian = Attendance::where('classroom_assignment_id', $assignment->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('attendance_date', $today)
+            ->get()
+            ->keyBy('student_id');
+        // Rekap semester
+        $rekapAbsensi = Attendance::whereIn('student_id', $studentList->pluck('id'))
+            ->where('semester_id', $activeSemester->id)
             ->select('student_id', 'status', DB::raw('count(*) as total'))
             ->groupBy('student_id', 'status')
             ->get()
             ->groupBy('student_id');
-
-        // Ambil data yang sudah tersimpan di raport
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
         $raports = Raport::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
             ->get()
             ->keyBy('student_id');
-
-        return view('guru.wali-absensi', compact('kelas', 'students', 'rekapAbsensi', 'raports', 'activeYear'));
+        return view('guru.wali-absensi', compact('kelas', 'students', 'absensiHarian', 'rekapAbsensi', 'raports', 'activeSemester', 'tab', 'q'));
     }
 
     public function storeAbsensi(Request $request)
     {
-        $request->validate([
-            'attendance' => 'required|array',
-            'attendance.*.sick' => 'required|integer|min:0',
-            'attendance.*.permit' => 'required|integer|min:0',
-            'attendance.*.absent' => 'required|integer|min:0',
-        ]);
-
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->firstOrFail();
-
-        foreach ($request->attendance as $studentId => $data) {
-            Raport::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'classroom_id' => $kelas->id,
-                    'academic_year_id' => $activeYear->id,
-                    'semester' => $activeYear->semester,
-                ],
-                [
-                    'attendance_sick' => $data['sick'],
-                    'attendance_permit' => $data['permit'],
-                    'attendance_absent' => $data['absent'],
-                ]
-            );
-        }
-
-        return redirect()->route('wali.absensi')->with('success', 'Rekapitulasi absensi berhasil disimpan.');
+        $kelas = $assignment->classroom;
+        $request->validate([
+            'attendances' => 'required|array',
+            'attendances.*.status' => 'required|in:Hadir,Sakit,Izin,Alpha',
+            'attendances.*.notes' => 'nullable|string|max:255',
+        ]);
+        $attendanceDate = now()->format('Y-m-d');
+        DB::transaction(function () use ($request, $teacher, $activeSemester, $attendanceDate, $assignment) {
+            foreach ($request->attendances as $studentId => $data) {
+                Attendance::updateOrCreate(
+                    [
+                        'student_id' => $studentId,
+                        'classroom_assignment_id' => $assignment->id,
+                        'semester_id' => $activeSemester->id,
+                        'attendance_date' => $attendanceDate,
+                    ],
+                    [
+                        'teacher_id' => $teacher->id,
+                        'academic_year_id' => $activeSemester->academic_year_id,
+                        'status' => $data['status'],
+                        'notes' => $data['notes'],
+                    ]
+                );
+            }
+        });
+        return redirect()->route('wali.absensi')->with('success', 'Absensi harian berhasil disimpan.');
     }
 
     public function finalisasi()
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
-
-        if (!$kelas) {
+        $kelas = $assignment?->classroom;
+        if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
-
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
         $raports = Raport::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
             ->with('student')
             ->get();
-
         $isAllFinalized = $raports->every(fn($raport) => $raport->is_finalized);
-
-        return view('guru.wali-finalisasi', compact('kelas', 'raports', 'activeYear', 'isAllFinalized'));
+        return view('guru.wali-finalisasi', compact('kelas', 'raports', 'activeSemester', 'isAllFinalized'));
     }
 
     public function showRaport(Student $student)
     {
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        if (!$activeYear) {
+        $activeSemester = Semester::where('is_active', true)->first();
+        if (!$activeSemester) {
             return back()->with('error', 'Tahun ajaran aktif belum ditentukan.');
         }
-
-        $classroom = $student->classrooms()->where('academic_year_id', $activeYear->id)->first();
-        if (!$classroom) {
+        $assignment = $student->classStudents()->where('academic_year_id', $activeSemester->academic_year_id)->first();
+        $kelas = $assignment?->classroomAssignment?->classroom;
+        $waliKelas = $assignment?->classroomAssignment?->homeroomTeacher;
+        if (!$kelas) {
             return back()->with('error', 'Siswa tidak terdaftar di kelas manapun pada tahun ajaran ini.');
         }
-
-        // Pastikan wali kelas hanya bisa akses siswanya sendiri
-        $waliKelasClassroomId = Auth::user()->teacher->homeroomClassrooms()->where('academic_year_id', $activeYear->id)->value('id');
-        if ($classroom->id !== $waliKelasClassroomId) {
+        $waliKelasAssignment = ClassroomAssignment::where('homeroom_teacher_id', Auth::user()->teacher->id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->first();
+        if ($assignment->classroom_assignment_id !== $waliKelasAssignment?->id) {
             return back()->with('error', 'Anda tidak memiliki hak akses untuk melihat raport siswa ini.');
         }
-
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
         $raport = Raport::where('student_id', $student->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('classroom_id', $kelas->id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
             ->first();
-
         $grades = Grade::with('subject')
             ->where('student_id', $student->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('semester_id', $activeSemester->id)
             ->get();
-
-        $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear->id)
+        $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
             ->whereIn('subject_id', $grades->pluck('subject_id'))
             ->get()
             ->keyBy('subject_id');
-
-        return view('siswa.raport', compact('student', 'activeYear', 'classroom', 'raport', 'grades', 'subjectSettings'));
-    }
-
-    public function storeFinalisasi(Request $request)
-    {
-        $user = Auth::user();
-        $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
-            ->firstOrFail();
-
-        $catatan = $request->input('catatan', []);
-
-        DB::transaction(function () use ($kelas, $activeYear, $catatan) {
-            $students = $kelas->students()->get();
-            $studentIds = $students->pluck('id');
-
-            // 1. Ambil rekapitulasi absensi terbaru dari tabel attendances
-            $rekapAbsensi = Attendance::whereIn('student_id', $studentIds)
-                ->where('academic_year_id', $activeYear->id)
-                ->select('student_id', 'status', DB::raw('count(*) as total'))
-                ->groupBy('student_id', 'status')
-                ->get()
-                ->groupBy('student_id');
-
-            foreach ($students as $student) {
-                $rekap = $rekapAbsensi->get($student->id);
-                $sakit = $rekap ? ($rekap->firstWhere('status', 'Sakit')->total ?? 0) : 0;
-                $izin = $rekap ? ($rekap->firstWhere('status', 'Izin')->total ?? 0) : 0;
-                $alpha = $rekap ? ($rekap->firstWhere('status', 'Alpha')->total ?? 0) : 0;
-
-                // 2. Update atau buat data raport dengan rekap absensi final dan catatan wali
-                $raport = Raport::updateOrCreate(
-                    [
-                        'student_id' => $student->id,
-                        'classroom_id' => $kelas->id,
-                        'academic_year_id' => $activeYear->id,
-                        'semester' => $activeYear->semester,
-                    ],
-                    [
-                        'attendance_sick' => $sakit,
-                        'attendance_permit' => $izin,
-                        'attendance_absent' => $alpha,
-                        'homeroom_teacher_notes' => $catatan[$student->id] ?? null,
-                    ]
-                );
-
-                // 3. Finalisasi raport
-                if (!$raport->is_finalized) {
-                    $raport->finalize();
-                }
-            }
-        });
-
-        return redirect()->route('wali.finalisasi')->with('success', 'Semua raport siswa di kelas ini telah berhasil difinalisasi.');
+        // Absensi: rekap langsung jika raport kosong atau field absensi kosong
+        if (!$raport || (!$raport->attendance_sick && !$raport->attendance_permit && !$raport->attendance_absent)) {
+            $attendance = Attendance::where('student_id', $student->id)
+                ->where('semester_id', $activeSemester->id)
+                ->selectRaw(
+                    "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
+                )->first();
+            $attendance_sick = $attendance->sakit ?? 0;
+            $attendance_permit = $attendance->izin ?? 0;
+            $attendance_absent = $attendance->alpha ?? 0;
+        } else {
+            $attendance_sick = $raport->attendance_sick;
+            $attendance_permit = $raport->attendance_permit;
+            $attendance_absent = $raport->attendance_absent;
+        }
+        return view('siswa.raport', compact('student', 'activeSemester', 'kelas', 'waliKelas', 'raport', 'grades', 'subjectSettings', 'attendance_sick', 'attendance_permit', 'attendance_absent'));
     }
 
     public function kenaikan()
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
+        $kelas = $assignment?->classroom;
 
         if (!$kelas) {
             return view('guru.wali-kelas-empty');
@@ -262,18 +237,18 @@ class WaliKelasController extends Controller
 
         // Ambil data nilai dan KKM untuk menghitung rekomendasi
         $grades = Grade::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('semester_id', $activeSemester->id)
             ->get()->groupBy('student_id');
 
-        $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear->id)
+        $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
             ->get()->keyBy('subject_id');
 
         // Ambil data promosi yang sudah ada
         $promotions = StudentPromotion::where('from_classroom_id', $kelas->id)
-            ->where('promotion_year_id', $activeYear->id)
+            ->where('promotion_year_id', $activeSemester->id)
             ->get()->keyBy('student_id');
 
-        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeYear) {
+        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeSemester) {
             $studentGrades = $grades->get($student->id, collect());
             $failedSubjects = 0;
 
@@ -307,7 +282,7 @@ class WaliKelasController extends Controller
         });
 
 
-        return view('guru.wali-kenaikan', compact('kelas', 'promotionData', 'activeYear'));
+        return view('guru.wali-kenaikan', compact('kelas', 'promotionData', 'activeSemester'));
     }
 
     public function storeKenaikan(Request $request)
@@ -319,18 +294,19 @@ class WaliKelasController extends Controller
 
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->firstOrFail();
+        $kelas = $assignment->classroom;
 
-        DB::transaction(function () use ($request, $kelas, $activeYear) {
+        DB::transaction(function () use ($request, $kelas, $activeSemester) {
             foreach ($request->promotions as $studentId => $data) {
                 // Rekalkulasi rekomendasi untuk keamanan
                 $studentGrades = Grade::where('student_id', $studentId)
-                    ->where('academic_year_id', $activeYear->id)
+                    ->where('semester_id', $activeSemester->id)
                     ->get();
-                $subjectSettings = SubjectSetting::where('academic_year_id', $activeYear->id)
+                $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
                     ->get()->keyBy('subject_id');
 
                 $failedSubjects = 0;
@@ -352,7 +328,7 @@ class WaliKelasController extends Controller
                 StudentPromotion::updateOrCreate(
                     [
                         'student_id' => $studentId,
-                        'promotion_year_id' => $activeYear->id,
+                        'promotion_year_id' => $activeSemester->id,
                         'from_classroom_id' => $kelas->id,
                     ],
                     [
@@ -371,11 +347,12 @@ class WaliKelasController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
-        if (!$kelas) {
+        $kelas = $assignment?->classroom;
+        if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
         $students = $kelas->students()->where('status', 'Pindahan')->with('user')->orderBy('full_name')->get();
@@ -386,11 +363,11 @@ class WaliKelasController extends Controller
             ->unique('id')
             ->sortBy('name');
         $grades = Grade::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('semester_id', $activeSemester->id)
             ->where('source', 'konversi')
             ->get()
             ->groupBy(['student_id', 'subject_id']);
-        return view('guru.wali-pindahan', compact('kelas', 'students', 'subjects', 'grades', 'activeYear'));
+        return view('guru.wali-pindahan', compact('kelas', 'students', 'subjects', 'grades', 'activeSemester'));
     }
 
     public function storeKonversi(Request $request)
@@ -403,17 +380,18 @@ class WaliKelasController extends Controller
         ]);
         $user = Auth::user();
         $teacher = $user->teacher;
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->firstOrFail();
+        $kelas = $assignment->classroom;
         foreach ($request->grades as $data) {
             Grade::updateOrCreate(
                 [
                     'student_id' => $data['student_id'],
                     'subject_id' => $data['subject_id'],
                     'classroom_id' => $kelas->id,
-                    'academic_year_id' => $activeYear->id,
+                    'semester_id' => $activeSemester->id,
                     'source' => 'konversi',
                 ],
                 [

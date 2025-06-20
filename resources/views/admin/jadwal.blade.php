@@ -9,7 +9,7 @@
             </svg>
             Jadwal & Penugasan Mengajar
         </h2>
-        <div class="mt-1 text-sm text-gray-600">Tahun Ajaran: <span class="font-semibold text-blue-700">{{ $activeYear->year ?? '-' }}</span> | Semester: <span class="font-semibold text-blue-700">{{ $activeYear->semester ?? '-' }}</span></div>
+        <div class="mt-1 text-sm text-gray-600">Tahun Ajaran: <span class="font-semibold text-blue-700">{{ $activeSemester->academicYear->year ?? '-' }}</span> | Semester: <span class="font-semibold text-blue-700">{{ $activeSemester->name ?? '-' }}</span></div>
     </div>
     <a href="#" onclick="window.print()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm transition" title="Cetak Jadwal">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,9 +29,11 @@
             </svg>
             Pilih Kelas:
         </label>
-        <select name="kelas_id" onchange="this.form.submit()" class="border-2 border-blue-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto">
-            @foreach($classrooms as $kelas)
-            <option value="{{ $kelas->id }}" {{ $selectedClass == $kelas->id ? 'selected' : '' }}>{{ $kelas->name }}</option>
+        <select name="assignment_id" onchange="this.form.submit()" class="border-2 border-blue-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto">
+            @foreach($assignments as $assignment)
+            <option value="{{ $assignment->id }}" {{ $selectedAssignment == $assignment->id ? 'selected' : '' }}>
+                {{ $assignment->classroom->name }} ({{ $assignment->academicYear->year ?? '' }})
+            </option>
             @endforeach
         </select>
     </form>
@@ -98,7 +100,7 @@
                         </div>
                     </div>
                     @else
-                    <a href="{{ route('jadwal.admin.create', ['kelas_id' => $selectedClass, 'day' => $day, 'jam' => $i]) }}" class="bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white px-3 py-2 rounded-lg text-xs flex items-center gap-1 justify-center shadow font-semibold transition" title="Tambah Jadwal">
+                    <a href="{{ route('jadwal.admin.create', ['assignment_id' => $selectedAssignment, 'day' => $day, 'jam' => $i]) }}" class="bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white px-3 py-2 rounded-lg text-xs flex items-center gap-1 justify-center shadow font-semibold transition" title="Tambah Jadwal">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>

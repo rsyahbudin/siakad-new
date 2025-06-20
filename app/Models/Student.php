@@ -8,6 +8,8 @@ use App\Models\Grade;
 use App\Models\Raport;
 use App\Models\User;
 use App\Models\Attendance;
+use App\Models\ClassStudent;
+use App\Models\ClassroomAssignment;
 
 class Student extends Model
 {
@@ -56,5 +58,15 @@ class Student extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function classStudents()
+    {
+        return $this->hasMany(ClassStudent::class);
+    }
+
+    public function classroomAssignments()
+    {
+        return $this->hasManyThrough(ClassroomAssignment::class, ClassStudent::class, 'student_id', 'id', 'id', 'classroom_assignment_id');
     }
 }

@@ -2,15 +2,17 @@
 @section('title', 'Nilai Siswa')
 @section('content')
 <h2 class="text-2xl font-bold mb-4">Nilai Siswa</h2>
-<p class="mb-4">Tahun Ajaran Aktif: <span class="font-semibold">{{ $activeYear->year ?? '-' }} Semester {{ $activeYear->semester ?? '-' }}</span></p>
+<p class="mb-4">Semester Aktif: <span class="font-semibold">{{ $activeSemester->academicYear->year ?? '-' }} (Semester {{ $activeSemester->name ?? '-' }})</span></p>
 <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
     <form method="GET" class="flex gap-2 items-center w-full sm:w-auto">
         <label class="font-semibold text-blue-700 flex items-center gap-1">
             Pilih Kelas:
         </label>
-        <select name="kelas_id" onchange="this.form.submit()" class="border-2 border-blue-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto">
-            @foreach($classrooms as $kelas)
-            <option value="{{ $kelas->id }}" {{ $selectedClass == $kelas->id ? 'selected' : '' }}>{{ $kelas->name }}</option>
+        <select name="assignment_id" onchange="this.form.submit()" class="border-2 border-blue-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto">
+            @foreach($assignments as $assignment)
+            <option value="{{ $assignment->id }}" {{ $selectedAssignment == $assignment->id ? 'selected' : '' }}>
+                {{ $assignment->classroom->name }} ({{ $assignment->academicYear->year ?? '' }})
+            </option>
             @endforeach
         </select>
     </form>
