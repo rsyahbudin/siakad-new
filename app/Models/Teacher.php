@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Classroom;
 use App\Models\Schedule;
+use App\Models\Attendance;
 
 class Teacher extends Model
 {
@@ -16,6 +17,7 @@ class Teacher extends Model
         'full_name',
         'phone_number',
         'address',
+        'subject_id',
     ];
     public function user()
     {
@@ -32,5 +34,15 @@ class Teacher extends Model
     {
         // Relasi untuk semua jadwal mengajar guru ini
         return $this->hasMany(Schedule::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(\App\Models\Subject::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

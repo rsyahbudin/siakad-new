@@ -6,13 +6,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use app\Models\Teacher;
-use app\Models\Student;
+use App\Models\Teacher;
+use App\Models\Student;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    // Role constants
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_TEACHER = 'teacher';
+    public const ROLE_STUDENT = 'student';
 
     /**
      * The attributes that are mass assignable.
@@ -63,5 +68,48 @@ class User extends Authenticatable
     public function student()
     {
         return $this->hasOne(Student::class);
+    }
+
+    /**
+     * Check if the user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Check if the user is a teacher
+     */
+    public function isTeacher(): bool
+    {
+        return $this->role === self::ROLE_TEACHER;
+    }
+
+    /**
+     * Check if the user is a student
+     */
+    public function isStudent(): bool
+    {
+        return $this->role === self::ROLE_STUDENT;
+    }
+
+    /**
+     * Check if the user is a homeroom teacher for the active academic year.
+     */
+    public function isHomeroomTeacher(): bool
+    {
+        if (!$this->isTeacher() || !$this->teacher) {
+            return false;
+        }
+
+        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            return false;
+        }
+
+        return $this->teacher->homeroomClassrooms()
+            ->where('academic_year_id', $activeYear->id)
+            ->exists();
     }
 }

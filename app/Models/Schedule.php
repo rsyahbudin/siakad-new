@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\Attendance;
 
 class Schedule extends Model
 {
@@ -37,5 +38,10 @@ class Schedule extends Model
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

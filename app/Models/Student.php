@@ -7,16 +7,24 @@ use App\Models\Classroom;
 use App\Models\Grade;
 use App\Models\Raport;
 use App\Models\User;
+use App\Models\Attendance;
 
 class Student extends Model
 {
 
     protected $fillable = [
         'user_id',
+        'nis',
         'nisn',
         'full_name',
         'gender',
+        'birth_place',
         'birth_date',
+        'religion',
+        'address',
+        'parent_name',
+        'parent_phone',
+        'phone_number',
         'status',
     ];
 
@@ -43,5 +51,10 @@ class Student extends Model
     public function raports()
     {
         return $this->hasMany(Raport::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

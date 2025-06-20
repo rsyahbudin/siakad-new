@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
@@ -13,16 +13,52 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Membuat Admin Pertama
+        // Create Admin
         User::create([
-            'name' => 'Admin Siakad',
-            'email' => 'admin@siakad.test', // Anda bisa ganti email ini
-            'password' => Hash::make('password'), // Ganti dengan password yang aman
-            'role' => 'admin', // Ini adalah peran penting
+            'name' => 'Administrator',
+            'email' => 'admin@siakad.test',
+            'password' => Hash::make('admin123'),
+            'role' => User::ROLE_ADMIN,
         ]);
 
-        // Anda juga bisa membuat contoh guru dan siswa di sini jika perlu
-        // User::create([... 'role' => 'teacher']);
-        // User::create([... 'role' => 'student']);
+        // Create Sample Teachers
+        $teachers = [
+            [
+                'name' => 'Budi Santoso',
+                'email' => 'budi@siakad.test',
+                'password' => Hash::make('teacher123'),
+                'role' => User::ROLE_TEACHER,
+            ],
+            [
+                'name' => 'Siti Rahayu',
+                'email' => 'siti@siakad.test',
+                'password' => Hash::make('teacher123'),
+                'role' => User::ROLE_TEACHER,
+            ],
+        ];
+
+        foreach ($teachers as $teacher) {
+            User::create($teacher);
+        }
+
+        // Create Sample Students
+        $students = [
+            [
+                'name' => 'Ahmad Rizki',
+                'email' => 'ahmad@siakad.test',
+                'password' => Hash::make('student123'),
+                'role' => User::ROLE_STUDENT,
+            ],
+            [
+                'name' => 'Dewi Putri',
+                'email' => 'dewi@siakad.test',
+                'password' => Hash::make('student123'),
+                'role' => User::ROLE_STUDENT,
+            ],
+        ];
+
+        foreach ($students as $student) {
+            User::create($student);
+        }
     }
 }

@@ -1,24 +1,116 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\MajorController;
-
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\ClassAssignmentController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\PenugasanGuruController;
+use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\SubjectSettingController;
+use App\Http\Controllers\GradeController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\GuruJadwalController;
+use App\Http\Controllers\GuruNilaiController;
+use App\Http\Controllers\WaliKelasController;
+use App\Http\Controllers\SiswaRaportController;
+use App\Http\Controllers\GuruAbsensiController;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Auth::check() ? redirect('/dashboard') : redirect('/login');
+});
+
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+
+// Resource index routes for admin menu (dummy controller, just for view)
+Route::middleware('auth')->group(function () {
+    Route::resource('tahun-ajaran', AcademicYearController::class)->parameters(['tahun-ajaran' => 'tahun_ajaran']);
+    Route::post('tahun-ajaran/{tahun_ajaran}/set-active', [AcademicYearController::class, 'setActive'])->name('tahun-ajaran.set-active');
+    Route::resource('jurusan', MajorController::class)->parameters(['jurusan' => 'jurusan']);
+    Route::resource('mapel', SubjectController::class)->parameters(['mapel' => 'mapel']);
+    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'guru']);
+    Route::resource('siswa', StudentController::class)->parameters(['siswa' => 'siswa']);
+    Route::resource('kelas', ClassroomController::class)->parameters(['kelas' => 'kelas']);
+    // Guru
+    Route::get('/jadwal-guru', [GuruJadwalController::class, 'index'])->name('jadwal.guru');
+    Route::get('/input-nilai', [GuruNilaiController::class, 'index'])->name('nilai.input');
+    Route::post('/input-nilai', [GuruNilaiController::class, 'store'])->name('nilai.input.store');
+    Route::get('/input-absensi', [GuruAbsensiController::class, 'index'])->name('absensi.input');
+    Route::post('/input-absensi', [GuruAbsensiController::class, 'store'])->name('absensi.input.store');
+    // Siswa
+    Route::view('/profil-siswa', 'siswa.profil')->name('profil.siswa');
+    Route::view('/jadwal-siswa', 'siswa.jadwal')->name('jadwal.siswa');
+    Route::view('/nilai-siswa', 'siswa.nilai')->name('nilai.siswa');
+    Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('raport.siswa');
+    // Admin
+    Route::prefix('jadwal-admin')->name('jadwal.admin.')->group(function () {
+        Route::get('/', [ScheduleController::class, 'index'])->name('index');
+        Route::get('/create', [ScheduleController::class, 'create'])->name('create');
+        Route::post('/', [ScheduleController::class, 'store'])->name('store');
+        Route::get('/{jadwal}/edit', [ScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{jadwal}', [ScheduleController::class, 'update'])->name('update');
+        Route::delete('/{jadwal}', [ScheduleController::class, 'destroy'])->name('destroy');
+    });
+    Route::get('/penugasan-guru', [PenugasanGuruController::class, 'index'])->name('penugasan.guru');
+    Route::get('/pembagian-kelas', [ClassAssignmentController::class, 'index'])->name('pembagian.kelas');
+    Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
+    Route::get('kenaikan-kelas', [PromotionController::class, 'index'])->name('kenaikan-kelas.index');
+    Route::post('kenaikan-kelas', [PromotionController::class, 'processPromotions'])->name('kenaikan-kelas.store');
+    Route::view('/import-siswa', 'admin.import-siswa')->name('import.siswa');
+    Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
+    Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
+    Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');
+    Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen.pengguna');
+    // Guru Wali Kelas
+    Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.dashboard');
+    Route::get('/wali/kelas', [\App\Http\Controllers\WaliKelasController::class, 'kelas'])->name('wali.kelas');
+    Route::get('/wali/leger', [\App\Http\Controllers\WaliKelasController::class, 'leger'])->name('wali.leger');
+    Route::get('/wali/catatan', [WaliKelasController::class, 'catatan'])->name('wali.catatan');
+    Route::post('/wali/catatan', [WaliKelasController::class, 'storeCatatan'])->name('wali.catatan.store');
+    Route::get('/wali/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('wali.finalisasi');
+    Route::post('/wali/finalisasi', [WaliKelasController::class, 'storeFinalisasi'])->name('wali.finalisasi.store');
+    Route::get('/wali/kenaikan', [WaliKelasController::class, 'kenaikan'])->name('wali.kenaikan');
+    Route::post('/wali/kenaikan', [WaliKelasController::class, 'storeKenaikan'])->name('wali.kenaikan.store');
+    Route::get('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'siswaPindahan'])->name('wali.pindahan');
+    Route::post('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'storeKonversi'])->name('wali.pindahan.store');
+    Route::get('/nilai-admin', [GradeController::class, 'index'])->name('nilai.admin');
+    Route::post('/admin/user/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.user.reset-password')->middleware('auth');
+});
+
+Route::prefix('pengaturan-mapel')->name('pengaturan.mapel.')->group(function () {
+    Route::get('/', [SubjectSettingController::class, 'index'])->name('index');
+    Route::get('/create', [SubjectSettingController::class, 'create'])->name('create');
+    Route::post('/', [SubjectSettingController::class, 'store'])->name('store');
+    Route::get('/{setting}/edit', [SubjectSettingController::class, 'edit'])->name('edit');
+    Route::put('/{setting}', [SubjectSettingController::class, 'update'])->name('update');
+    Route::delete('/{setting}', [SubjectSettingController::class, 'destroy'])->name('destroy');
+});
+
+// Wali Kelas Routes
+Route::middleware('is.homeroom.teacher')->prefix('wali-kelas')->name('wali.')->group(function () {
+    Route::get('/kelas', [WaliKelasController::class, 'kelas'])->name('kelas');
+    Route::get('/leger', [WaliKelasController::class, 'leger'])->name('leger');
+    Route::get('/raport/{student}', [WaliKelasController::class, 'showRaport'])->name('raport.show');
+    Route::get('/absensi', [WaliKelasController::class, 'absensi'])->name('absensi');
+    Route::post('/absensi', [WaliKelasController::class, 'storeAbsensi'])->name('absensi.store');
+    Route::get('/catatan', [WaliKelasController::class, 'catatan'])->name('catatan');
+    Route::post('/catatan', [WaliKelasController::class, 'storeCatatan'])->name('catatan.store');
+    Route::get('/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('finalisasi');
+    Route::post('/finalisasi', [WaliKelasController::class, 'storeFinalisasi'])->name('finalisasi.store');
+});
+
+Route::get('/home', function () {
+    return redirect('/dashboard');
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
-
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('majors', MajorController::class);
-    // ... rute admin lain
-});
-
-require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

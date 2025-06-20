@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use App\Models\AcademicYear;
 use App\Models\Subject;
 
@@ -17,17 +18,30 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
-            
-            $table->unsignedTinyInteger('kkm'); // Nilai 0-255, cukup untuk KKM 0-100
-            $table->unsignedTinyInteger('assignment_weight'); // Bobot Tugas dalam %
-            $table->unsignedTinyInteger('uts_weight'); // Bobot UTS dalam %
-            $table->unsignedTinyInteger('uas_weight'); // Bobot UAS dalam %
-            
-            // Kunci unik untuk memastikan satu mapel hanya punya satu set aturan per tahun ajaran
-            $table->unique(['subject_id', 'academic_year_id']);
-            
+
+            // KKM and grade weights
+            $table->decimal('kkm', 5, 2)->comment('Kriteria Ketuntasan Minimal');
+            $table->decimal('assignment_weight', 5, 2)->comment('Bobot Nilai Tugas (%)');
+            $table->decimal('uts_weight', 5, 2)->comment('Bobot Nilai UTS (%)');
+            $table->decimal('uas_weight', 5, 2)->comment('Bobot Nilai UAS (%)');
+
+            // Additional settings
+            $table->boolean('allow_remedial')->default(true)->comment('Izinkan Remedial');
+            $table->decimal('remedial_max_grade', 5, 2)->nullable()->comment('Nilai Maksimal Remedial');
+            $table->boolean('is_active')->default(true)->comment('Status Aktif');
+
+            // Unique constraint
+            $table->unique(['subject_id', 'academic_year_id'], 'unique_subject_year_settings');
+
+            // Common query index
+            $table->index(['academic_year_id', 'is_active']);
+
             $table->timestamps();
         });
+
+        // Add check constraint using raw SQL
+        DB::statement('ALTER TABLE subject_settings ADD CONSTRAINT check_weights_sum_100 
+            CHECK (assignment_weight + uts_weight + uas_weight = 100.00)');
     }
 
     /**
@@ -35,6 +49,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Remove check constraint first (if your DB requires explicit removal)
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE subject_settings DROP CONSTRAINT IF EXISTS check_weights_sum_100');
+        }
+
         Schema::dropIfExists('subject_settings');
     }
 };

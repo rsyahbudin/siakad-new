@@ -14,14 +14,16 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi ke tabel 'users' untuk login.
             // onDelete('cascade') berarti jika akun login seorang guru dihapus,
             // data profil guru ini juga akan ikut terhapus.
             $table->foreignIdFor(User::class)->constrained()->onDelete('cascade');
-            
+
             $table->string('nip')->unique();
             $table->string('full_name');
+            $table->unsignedBigInteger('subject_id')->nullable();
+            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('set null');
             $table->string('phone_number')->nullable();
             $table->text('address')->nullable();
             $table->timestamps();

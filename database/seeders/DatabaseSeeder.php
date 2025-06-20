@@ -13,7 +13,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            // Anda bisa memanggil seeder lain di sini nanti
+            AcademicYearSeeder::class,
+            MajorSeeder::class,
+            SubjectSeeder::class,
+            TeacherSeeder::class,
+            StudentSeeder::class,
+            ClassroomSeeder::class,
+            SubjectSettingSeeder::class,
         ]);
     }
 }

@@ -10,9 +10,21 @@ class GradeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        $classrooms = \App\Models\Classroom::where('academic_year_id', $activeYear?->id)->orderBy('name')->get();
+        $selectedClass = $request->kelas_id ?? $classrooms->first()?->id;
+        $grades = [];
+        if ($selectedClass) {
+            $grades = \App\Models\Grade::with(['student.user', 'subject'])
+                ->where('classroom_id', $selectedClass)
+                ->where('academic_year_id', $activeYear?->id)
+                ->orderBy('student_id')
+                ->orderBy('subject_id')
+                ->get();
+        }
+        return view('admin.nilai', compact('classrooms', 'selectedClass', 'grades', 'activeYear'));
     }
 
     /**

@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('academic_years', function (Blueprint $table) {
             $table->id();
-            $table->string('year', 9); // Contoh: "2024/2025"
-            $table->enum('semester', ['Ganjil', 'Genap']);
+            $table->string('year', 9); // Format: "2024/2025"
+            $table->tinyInteger('semester')->comment('1: Ganjil, 2: Genap');
             $table->boolean('is_active')->default(false);
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
+
+            // Ensure only one active academic year
+            $table->index('is_active');
         });
     }
 
