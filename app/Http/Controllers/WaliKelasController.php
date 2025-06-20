@@ -132,61 +132,6 @@ class WaliKelasController extends Controller
         return redirect()->route('wali.absensi')->with('success', 'Rekapitulasi absensi berhasil disimpan.');
     }
 
-    public function catatan()
-    {
-        $user = Auth::user();
-        $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
-            ->first();
-
-        if (!$kelas) {
-            return view('guru.wali-kelas-empty');
-        }
-
-        $students = $kelas->students()->orderBy('full_name')->get();
-
-        // Ambil catatan yang sudah ada
-        $raports = Raport::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeYear->id)
-            ->get()
-            ->keyBy('student_id');
-
-        return view('guru.wali-catatan', compact('kelas', 'students', 'raports', 'activeYear'));
-    }
-
-    public function storeCatatan(Request $request)
-    {
-        $request->validate([
-            'notes' => 'required|array',
-            'notes.*' => 'nullable|string',
-        ]);
-
-        $user = Auth::user();
-        $teacher = $user->teacher;
-        $activeYear = AcademicYear::getActive();
-        $kelas = Classroom::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeYear?->id)
-            ->firstOrFail();
-
-        foreach ($request->notes as $studentId => $note) {
-            Raport::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'classroom_id' => $kelas->id,
-                    'academic_year_id' => $activeYear->id,
-                    'semester' => $activeYear->semester,
-                ],
-                [
-                    'homeroom_teacher_notes' => $note,
-                ]
-            );
-        }
-
-        return redirect()->route('wali.catatan')->with('success', 'Catatan wali kelas berhasil disimpan.');
-    }
-
     public function finalisasi()
     {
         $user = Auth::user();
@@ -254,7 +199,9 @@ class WaliKelasController extends Controller
             ->where('academic_year_id', $activeYear?->id)
             ->firstOrFail();
 
-        DB::transaction(function () use ($kelas, $activeYear) {
+        $catatan = $request->input('catatan', []);
+
+        DB::transaction(function () use ($kelas, $activeYear, $catatan) {
             $students = $kelas->students()->get();
             $studentIds = $students->pluck('id');
 
@@ -272,7 +219,7 @@ class WaliKelasController extends Controller
                 $izin = $rekap ? ($rekap->firstWhere('status', 'Izin')->total ?? 0) : 0;
                 $alpha = $rekap ? ($rekap->firstWhere('status', 'Alpha')->total ?? 0) : 0;
 
-                // 2. Update atau buat data raport dengan rekap absensi final
+                // 2. Update atau buat data raport dengan rekap absensi final dan catatan wali
                 $raport = Raport::updateOrCreate(
                     [
                         'student_id' => $student->id,
@@ -284,6 +231,7 @@ class WaliKelasController extends Controller
                         'attendance_sick' => $sakit,
                         'attendance_permit' => $izin,
                         'attendance_absent' => $alpha,
+                        'homeroom_teacher_notes' => $catatan[$student->id] ?? null,
                     ]
                 );
 

@@ -77,8 +77,6 @@ Route::middleware('auth')->group(function () {
     Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.dashboard');
     Route::get('/wali/kelas', [\App\Http\Controllers\WaliKelasController::class, 'kelas'])->name('wali.kelas');
     Route::get('/wali/leger', [\App\Http\Controllers\WaliKelasController::class, 'leger'])->name('wali.leger');
-    Route::get('/wali/catatan', [WaliKelasController::class, 'catatan'])->name('wali.catatan');
-    Route::post('/wali/catatan', [WaliKelasController::class, 'storeCatatan'])->name('wali.catatan.store');
     Route::get('/wali/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('wali.finalisasi');
     Route::post('/wali/finalisasi', [WaliKelasController::class, 'storeFinalisasi'])->name('wali.finalisasi.store');
     Route::get('/wali/kenaikan', [WaliKelasController::class, 'kenaikan'])->name('wali.kenaikan');

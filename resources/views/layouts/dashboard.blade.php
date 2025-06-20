@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-blue-700 text-white flex flex-col py-6 px-4">
             <div class="mb-8 text-center">
-                <h2 class="text-2xl font-bold tracking-wide">SIAKAD</h2>
+                <h2 class="text-2xl font-bold tracking-wide">SIAKAD SMA XYZ</h2>
             </div>
             <nav class="flex-1">
                 @php $role = Auth::user()->role; @endphp
@@ -45,7 +45,6 @@
                     <li><a href="{{ route('wali.kelas') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.kelas') ? 'bg-blue-900' : '' }}">Kelas Perwalian</a></li>
                     <li><a href="{{ route('wali.leger') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.leger') ? 'bg-blue-900' : '' }}">Rekap Nilai (Leger)</a></li>
                     <li><a href="{{ route('wali.absensi') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.absensi') ? 'bg-blue-900' : '' }}">Rekap Absensi</a></li>
-                    <li><a href="{{ route('wali.catatan') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.catatan') ? 'bg-blue-900' : '' }}">Catatan Raport</a></li>
                     <li><a href="{{ route('wali.finalisasi') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.finalisasi') ? 'bg-blue-900' : '' }}">Finalisasi Raport</a></li>
                     <li><a href="{{ route('wali.kenaikan') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.kenaikan') ? 'bg-blue-900' : '' }}">Kenaikan Kelas</a></li>
                     <li><a href="{{ route('wali.pindahan') }}" class="block px-4 py-2 rounded hover:bg-blue-800 {{ request()->routeIs('wali.pindahan') ? 'bg-blue-900' : '' }}">Siswa Pindahan</a></li>

@@ -37,29 +37,44 @@
             <tr>
                 <th class="py-2 px-4 text-left">Nama Siswa</th>
                 <th class="py-2 px-4 text-center">Status Raport</th>
+                @if(!$isAllFinalized)
+                <th class="py-2 px-4 text-center">Catatan Wali Kelas</th>
+                @endif
             </tr>
         </thead>
         <tbody>
-            @forelse($raports->sortBy('student.full_name') as $raport)
+            @if(!$isAllFinalized)
+            <form method="POST" action="{{ route('wali.finalisasi.store') }}" onsubmit="return confirm('Apakah Anda yakin ingin memfinalisasi semua raport? Tindakan ini tidak dapat dibatalkan.');">
+                @csrf
+                @foreach($raports->sortBy('student.full_name') as $raport)
+                <tr class="border-b hover:bg-blue-50">
+                    <td class="py-2 px-4 font-medium">{{ $raport->student->full_name }}</td>
+                    <td class="py-2 px-4 text-center">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-700">Draft</span>
+                    </td>
+                    <td class="py-2 px-4 text-center">
+                        <input type="text" name="catatan[{{ $raport->student_id }}]" value="{{ old('catatan.' . $raport->student_id, $raport->homeroom_teacher_notes) }}" class="w-full border rounded px-2 py-1 text-xs">
+                    </td>
+                </tr>
+                @endforeach
+                <tr>
+                    <td colspan="3" class="py-4 text-center">
+                        <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 shadow-lg transition font-bold text-lg">
+                            Finalisasi Seluruh Raport Kelas {{ $kelas->name }}
+                        </button>
+                    </td>
+                </tr>
+            </form>
+            @else
+            @foreach($raports->sortBy('student.full_name') as $raport)
             <tr class="border-b hover:bg-blue-50">
                 <td class="py-2 px-4 font-medium">{{ $raport->student->full_name }}</td>
                 <td class="py-2 px-4 text-center">
-                    @if($raport->is_finalized)
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Final
-                    </span>
-                    @else
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-700">
-                        Draft
-                    </span>
-                    @endif
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Final</span>
                 </td>
             </tr>
-            @empty
-            <tr>
-                <td colspan="2" class="py-4 text-center text-gray-500">Tidak ada data raport untuk ditampilkan.</td>
-            </tr>
-            @endforelse
+            @endforeach
+            @endif
         </tbody>
     </table>
 </div>

@@ -42,12 +42,21 @@
 @section('content')
 <div class="flex justify-between items-center mb-6 no-print">
     <h2 class="text-2xl font-bold">Raport Digital</h2>
+    @if($raport && $raport->is_finalized)
     <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
         Cetak Raport
     </button>
+    @else
+    <button class="bg-gray-300 text-gray-500 px-4 py-2 rounded flex items-center gap-2 cursor-not-allowed" title="Raport belum final, tidak bisa diunduh" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        Cetak Raport
+    </button>
+    @endif
 </div>
 
 <div class="printable-area bg-white p-8 rounded-lg shadow-lg border">
@@ -56,6 +65,17 @@
         <h1 class="text-2xl font-bold text-gray-800">LAPORAN HASIL BELAJAR SISWA</h1>
         <h2 class="text-xl font-semibold text-gray-700">SMA NEGERI HARAPAN BANGSA</h2>
         <p class="text-sm text-gray-500">Tahun Ajaran {{ $activeYear->year }} - Semester {{ $activeYear->semester }}</p>
+    </div>
+
+    <!-- Status Finalisasi Raport -->
+    <div class="mb-4">
+        @if($raport && $raport->is_finalized)
+        <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded font-semibold text-sm">Status: Final</span>
+        <span class="ml-2 text-green-700">Raport sudah final, nilai tidak bisa diubah.</span>
+        @else
+        <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded font-semibold text-sm">Status: Draft</span>
+        <span class="ml-2 text-yellow-700">Raport ini masih draft, nilai bisa berubah.</span>
+        @endif
     </div>
 
     <!-- Informasi Siswa -->
