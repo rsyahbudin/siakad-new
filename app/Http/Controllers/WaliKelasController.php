@@ -159,14 +159,86 @@ class WaliKelasController extends Controller
         if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
+
         $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
-        $raports = Raport::where('classroom_id', $kelas->id)
+
+        // Cek apakah sudah ada raport yang difinalisasi
+        $existingRaports = Raport::where('classroom_id', $kelas->id)
             ->where('academic_year_id', $activeSemester->academic_year_id)
             ->where('semester', $semesterInt)
+            ->where('is_finalized', true)
             ->with('student')
             ->get();
-        $isAllFinalized = $raports->every(fn($raport) => $raport->is_finalized);
-        return view('guru.wali-finalisasi', compact('kelas', 'raports', 'activeSemester', 'isAllFinalized'));
+
+        $isFinalized = $existingRaports->isNotEmpty();
+
+        // Ambil daftar siswa untuk ditampilkan
+        $students = $assignment->classStudents()->with('student')->get();
+
+        // Jika sudah difinalisasi, gunakan data raport
+        // Jika belum, gunakan data siswa dari assignment
+        $displayData = $isFinalized ? $existingRaports : $students;
+
+        return view('guru.wali-finalisasi', compact('kelas', 'displayData', 'activeSemester', 'isFinalized', 'students'));
+    }
+
+    public function storeFinalisasi(Request $request)
+    {
+        $user = Auth::user();
+        $teacher = $user->teacher;
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
+            ->firstOrFail();
+        $kelas = $assignment->classroom;
+
+        $request->validate([
+            'catatan' => 'nullable|array',
+            'catatan.*' => 'nullable|string|max:500',
+        ]);
+
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
+        $students = $assignment->classStudents()->with('student')->get();
+
+        // Cek apakah sudah ada raport yang difinalisasi
+        $existingRaports = Raport::where('classroom_id', $kelas->id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
+            ->where('is_finalized', true)
+            ->exists();
+
+        if ($existingRaports) {
+            return redirect()->route('wali.finalisasi')->with('error', 'Raport sudah difinalisasi sebelumnya. Tidak dapat melakukan finalisasi ulang.');
+        }
+
+        DB::transaction(function () use ($request, $students, $kelas, $activeSemester, $semesterInt) {
+            foreach ($students as $classStudent) {
+                $student = $classStudent->student;
+
+                // Rekap absensi dari tabel attendances
+                $attendance = Attendance::where('student_id', $student->id)
+                    ->where('semester_id', $activeSemester->id)
+                    ->selectRaw(
+                        "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
+                    )->first();
+
+                // Buat raport baru (CREATE, bukan UPDATE)
+                Raport::create([
+                    'student_id' => $student->id,
+                    'classroom_id' => $kelas->id,
+                    'academic_year_id' => $activeSemester->academic_year_id,
+                    'semester' => $semesterInt,
+                    'attendance_sick' => $attendance->sakit ?? 0,
+                    'attendance_permit' => $attendance->izin ?? 0,
+                    'attendance_absent' => $attendance->alpha ?? 0,
+                    'homeroom_teacher_notes' => $request->catatan[$student->id] ?? null,
+                    'is_finalized' => true,
+                    'finalized_at' => now(),
+                ]);
+            }
+        });
+
+        return redirect()->route('wali.finalisasi')->with('success', 'Semua raport berhasil difinalisasi. Data tidak dapat diubah lagi.');
     }
 
     public function showRaport(Student $student)
@@ -187,11 +259,20 @@ class WaliKelasController extends Controller
         if ($assignment->classroom_assignment_id !== $waliKelasAssignment?->id) {
             return back()->with('error', 'Anda tidak memiliki hak akses untuk melihat raport siswa ini.');
         }
-        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
+        
+        // Ambil semua tahun ajaran yang pernah diikuti siswa (untuk filter)
+        $academicYears = AcademicYear::whereHas('classroomAssignments.classStudents', function($query) use ($student) {
+            $query->where('student_id', $student->id);
+        })->orderBy('year', 'desc')->get();
+        
+        // Gunakan tahun ajaran aktif sebagai selectedYear
+        $selectedYear = $activeSemester->academicYear;
+        $selectedSemester = $activeSemester->name === 'Ganjil' ? 1 : 2;
+        
         $raport = Raport::where('student_id', $student->id)
             ->where('classroom_id', $kelas->id)
             ->where('academic_year_id', $activeSemester->academic_year_id)
-            ->where('semester', $semesterInt)
+            ->where('semester', $selectedSemester)
             ->first();
         $grades = Grade::with('subject')
             ->where('student_id', $student->id)
@@ -216,7 +297,20 @@ class WaliKelasController extends Controller
             $attendance_permit = $raport->attendance_permit;
             $attendance_absent = $raport->attendance_absent;
         }
-        return view('siswa.raport', compact('student', 'activeSemester', 'kelas', 'waliKelas', 'raport', 'grades', 'subjectSettings', 'attendance_sick', 'attendance_permit', 'attendance_absent'));
+        return view('siswa.raport', compact(
+            'student', 
+            'selectedYear', 
+            'selectedSemester', 
+            'academicYears', 
+            'kelas', 
+            'waliKelas', 
+            'raport', 
+            'grades', 
+            'subjectSettings', 
+            'attendance_sick', 
+            'attendance_permit', 
+            'attendance_absent'
+        ));
     }
 
     public function kenaikan()

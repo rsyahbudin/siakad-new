@@ -52,7 +52,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profil-siswa/password', [\App\Http\Controllers\StudentController::class, 'changePasswordSiswa'])->name('profil.siswa.password');
     Route::get('/jadwal-siswa', [\App\Http\Controllers\StudentController::class, 'jadwalMingguanSiswa'])->name('jadwal.siswa');
     Route::get('/nilai-siswa', [\App\Http\Controllers\StudentController::class, 'nilaiAkademikSiswa'])->name('nilai.siswa');
-    Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('raport.siswa');
+    Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('siswa.raport');
+    Route::get('/raport-siswa/semua', [SiswaRaportController::class, 'allRaports'])->name('siswa.all-raports');
     // Admin
     Route::prefix('jadwal-admin')->name('jadwal.admin.')->group(function () {
         Route::get('/', [ScheduleController::class, 'index'])->name('index');

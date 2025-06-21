@@ -42,21 +42,58 @@
 @section('content')
 <div class="flex justify-between items-center mb-6 no-print">
     <h2 class="text-2xl font-bold">Raport Digital</h2>
-    @if($raport && $raport->is_finalized)
-    <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        Cetak Raport
-    </button>
-    @else
-    <button class="bg-gray-300 text-gray-500 px-4 py-2 rounded flex items-center gap-2 cursor-not-allowed" title="Raport belum final, tidak bisa diunduh" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        Cetak Raport
-    </button>
-    @endif
+    <div class="flex items-center gap-4">
+        <a href="{{ route('siswa.all-raports') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Lihat Semua Raport
+        </a>
+        @if($raport && $raport->is_finalized)
+        <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            Cetak Raport
+        </button>
+        @else
+        <button class="bg-gray-300 text-gray-500 px-4 py-2 rounded flex items-center gap-2 cursor-not-allowed" title="Raport belum final, tidak bisa diunduh" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            Cetak Raport
+        </button>
+        @endif
+    </div>
+</div>
+
+<!-- Filter Tahun Ajaran dan Semester -->
+<div class="bg-white rounded-lg shadow p-6 mb-6 no-print">
+    <h3 class="text-lg font-semibold mb-4">Pilih Tahun Ajaran dan Semester</h3>
+    <form method="GET" action="{{ route('siswa.raport') }}" class="flex items-center gap-4">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
+            <select name="academic_year_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                @foreach($academicYears as $year)
+                <option value="{{ $year->id }}" {{ $selectedYear->id == $year->id ? 'selected' : '' }}>
+                    {{ $year->year }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+            <select name="semester" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="1" {{ $selectedSemester == 1 ? 'selected' : '' }}>Ganjil</option>
+                <option value="2" {{ $selectedSemester == 2 ? 'selected' : '' }}>Genap</option>
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+                Tampilkan
+            </button>
+        </div>
+    </form>
 </div>
 
 <div class="printable-area bg-white p-8 rounded-lg shadow-lg border">
@@ -64,7 +101,7 @@
     <div class="text-center mb-8 border-b pb-4">
         <h1 class="text-2xl font-bold text-gray-800">LAPORAN HASIL BELAJAR SISWA</h1>
         <h2 class="text-xl font-semibold text-gray-700">SMA NEGERI HARAPAN BANGSA</h2>
-        <p class="text-sm text-gray-500">Tahun Ajaran {{ $activeSemester->academicYear->year }} - Semester {{ $activeSemester->name }}</p>
+        <p class="text-sm text-gray-500">Tahun Ajaran {{ $selectedYear->year }} - Semester {{ $selectedSemester == 1 ? 'Ganjil' : 'Genap' }}</p>
     </div>
 
     <!-- Status Finalisasi Raport -->
