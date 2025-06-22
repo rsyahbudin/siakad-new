@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('mapel', SubjectController::class)->parameters(['mapel' => 'mapel']);
     Route::resource('guru', TeacherController::class)->parameters(['guru' => 'guru']);
     Route::resource('siswa', StudentController::class)->parameters(['siswa' => 'siswa']);
+    Route::get('/siswa/{siswa}/detail', [StudentController::class, 'detail'])->name('siswa.detail');
     Route::resource('kelas', ClassroomController::class)->parameters(['kelas' => 'kelas']);
     // Guru
     Route::get('/jadwal-guru', [GuruJadwalController::class, 'index'])->name('jadwal.guru');

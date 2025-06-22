@@ -11,27 +11,30 @@
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
-        
+
         /* Smooth animations */
         .nav-item {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .nav-item:hover {
             transform: translateX(4px);
         }
-        
+
         /* Gradient text */
         .gradient-text {
             background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
@@ -39,7 +42,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         /* Glass effect */
         .glass-effect {
             backdrop-filter: blur(10px);
@@ -58,7 +61,7 @@
                 <div class="absolute top-20 -right-4 w-32 h-32 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl"></div>
                 <div class="absolute -bottom-8 left-20 w-28 h-28 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl"></div>
             </div>
-            
+
             <!-- Header -->
             <div class="relative z-10 mb-8 p-6 text-center">
                 <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white/20 to-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
@@ -69,7 +72,7 @@
                 <h2 class="text-xl font-bold tracking-wide gradient-text">SIAKAD</h2>
                 <p class="text-blue-200 text-sm font-medium">SMA XYZ</p>
             </div>
-            
+
             <!-- Navigation -->
             <nav class="flex-1 px-4 pb-4 custom-scrollbar overflow-y-auto relative z-10">
                 @php $role = Auth::user()->role; @endphp
@@ -85,14 +88,14 @@
                             <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    
+
                     <!-- Master Data Section -->
                     <li class="pt-4">
                         <div class="px-4 py-2">
                             <p class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Master Data</p>
                         </div>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('tahun-ajaran.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('tahun-ajaran.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +104,7 @@
                             <span class="font-medium">Tahun Ajaran</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('jurusan.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('jurusan.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +113,7 @@
                             <span class="font-medium">Jurusan</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('mapel.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('mapel.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +122,7 @@
                             <span class="font-medium">Mata Pelajaran</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('guru.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('guru.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,7 +131,7 @@
                             <span class="font-medium">Guru</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +140,7 @@
                             <span class="font-medium">Siswa</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('kelas.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kelas.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,14 +149,14 @@
                             <span class="font-medium">Kelas</span>
                         </a>
                     </li>
-                    
+
                     <!-- Academic Section -->
                     <li class="pt-4">
                         <div class="px-4 py-2">
                             <p class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Akademik</p>
                         </div>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('jadwal.admin.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('jadwal.admin.*') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +165,7 @@
                             <span class="font-medium text-sm">Jadwal & Penugasan</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('penugasan.guru') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('penugasan.guru') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +174,7 @@
                             <span class="font-medium text-sm">Laporan Penugasan</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('pembagian.kelas') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('pembagian.kelas') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +183,7 @@
                             <span class="font-medium">Pembagian Kelas</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('kenaikan-kelas.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kenaikan-kelas.*') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +192,7 @@
                             <span class="font-medium text-sm">Kenaikan & Kelulusan</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('nilai.admin') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('nilai.admin') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,14 +201,14 @@
                             <span class="font-medium">Nilai Siswa</span>
                         </a>
                     </li>
-                    
+
                     <!-- System Section -->
                     <li class="pt-4">
                         <div class="px-4 py-2">
                             <p class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Sistem</p>
                         </div>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('import.siswa') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('import.siswa') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +217,7 @@
                             <span class="font-medium">Import Data</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('pengaturan.kkm') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('pengaturan.kkm') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +227,7 @@
                             <span class="font-medium text-sm">Pengaturan KKM</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('manajemen.pengguna') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('manajemen.pengguna') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +236,7 @@
                             <span class="font-medium text-sm">Manajemen User</span>
                         </a>
                     </li>
-                    
+
                     @elseif($role === 'teacher')
                     <li>
                         <a href="{{ route('dashboard') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('dashboard') ? 'bg-white/20 shadow-lg' : '' }} group">
@@ -244,7 +247,7 @@
                             <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('jadwal.guru') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('jadwal.guru') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,7 +256,7 @@
                             <span class="font-medium">Jadwal Mengajar</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('nilai.input') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('nilai.input') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,14 +265,14 @@
                             <span class="font-medium">Input Nilai</span>
                         </a>
                     </li>
-                    
+
                     @if(Auth::user()->isHomeroomTeacher())
                     <li class="pt-4">
                         <div class="px-4 py-2">
                             <p class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Menu Wali Kelas</p>
                         </div>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.dashboard') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.dashboard') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +281,7 @@
                             <span class="font-medium text-sm">Dashboard Wali</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.kelas') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.kelas') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,7 +290,7 @@
                             <span class="font-medium">Kelas Perwalian</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.leger') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.leger') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,7 +299,7 @@
                             <span class="font-medium text-sm">Rekap Nilai</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.absensi') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.absensi') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +308,7 @@
                             <span class="font-medium">Rekap Absensi</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.finalisasi') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.finalisasi') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +317,7 @@
                             <span class="font-medium">Finalisasi Raport</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.kenaikan') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.kenaikan') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +326,7 @@
                             <span class="font-medium">Kenaikan Kelas</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('wali.pindahan') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.pindahan') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,7 +336,7 @@
                         </a>
                     </li>
                     @endif
-                    
+
                     @elseif($role === 'student')
                     <li>
                         <a href="{{ route('dashboard') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('dashboard') ? 'bg-white/20 shadow-lg' : '' }} group">
@@ -344,7 +347,7 @@
                             <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('profil.siswa') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('profil.siswa') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,7 +356,7 @@
                             <span class="font-medium">Profil</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('jadwal.siswa') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('jadwal.siswa') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,7 +365,7 @@
                             <span class="font-medium">Jadwal</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('nilai.siswa') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('nilai.siswa') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,7 +374,7 @@
                             <span class="font-medium">Nilai Akademik</span>
                         </a>
                     </li>
-                    
+
                     <li>
                         <a href="{{ route('siswa.raport') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('siswa.raport') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,7 +386,7 @@
                     @endif
                 </ul>
             </nav>
-            
+
             <!-- User Profile & Logout -->
             <div class="relative z-10 p-4">
                 <!-- User Info -->
@@ -400,7 +403,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Logout Button -->
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -413,7 +416,7 @@
                 </form>
             </div>
         </aside>
-        
+
         <!-- Main Content -->
         <main class="flex-1 flex flex-col min-h-screen">
             <!-- Top Bar -->
@@ -424,8 +427,8 @@
                         <p class="text-gray-600 text-sm">Selamat datang di Sistem Informasi Akademik</p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        
-                        
+
+
                         <!-- User Menu -->
                         <div class="flex items-center space-x-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-xl">
                             <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
@@ -439,13 +442,14 @@
                     </div>
                 </div>
             </header>
-            
+
             <!-- Content Area -->
             <div class="flex-1 p-8 bg-gradient-to-br from-gray-50/50 via-white to-blue-50/30">
                 @yield('content')
             </div>
         </main>
     </div>
+
 </body>
 
 </html>

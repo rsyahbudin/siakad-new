@@ -9,6 +9,7 @@ use App\Models\ClassroomAssignment;
 use App\Models\ClassStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -19,9 +20,10 @@ class StudentController extends Controller
     {
         $activeSemester = \App\Models\Semester::where('is_active', true)->first();
         $activeYearId = $activeSemester?->academic_year_id;
-        $query = Student::with(['user', 'classStudents' => function ($q) use ($activeYearId) {
-            $q->where('academic_year_id', $activeYearId)->with('classroomAssignment.classroom');
-        }]);
+
+        $query = Student::query();
+
+        // Search functionality
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
@@ -34,8 +36,48 @@ class StudentController extends Controller
                     });
             });
         }
-        $students = $query->orderByDesc('id')->get();
-        return view('master.siswa.index', compact('students'));
+
+        // Filter by class
+        if ($request->filled('kelas')) {
+            $query->whereHas('classStudents', function ($q) use ($request, $activeYearId) {
+                $q->where('academic_year_id', $activeYearId)
+                    ->whereHas('classroomAssignment', function ($ca) use ($request) {
+                        $ca->where('classroom_id', $request->kelas);
+                    });
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by gender
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Clone the query for statistics before adding eager loading or pagination
+        $statsQuery = clone $query;
+
+        $totalStudents = $statsQuery->count();
+        $activeStudents = (clone $statsQuery)->where('status', 'Aktif')->count();
+        $migratedStudents = (clone $statsQuery)->where('status', 'Pindahan')->count();
+
+        // Add eager loading to the main query for display
+        $students = $query->with(['user', 'classStudents' => function ($q) use ($activeYearId) {
+            $q->where('academic_year_id', $activeYearId)->with('classroomAssignment.classroom');
+        }])->orderByDesc('id')->paginate(15)->withQueryString();
+
+        $classrooms = Classroom::orderBy('name')->get();
+
+        return view('master.siswa.index', compact(
+            'students',
+            'classrooms',
+            'totalStudents',
+            'activeStudents',
+            'migratedStudents'
+        ));
     }
 
     /**
@@ -104,9 +146,20 @@ class StudentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Student $student)
+    public function show(Student $siswa)
     {
-        //
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+
+        // Load student with related data
+        $siswa->load([
+            'user',
+            'classStudents' => function ($q) use ($activeYearId) {
+                $q->where('academic_year_id', $activeYearId)->with('classroomAssignment.classroom');
+            }
+        ]);
+
+        return view('master.siswa.show', compact('siswa'));
     }
 
     /**
@@ -200,7 +253,7 @@ class StudentController extends Controller
      */
     public function profilSiswa()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $siswa = $user->student;
         return view('siswa.profil', compact('siswa'));
     }
@@ -210,7 +263,7 @@ class StudentController extends Controller
      */
     public function updateProfilSiswa(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $siswa = $user->student;
         $request->validate([
             'full_name' => 'required|string|max:100',
@@ -246,8 +299,8 @@ class StudentController extends Controller
             'current_password' => 'required',
             'password' => 'required|string|min:8|confirmed',
         ]);
-        $user = auth()->user();
-        if (!\Hash::check($request->current_password, $user->password)) {
+        $user = Auth::user();
+        if (!Hash::check($request->current_password, $user->password)) {
             return back()->with('password_error', 'Password lama salah.');
         }
         $user->password = bcrypt($request->password);
@@ -260,7 +313,7 @@ class StudentController extends Controller
      */
     public function jadwalMingguanSiswa()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $student = $user->student;
         $classroom = $student->classrooms()->latest('id')->first();
         $weeklySchedules = [];
@@ -283,7 +336,7 @@ class StudentController extends Controller
      */
     public function nilaiAkademikSiswa()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $student = $user->student;
         $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
         $grades = collect();
