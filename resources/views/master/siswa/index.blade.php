@@ -11,13 +11,25 @@
         <p class="mt-1 text-sm text-gray-500">
             Kelola data siswa yang terdaftar di sistem.
         </p>
+        @if($userRole === 'teacher')
+        <div class="mt-3">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+                <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-sm font-medium text-blue-800">Mode Lihat Saja - Anda dapat melihat data siswa tetapi tidak dapat mengedit atau menghapus</span>
+            </div>
+        </div>
+        @endif
     </div>
+    @if($canEdit)
     <a href="{{ route('siswa.create') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
         Tambah Siswa
     </a>
+    @endif
 </div>
 
 {{-- Notifikasi Sukses --}}
@@ -191,26 +203,45 @@
 
 {{-- Quick Actions --}}
 @if($students->total() > 0)
-<div class="mb-4 flex flex-wrap items-center gap-2">
-    <span class="text-sm font-medium text-gray-700">Quick Actions:</span>
-    <a href="{{ route('siswa.create') }}" class="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100">
-        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-        Tambah Siswa
-    </a>
-    <button onclick="exportData()" class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100">
-        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        Export Data
-    </button>
-    <button onclick="printTable()" class="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100">
-        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        Print
-    </button>
+<div class="mb-4">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm font-medium text-gray-700">Quick Actions:</span>
+            @if($canEdit)
+            <a href="{{ route('siswa.create') }}" class="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Tambah Siswa
+            </a>
+            @endif
+        </div>
+
+        {{-- Export Section --}}
+        <div class="flex flex-col gap-3">
+            <span class="text-xs font-medium text-gray-500">Export Data:</span>
+
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Export Current Results --}}
+                @if(request('q') || request('kelas') || request('status') || request('gender'))
+                <a href="{{ route('siswa.export', request()->query()) }}" class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Hasil Pencarian
+                </a>
+                @endif
+
+                {{-- Export All Students --}}
+                <a href="{{ route('siswa.export') }}" class="inline-flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Semua Siswa
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 @endif
 
@@ -270,6 +301,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
                             </a>
+                            @if($canEdit)
                             <a href="{{ route('siswa.edit', $siswa) }}" class="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" title="Edit Siswa">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -284,6 +316,7 @@
                                     </svg>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -318,12 +351,14 @@
                             <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada data siswa</h3>
                             <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan data siswa baru.</p>
                             <div class="mt-4">
+                                @if($canEdit)
                                 <a href="{{ route('siswa.create') }}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
                                     Tambah Siswa Pertama
                                 </a>
+                                @endif
                             </div>
                             @endif
                         </div>
@@ -342,88 +377,6 @@
 
 @push('scripts')
 <script>
-    function exportData() {
-        // Create a CSV content
-        let csvContent = "data:text/csv;charset=utf-8,";
-
-        // Add headers
-        csvContent += "No,NIS,NISN,Nama,Email,Jenis Kelamin,Kelas,Status\n";
-
-        // Add data rows
-        const rows = document.querySelectorAll('#siswa-table-container tbody tr');
-        rows.forEach((row, index) => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length > 0) {
-                const nis = cells[1]?.textContent?.trim() || '';
-                const nama = cells[2]?.querySelector('.text-sm.font-medium')?.textContent?.trim() || '';
-                const email = cells[2]?.querySelector('.text-sm.text-gray-500')?.textContent?.trim() || '';
-                const gender = cells[3]?.textContent?.trim() || '';
-                const kelas = cells[4]?.textContent?.trim() || '';
-                const status = cells[5]?.textContent?.trim() || '';
-
-                // Escape commas and quotes in CSV
-                const escapeCsv = (str) => {
-                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                        return '"' + str.replace(/"/g, '""') + '"';
-                    }
-                    return str;
-                };
-
-                csvContent += `${index + 1},${escapeCsv(nis)},${escapeCsv(nama)},${escapeCsv(email)},${escapeCsv(gender)},${escapeCsv(kelas)},${escapeCsv(status)}\n`;
-            }
-        });
-
-        // Create download link
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "data_siswa.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function printTable() {
-        // Create a new window for printing
-        const printWindow = window.open('', '_blank');
-        const table = document.querySelector('#siswa-table-container');
-
-        printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Data Siswa - Print</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f3f4f6; font-weight: bold; }
-                .header { text-align: center; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #1f2937; }
-                .header p { margin: 5px 0; color: #6b7280; }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>Data Siswa</h1>
-                <p>Tanggal: ${new Date().toLocaleDateString('id-ID')}</p>
-                <p>Total: ${document.querySelectorAll('#siswa-table-container tbody tr').length} siswa</p>
-            </div>
-            ${table.outerHTML}
-            <div class="no-print" style="margin-top: 20px; text-align: center;">
-                <button onclick="window.print()">Print</button>
-                <button onclick="window.close()">Tutup</button>
-            </div>
-        </body>
-        </html>
-    `);
-
-        printWindow.document.close();
-    }
-
     // Auto-submit form when filters change (optional)
     document.addEventListener('DOMContentLoaded', function() {
         const filterSelects = document.querySelectorAll('select[name="kelas"], select[name="status"], select[name="gender"]');
@@ -481,27 +434,6 @@
             submitButton.innerHTML = originalButtonText;
             submitButton.disabled = false;
         }
-
-        // Highlight search results
-        function highlightSearchResults() {
-            const searchQuery = searchInput.value.toLowerCase();
-            if (!searchQuery) return;
-
-            const tableRows = document.querySelectorAll('#siswa-table-container tbody tr');
-            tableRows.forEach(row => {
-                const textContent = row.textContent.toLowerCase();
-                if (textContent.includes(searchQuery)) {
-                    row.classList.add('bg-yellow-50');
-                    // Add a subtle animation
-                    row.style.transition = 'background-color 0.3s ease';
-                } else {
-                    row.classList.remove('bg-yellow-50');
-                }
-            });
-        }
-
-        // Highlight results when page loads
-        highlightSearchResults();
 
         // Remove highlighting when search is cleared
         searchInput.addEventListener('input', function() {

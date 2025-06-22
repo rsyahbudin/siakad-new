@@ -210,15 +210,6 @@
                     </li>
 
                     <li>
-                        <a href="{{ route('import.siswa') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('import.siswa') ? 'bg-white/20 shadow-lg' : '' }} group">
-                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                            </svg>
-                            <span class="font-medium">Import Data</span>
-                        </a>
-                    </li>
-
-                    <li>
                         <a href="{{ route('pengaturan.kkm') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('pengaturan.kkm') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -263,6 +254,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             <span class="font-medium">Input Nilai</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            <span class="font-medium">Data Siswa</span>
                         </a>
                     </li>
 

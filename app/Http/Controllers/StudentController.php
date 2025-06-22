@@ -71,12 +71,20 @@ class StudentController extends Controller
 
         $classrooms = Classroom::orderBy('name')->get();
 
+        // Check user role for view permissions
+        $userRole = Auth::user()->role;
+        $canEdit = $userRole === 'admin';
+        $canDelete = $userRole === 'admin';
+
         return view('master.siswa.index', compact(
             'students',
             'classrooms',
             'totalStudents',
             'activeStudents',
-            'migratedStudents'
+            'migratedStudents',
+            'userRole',
+            'canEdit',
+            'canDelete'
         ));
     }
 
@@ -88,7 +96,9 @@ class StudentController extends Controller
         $classrooms = Classroom::orderBy('name')->get();
         $activeSemester = \App\Models\Semester::where('is_active', true)->first();
         $activeYearId = $activeSemester?->academic_year_id;
-        $assignments = ClassroomAssignment::where('academic_year_id', $activeYearId)->with('classroom')->get();
+        $assignments = ClassroomAssignment::where('academic_year_id', $activeYearId)
+            ->with(['classroom', 'academicYear'])
+            ->get();
         return view('master.siswa.form', compact('classrooms', 'assignments'));
     }
 
@@ -159,7 +169,11 @@ class StudentController extends Controller
             }
         ]);
 
-        return view('master.siswa.show', compact('siswa'));
+        // Check user role for view permissions
+        $userRole = Auth::user()->role;
+        $canEdit = $userRole === 'admin';
+
+        return view('master.siswa.show', compact('siswa', 'userRole', 'canEdit'));
     }
 
     /**
@@ -170,7 +184,9 @@ class StudentController extends Controller
         $classrooms = Classroom::orderBy('name')->get();
         $activeSemester = \App\Models\Semester::where('is_active', true)->first();
         $activeYearId = $activeSemester?->academic_year_id;
-        $assignments = ClassroomAssignment::where('academic_year_id', $activeYearId)->with('classroom')->get();
+        $assignments = ClassroomAssignment::where('academic_year_id', $activeYearId)
+            ->with(['classroom', 'academicYear'])
+            ->get();
         $siswa->load('user', 'classStudents.classroomAssignment.classroom');
         return view('master.siswa.form', ['siswa' => $siswa, 'classrooms' => $classrooms, 'assignments' => $assignments]);
     }
@@ -351,5 +367,117 @@ class StudentController extends Controller
                 ->keyBy('subject_id');
         }
         return view('siswa.nilai', compact('grades', 'subjectSettings'));
+    }
+
+    /**
+     * Export students data to CSV
+     */
+    public function export(Request $request)
+    {
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
+
+        $query = Student::with(['user', 'classStudents' => function ($q) use ($activeYearId) {
+            $q->where('academic_year_id', $activeYearId)->with('classroomAssignment.classroom');
+        }]);
+
+        // Apply filters
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('nis', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('kelas')) {
+            $query->whereHas('classStudents.classroomAssignment', function ($q) use ($request) {
+                $q->where('classroom_id', $request->kelas);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        $students = $query->get();
+
+        // Generate filename based on filters
+        $filename = 'data_siswa';
+        if ($request->filled('kelas')) {
+            $classroom = \App\Models\Classroom::find($request->kelas);
+            $filename .= '_' . str_replace(' ', '_', $classroom->name);
+        }
+        if ($request->filled('status')) {
+            $filename .= '_' . $request->status;
+        }
+        $filename .= '_' . date('Y-m-d_H-i-s') . '.csv';
+
+        // Create CSV content
+        $headers = [
+            'No',
+            'NIS',
+            'NISN',
+            'Nama Lengkap',
+            'Email',
+            'Jenis Kelamin',
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Agama',
+            'Kelas',
+            'Status',
+            'Alamat',
+            'Nama Orang Tua',
+            'No HP Orang Tua',
+            'No HP Siswa'
+        ];
+
+        $csvContent = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel compatibility
+
+        // Add headers
+        $csvContent .= implode(',', array_map(function ($header) {
+            return '"' . str_replace('"', '""', $header) . '"';
+        }, $headers)) . "\n";
+
+        // Add data rows
+        foreach ($students as $index => $student) {
+            $row = [
+                $index + 1,
+                $student->nis,
+                $student->nisn,
+                $student->full_name,
+                $student->user->email,
+                $student->gender == 'L' ? 'Laki-laki' : 'Perempuan',
+                $student->birth_place,
+                $student->birth_date ? $student->birth_date->format('d/m/Y') : '',
+                $student->religion,
+                $student->classStudents->first()?->classroomAssignment?->classroom?->name ?? '-',
+                $student->status,
+                $student->address,
+                $student->parent_name,
+                $student->parent_phone,
+                $student->phone_number
+            ];
+
+            $csvContent .= implode(',', array_map(function ($value) {
+                return '"' . str_replace('"', '""', $value) . '"';
+            }, $row)) . "\n";
+        }
+
+        // Return CSV response
+        return response($csvContent)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Transfer-Encoding', 'binary')
+            ->header('Cache-Control', 'must-revalidate')
+            ->header('Pragma', 'public');
     }
 }

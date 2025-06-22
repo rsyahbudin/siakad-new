@@ -40,13 +40,41 @@ Route::middleware('auth')->group(function () {
     Route::resource('jurusan', MajorController::class)->parameters(['jurusan' => 'jurusan']);
     Route::resource('mapel', SubjectController::class)->parameters(['mapel' => 'mapel']);
     Route::resource('guru', TeacherController::class)->parameters(['guru' => 'guru']);
-    Route::resource('siswa', StudentController::class)->parameters(['siswa' => 'siswa']);
+
+    // Student routes with role-based access
+    Route::get('/siswa', [StudentController::class, 'index'])->name('siswa.index');
+    Route::get('/siswa/export', [StudentController::class, 'export'])->name('siswa.export');
+
+    // Admin-only student routes
+    Route::middleware('check.role:admin')->group(function () {
+        Route::get('/siswa/create', [StudentController::class, 'create'])->name('siswa.create');
+        Route::post('/siswa', [StudentController::class, 'store'])->name('siswa.store');
+        Route::get('/siswa/{siswa}/edit', [StudentController::class, 'edit'])->name('siswa.edit');
+        Route::put('/siswa/{siswa}', [StudentController::class, 'update'])->name('siswa.update');
+        Route::delete('/siswa/{siswa}', [StudentController::class, 'destroy'])->name('siswa.destroy');
+    });
+
+    Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
     Route::get('/siswa/{siswa}/detail', [StudentController::class, 'detail'])->name('siswa.detail');
     Route::resource('kelas', ClassroomController::class)->parameters(['kelas' => 'kelas']);
     // Guru
     Route::get('/jadwal-guru', [GuruJadwalController::class, 'index'])->name('jadwal.guru');
     Route::get('/input-nilai', [GuruNilaiController::class, 'index'])->name('nilai.input');
     Route::post('/input-nilai', [GuruNilaiController::class, 'store'])->name('nilai.input.store');
+    // Route::get('/input-nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
+    // Route::post('/input-nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
+    // Route::get('/input-nilai/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
+    // Route::get('guru/nilai/import/form', [GuruNilaiController::class, 'handleImport'])->name('nilai.import.handle');
+    // Route::post('guru/nilai/import/store', [GuruNilaiController::class, 'storeImport'])->name('nilai.import.store');
+    // Route::get('guru/nilai/import/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
+    // Route::get('/input-nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
+    // Route::post('/input-nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
+    // Route::get('/input-nilai/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
+    Route::get('guru/nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
+    Route::post('guru/nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
+    Route::get('guru/nilai/import/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
+    
+
     // Siswa
     Route::get('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'profilSiswa'])->name('profil.siswa');
     Route::post('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'updateProfilSiswa'])->name('profil.siswa.update');
@@ -69,7 +97,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
     Route::get('kenaikan-kelas', [PromotionController::class, 'index'])->name('kenaikan-kelas.index');
     Route::post('kenaikan-kelas', [PromotionController::class, 'processPromotions'])->name('kenaikan-kelas.store');
-    Route::view('/import-siswa', 'admin.import-siswa')->name('import.siswa');
     Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
     Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
     Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');
