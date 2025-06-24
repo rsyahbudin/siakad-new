@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\Grade;
 use App\Models\Semester;
 use App\Models\ClassStudent;
+use App\Models\Raport;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -36,6 +37,7 @@ class GuruNilaiController extends Controller
         $students = collect();
         $grades = collect();
         $bobot = null;
+        $isFinalized = false;
         if ($selectedAssignment && $selectedSubject) {
             $assignment = ClassroomAssignment::find($selectedAssignment);
             $students = $assignment->classStudents()->with('student.user')->get()->pluck('student');
@@ -46,6 +48,14 @@ class GuruNilaiController extends Controller
             $bobot = \App\Models\SubjectSetting::where('subject_id', $selectedSubject)
                 ->where('academic_year_id', $activeYearId)
                 ->first();
+
+            // Cek apakah raport kelas ini sudah difinalisasi
+            $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
+            $isFinalized = Raport::where('classroom_id', $assignment->classroom_id)
+                ->where('academic_year_id', $activeSemester->academic_year_id)
+                ->where('semester', $semesterInt)
+                ->where('is_finalized', true)
+                ->exists();
         }
         // Ambil subjects hanya yang diampu guru pada assignment terpilih
         if ($selectedAssignment) {
@@ -60,7 +70,7 @@ class GuruNilaiController extends Controller
         } else {
             $subjects = collect();
         }
-        return view('guru.input-nilai', compact('assignments', 'selectedAssignment', 'selectedSubject', 'students', 'grades', 'activeSemester', 'bobot', 'subjects'));
+        return view('guru.input-nilai', compact('assignments', 'selectedAssignment', 'selectedSubject', 'students', 'grades', 'activeSemester', 'bobot', 'subjects', 'isFinalized'));
     }
 
     public function store(Request $request)
@@ -74,16 +84,28 @@ class GuruNilaiController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'nilai' => 'required|array',
         ]);
+
+        $assignment = \App\Models\ClassroomAssignment::find($request->assignment_id);
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
+        $isFinalized = Raport::where('classroom_id', $assignment->classroom_id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
+            ->where('is_finalized', true)
+            ->exists();
+
+        if ($isFinalized) {
+            return redirect()->back()->with('error', 'Tidak dapat menyimpan nilai karena raport untuk kelas ini sudah difinalisasi.');
+        }
+
         foreach ($request->nilai as $student_id => $nilai) {
-            $assignment = \App\Models\ClassroomAssignment::find($request->assignment_id);
             $grade = Grade::updateOrCreate([
                 'student_id' => $student_id,
                 'classroom_assignment_id' => $request->assignment_id,
-                'classroom_id' => $assignment?->classroom_id,
                 'subject_id' => $request->subject_id,
                 'semester_id' => $activeSemester?->id,
-                'academic_year_id' => $activeYearId,
             ], [
+                'classroom_id' => $assignment?->classroom_id,
+                'academic_year_id' => $activeYearId,
                 'assignment_grade' => isset($nilai['tugas']) ? ($nilai['tugas'] === null || $nilai['tugas'] === '' ? 0 : $nilai['tugas']) : 0,
                 'uts_grade' => isset($nilai['uts']) ? ($nilai['uts'] === null || $nilai['uts'] === '' ? 0 : $nilai['uts']) : 0,
                 'uas_grade' => isset($nilai['uas']) ? ($nilai['uas'] === null || $nilai['uas'] === '' ? 0 : $nilai['uas']) : 0,
@@ -139,6 +161,19 @@ class GuruNilaiController extends Controller
             return back()->with('error', 'Tidak ada semester aktif.');
         }
 
+        // Cek finalisasi sebelum import
+        $assignment = ClassroomAssignment::find($request->assignment_id);
+        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
+        $isFinalized = Raport::where('classroom_id', $assignment->classroom_id)
+            ->where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('semester', $semesterInt)
+            ->where('is_finalized', true)
+            ->exists();
+
+        if ($isFinalized) {
+            return redirect()->back()->with('error', 'Tidak dapat mengimpor nilai karena raport untuk kelas ini sudah difinalisasi.');
+        }
+
         $path = $request->file('file')->getRealPath();
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
@@ -171,8 +206,6 @@ class GuruNilaiController extends Controller
                 continue;
             }
 
-            $assignment = ClassroomAssignment::find($request->assignment_id);
-
             try {
                 $grade = Grade::updateOrCreate(
                     [
@@ -180,10 +213,10 @@ class GuruNilaiController extends Controller
                         'classroom_assignment_id' => $request->assignment_id,
                         'subject_id' => $request->subject_id,
                         'semester_id' => $activeSemester->id,
-                        'academic_year_id' => $activeSemester->academic_year_id,
                     ],
                     [
                         'classroom_id' => $assignment->classroom_id,
+                        'academic_year_id' => $activeSemester->academic_year_id,
                         'assignment_grade' => $assignment_grade === null || $assignment_grade === '' ? 0 : $assignment_grade,
                         'uts_grade' => $uts_grade === null || $uts_grade === '' ? 0 : $uts_grade,
                         'uas_grade' => $uas_grade === null || $uas_grade === '' ? 0 : $uas_grade,

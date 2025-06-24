@@ -48,6 +48,14 @@
         Bobot dan KKM untuk mata pelajaran ini belum diatur. Nilai akhir dan status tidak dapat dihitung.
     </div>
     @endif
+
+    @if($isFinalized)
+    <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700" role="alert">
+        <p class="font-bold">Raport Telah Difinalisasi</p>
+        <p>Anda tidak dapat lagi mengubah atau menyimpan nilai untuk kelas ini karena raport semester ini telah difinalisasi oleh wali kelas.</p>
+    </div>
+    @endif
+
     <form method="POST" action="{{ route('nilai.input.store') }}">
         @csrf
         <input type="hidden" name="assignment_id" value="{{ $selectedAssignment }}">
@@ -70,9 +78,9 @@
                     <tr class="border-b hover:bg-blue-50">
                         <td class="py-2 px-4">{{ $i+1 }}</td>
                         <td class="py-2 px-4">{{ $siswa->full_name }}</td>
-                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][tugas]" value="{{ $grades[$siswa->id]->assignment_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center"></td>
-                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uts]" value="{{ $grades[$siswa->id]->uts_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center"></td>
-                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uas]" value="{{ $grades[$siswa->id]->uas_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center"></td>
+                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][tugas]" value="{{ $grades[$siswa->id]->assignment_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
+                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uts]" value="{{ $grades[$siswa->id]->uts_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
+                        <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uas]" value="{{ $grades[$siswa->id]->uas_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
                         @php
                         $nilaiAkhir = null;
                         $status = null;
@@ -106,7 +114,7 @@
                 </tbody>
             </table>
         </div>
-        <button type="submit" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Simpan Nilai</button>
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 {{ $isFinalized ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $isFinalized ? 'disabled' : '' }}>Simpan Nilai</button>
     </form>
     @endif
 </div>

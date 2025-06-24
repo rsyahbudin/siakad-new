@@ -93,9 +93,7 @@ class SiswaRaportController extends Controller
         if (!$raport || (!$raport->attendance_sick && !$raport->attendance_permit && !$raport->attendance_absent)) {
             $attendance = Attendance::where('student_id', $student->id)
                 ->where('semester_id', $semester->id)
-                ->selectRaw(
-                    "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
-                )->first();
+                ->first();
             $attendance_sick = $attendance->sakit ?? 0;
             $attendance_permit = $attendance->izin ?? 0;
             $attendance_absent = $attendance->alpha ?? 0;

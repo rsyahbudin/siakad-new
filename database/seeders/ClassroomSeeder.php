@@ -23,16 +23,16 @@ class ClassroomSeeder extends Seeder
         $classrooms = [
             // Grade X (10)
             [
-                'name' => 'X-1',
+                'name' => 'X IPA-1',
                 'grade_level' => 10,
                 'capacity' => 32,
-                'major_id' => null,
+                'major_id' =>  $ipa->id ?? null,
             ],
             [
-                'name' => 'X-2',
+                'name' => 'X IPS-1',
                 'grade_level' => 10,
                 'capacity' => 32,
-                'major_id' => null,
+                'major_id' => $ips->id ?? null,
             ],
             // Grade XI (11)
             [

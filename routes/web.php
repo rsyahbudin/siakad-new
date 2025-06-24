@@ -54,6 +54,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/siswa/{siswa}', [StudentController::class, 'destroy'])->name('siswa.destroy');
     });
 
+    // Admin-only Promotion routes
+    Route::middleware('check.role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('promotions/process', [PromotionController::class, 'process'])->name('promotions.process');
+    });
+
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
     Route::get('/siswa/{siswa}/detail', [StudentController::class, 'detail'])->name('siswa.detail');
     Route::resource('kelas', ClassroomController::class)->parameters(['kelas' => 'kelas']);
@@ -73,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('guru/nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
     Route::post('guru/nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
     Route::get('guru/nilai/import/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
-    
+
 
     // Siswa
     Route::get('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'profilSiswa'])->name('profil.siswa');
@@ -95,8 +101,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/penugasan-guru', [PenugasanGuruController::class, 'index'])->name('penugasan.guru');
     Route::get('/pembagian-kelas', [ClassAssignmentController::class, 'index'])->name('pembagian.kelas');
     Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
-    Route::get('kenaikan-kelas', [PromotionController::class, 'index'])->name('kenaikan-kelas.index');
-    Route::post('kenaikan-kelas', [PromotionController::class, 'processPromotions'])->name('kenaikan-kelas.store');
     Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
     Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
     Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');

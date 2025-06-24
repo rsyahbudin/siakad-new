@@ -16,6 +16,13 @@
     <p class="text-sm">Silakan masukkan total rekapitulasi absensi (Sakit, Izin, Alpha) untuk setiap siswa selama satu semester. Data ini akan digunakan untuk pengisian raport.</p>
 </div>
 
+@if($isFinalized)
+<div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700" role="alert">
+    <p class="font-bold">Raport Telah Difinalisasi</p>
+    <p>Anda tidak dapat lagi mengubah rekap absensi karena raport semester ini telah difinalisasi.</p>
+</div>
+@endif
+
 {{-- Search Bar --}}
 <form method="GET" class="mb-4 flex gap-2 items-center">
     <input type="text" name="q" value="{{ $q }}" placeholder="Cari nama/NIS/NISN siswa..." class="border rounded px-3 py-1 w-64 text-sm">
@@ -48,13 +55,13 @@
                     <tr class="border-b hover:bg-blue-50">
                         <td class="py-2 px-4 font-medium">{{ $student->full_name }}</td>
                         <td class="py-2 px-4">
-                            <input type="number" name="attendances[{{ $student->id }}][sakit]" value="{{ $attendance->sakit ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center">
+                            <input type="number" name="attendances[{{ $student->id }}][sakit]" value="{{ $attendance->sakit ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center" {{ $isFinalized ? 'disabled' : '' }}>
                         </td>
                         <td class="py-2 px-4">
-                            <input type="number" name="attendances[{{ $student->id }}][izin]" value="{{ $attendance->izin ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center">
+                            <input type="number" name="attendances[{{ $student->id }}][izin]" value="{{ $attendance->izin ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center" {{ $isFinalized ? 'disabled' : '' }}>
                         </td>
                         <td class="py-2 px-4">
-                            <input type="number" name="attendances[{{ $student->id }}][alpha]" value="{{ $attendance->alpha ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center">
+                            <input type="number" name="attendances[{{ $student->id }}][alpha]" value="{{ $attendance->alpha ?? 0 }}" min="0" class="border rounded px-2 py-1 w-full text-sm text-center" {{ $isFinalized ? 'disabled' : '' }}>
                         </td>
                     </tr>
                     @endforeach
@@ -65,7 +72,7 @@
             <div class="text-xs text-gray-500">
                 Menampilkan {{ $students->firstItem() }} - {{ $students->lastItem() }} dari {{ $students->total() }} siswa
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 shadow transition">Simpan Rekap Absensi</button>
+            <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 shadow transition {{ $isFinalized ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $isFinalized ? 'disabled' : '' }}>Simpan Rekap Absensi</button>
         </div>
     </form>
     <div class="mt-4">{{ $students->links() }}</div>

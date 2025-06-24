@@ -11,125 +11,146 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Models\ClassroomAssignment;
 use App\Models\Semester;
+use App\Models\Student;
 
 class PromotionController extends Controller
 {
-    public function processPromotions(Request $request)
+    /**
+     * Display the promotion/graduation management dashboard.
+     */
+    public function index()
     {
-        $activeYear = AcademicYear::getActive();
-        $nextYear = $activeYear->getNext();
+        $activeSemester = Semester::where('is_active', true)->first();
 
-        if (!$nextYear) {
-            return redirect()->route('kenaikan-kelas.index')->with('error', 'Tahun ajaran berikutnya belum dibuat. Silakan buat terlebih dahulu.');
+        if (!$activeSemester || $activeSemester->name !== 'Genap') {
+            return view('admin.promotions.disabled', [
+                'message' => 'Proses kenaikan dan kelulusan massal hanya dapat dijalankan pada akhir semester Genap.'
+            ]);
         }
 
-        DB::transaction(function () use ($activeYear, $nextYear) {
-            $promotions = StudentPromotion::where('promotion_year_id', $activeYear->id)->with(['student', 'fromClassroom'])->get();
+        $academicYear = $activeSemester->academicYear;
+        $assignments = ClassroomAssignment::with('classroom', 'homeroomTeacher.user')
+            ->where('academic_year_id', $academicYear->id)
+            ->get();
+
+        $promotionStatus = $assignments->map(function ($assignment) use ($academicYear) {
+            $studentCount = $assignment->classStudents()->count();
+
+            if ($studentCount === 0) {
+                return (object) [
+                    'assignment' => $assignment,
+                    'student_count' => 0,
+                    'promotion_count' => 0,
+                    'is_ready' => true,
+                    'status_message' => 'Kelas kosong'
+                ];
+            }
+
+            $promotionCount = StudentPromotion::where('from_classroom_id', $assignment->classroom_id)
+                ->where('promotion_year_id', $academicYear->id)
+                ->count();
+
+            $isReady = $studentCount === $promotionCount;
+
+            return (object) [
+                'assignment' => $assignment,
+                'student_count' => $studentCount,
+                'promotion_count' => $promotionCount,
+                'is_ready' => $isReady,
+                'status_message' => $isReady ? 'Siap diproses' : 'Menunggu keputusan wali kelas'
+            ];
+        });
+
+        $allReady = $promotionStatus->every('is_ready', true);
+        return view('admin.promotions.index', compact('academicYear', 'promotionStatus', 'allReady'));
+    }
+
+    /**
+     * Process the mass promotion and graduation.
+     */
+    public function process()
+    {
+        DB::beginTransaction();
+        try {
+            $activeSemester = Semester::where('is_active', true)->firstOrFail();
+            $currentYear = $activeSemester->academicYear;
+
+            $nextYearName = (explode('/', $currentYear->year)[0] + 1) . '/' . (explode('/', $currentYear->year)[1] + 1);
+            $nextYear = AcademicYear::firstOrCreate(['year' => $nextYearName]);
+
+            Semester::firstOrCreate(['academic_year_id' => $nextYear->id, 'name' => 'Ganjil']);
+            Semester::firstOrCreate(['academic_year_id' => $nextYear->id, 'name' => 'Genap']);
+
+            $promotions = StudentPromotion::with('student', 'fromClassroom')
+                ->where('promotion_year_id', $currentYear->id)->get();
+
+            if ($promotions->isEmpty()) {
+                return redirect()->route('admin.promotions.index')->with('error', 'Tidak ada data kenaikan/kelulusan untuk diproses.');
+            }
 
             foreach ($promotions as $promotion) {
                 $student = $promotion->student;
-                $fromClassroom = $promotion->fromClassroom;
+                $fromClass = $promotion->fromClassroom;
 
-                if ($promotion->final_decision == 'Naik Kelas') {
-                    // Cek kelulusan (jika dari kelas 12)
-                    if (Str::startsWith($fromClassroom->name, 'XII')) {
-                        $student->status = 'Lulus';
-                        $student->save();
-                        // Hapus dari tabel pivot
-                        $student->classrooms()->detach($fromClassroom->id);
-                    } else {
-                        // Proses kenaikan kelas reguler
-                        $nextLevel = $this->getNextClassLevel($fromClassroom->level);
-                        $nextClassName = str_replace($fromClassroom->level, $nextLevel, $fromClassroom->name);
+                if ($promotion->final_decision === 'Lulus') {
+                    $student->status = 'Lulus';
+                    $student->save();
+                    continue; // Lanjut ke siswa berikutnya
+                }
 
-                        $nextClassroom = Classroom::firstOrCreate(
-                            [
-                                'name' => $nextClassName,
-                                'major_id' => $fromClassroom->major_id,
-                                'academic_year_id' => $nextYear->id,
-                            ],
-                            [
-                                'level' => $nextLevel,
-                                // Homeroom teacher bisa di-set null dulu atau di-assign nanti
-                                'homeroom_teacher_id' => null,
-                            ]
-                        );
+                $nextClassroom = $fromClass; // Default: siswa tetap di kelas yang sama (untuk tahun ajaran baru)
 
-                        // Pindahkan siswa
-                        $student->classrooms()->detach($fromClassroom->id);
-                        $student->classrooms()->attach($nextClassroom->id);
+                // Jika siswa naik kelas dan belum di tingkat akhir
+                if ($promotion->final_decision === 'Naik Kelas' && $fromClass->grade_level < 12) {
+                    $nextGradeLevel = $fromClass->grade_level + 1;
+
+                    // Buat nama kelas berikutnya yang diharapkan
+                    $nextClassName = $fromClass->name;
+                    if ($fromClass->grade_level == 10 && str_starts_with($fromClass->name, 'X ')) {
+                        $nextClassName = Str::replaceFirst('X ', 'XI ', $fromClass->name);
+                    } elseif ($fromClass->grade_level == 11 && str_starts_with($fromClass->name, 'XI ')) {
+                        $nextClassName = Str::replaceFirst('XI ', 'XII ', $fromClass->name);
                     }
-                } elseif ($promotion->final_decision == 'Tidak Naik Kelas') {
-                    // Siswa tinggal di kelas dengan level yang sama di tahun ajaran baru
-                    $retainedClassroom = Classroom::firstOrCreate(
-                        [
-                            'name' => $fromClassroom->name,
-                            'major_id' => $fromClassroom->major_id,
-                            'academic_year_id' => $nextYear->id,
-                        ],
-                        [
-                            'level' => $fromClassroom->level,
-                            'homeroom_teacher_id' => $fromClassroom->homeroom_teacher_id, // Bisa dipertahankan atau diubah
-                        ]
+
+                    // Cari kelas untuk tingkat selanjutnya
+                    $foundNextClass = Classroom::where('grade_level', $nextGradeLevel)
+                        ->where('name', $nextClassName)
+                        ->where('major_id', $fromClass->major_id)
+                        ->first();
+
+                    if ($foundNextClass) {
+                        $nextClassroom = $foundNextClass;
+                    }
+                }
+
+                // Jika kelas tujuan ditemukan (baik untuk naik maupun tinggal kelas)
+                if ($nextClassroom) {
+                    $nextAssignment = ClassroomAssignment::firstOrCreate(
+                        ['classroom_id' => $nextClassroom->id, 'academic_year_id' => $nextYear->id],
+                        ['homeroom_teacher_id' => null] // Admin bisa atur wali kelas nanti
                     );
 
-                    $student->classrooms()->detach($fromClassroom->id);
-                    $student->classrooms()->attach($retainedClassroom->id);
+                    DB::table('class_student')->insert([
+                        'student_id' => $student->id,
+                        'classroom_assignment_id' => $nextAssignment->id,
+                        'classroom_id' => $nextClassroom->id,
+                        'academic_year_id' => $nextYear->id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
                 }
             }
-            // Non-aktifkan tahun ajaran lama dan aktifkan yang baru
-            $activeYear->update(['is_active' => false]);
+
+            $currentYear->update(['is_active' => false]);
             $nextYear->update(['is_active' => true]);
-        });
+            $activeSemester->update(['is_active' => false]);
+            Semester::where(['academic_year_id' => $nextYear->id, 'name' => 'Ganjil'])->update(['is_active' => true]);
 
-        return redirect()->route('kenaikan-kelas.index')->with('success', 'Proses kenaikan kelas dan kelulusan telah berhasil diselesaikan.');
-    }
-
-    private function getNextClassLevel(string $currentLevel): string
-    {
-        $levels = ['X' => 'XI', 'XI' => 'XII'];
-        return $levels[$currentLevel] ?? $currentLevel;
-    }
-
-    public function index(Request $request)
-    {
-        $activeYear = \App\Models\AcademicYear::getActive();
-        if (!$activeYear) {
-            return redirect()->route('kenaikan-kelas.index')->with('error', 'Tahun ajaran aktif belum diatur.');
+            DB::commit();
+            return redirect()->route('admin.dashboard')->with('success', "Proses kenaikan kelas untuk tahun ajaran {$nextYear->year} berhasil dijalankan.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.promotions.index')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-        $activeSemester = Semester::where('is_active', true)->first();
-        $classroomAssignments = \App\Models\ClassroomAssignment::with('classroom')
-            ->where('academic_year_id', $activeYear?->id)
-            ->get();
-        $selectedKelas12 = $request->kelas12_id;
-        $selectedKelasNon12 = $request->kelasnon12_id;
-        $promotions = \App\Models\StudentPromotion::with(['student', 'fromClassroom'])
-            ->where('promotion_year_id', $activeYear->id)
-            ->get();
-        // Filter kelas 12
-        $kelas12Promotions = $promotions->where('fromClassroom.grade_level', 12);
-        if ($selectedKelas12) {
-            $kelas12Promotions = $kelas12Promotions->where('fromClassroom.id', $selectedKelas12);
-        }
-        $kelas12 = $kelas12Promotions->groupBy('fromClassroom.id')->map(function ($group) {
-            return $group->filter(fn($p) => is_object($p) && $p instanceof \App\Models\StudentPromotion);
-        });
-        // Filter kelas 10&11
-        $kelasNon12Promotions = $promotions->whereIn('fromClassroom.grade_level', [10, 11]);
-        if ($selectedKelasNon12) {
-            $kelasNon12Promotions = $kelasNon12Promotions->where('fromClassroom.id', $selectedKelasNon12);
-        }
-        $kelasNon12 = $kelasNon12Promotions->groupBy('fromClassroom.id')->map(function ($group) {
-            return $group->filter(fn($p) => is_object($p) && $p instanceof \App\Models\StudentPromotion);
-        });
-        return view('admin.kenaikan-kelas', [
-            'activeYear' => $activeYear,
-            'activeSemester' => $activeSemester,
-            'classroomAssignments' => $classroomAssignments,
-            'selectedKelas12' => $selectedKelas12,
-            'selectedKelasNon12' => $selectedKelasNon12,
-            'kelas12' => $kelas12,
-            'kelasNon12' => $kelasNon12,
-        ]);
     }
 }

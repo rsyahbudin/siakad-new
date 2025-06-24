@@ -26,8 +26,8 @@ return new class extends Migration
             // Relasi ke tahun ajaran
             $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
 
-            // Mencegah satu siswa yang sama didaftarkan ke kelas yang sama lebih dari sekali.
-            $table->unique(['classroom_id', 'student_id']);
+            // Mencegah satu siswa yang sama didaftarkan ke kelas yang sama lebih dari sekali dalam tahun ajaran yang sama.
+            $table->unique(['classroom_id', 'student_id', 'academic_year_id']);
 
             $table->timestamps();
         });
