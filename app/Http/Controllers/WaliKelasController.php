@@ -76,7 +76,6 @@ class WaliKelasController extends Controller
         if (!$assignment || !$kelas) {
             return view('guru.wali-kelas-empty');
         }
-        $tab = $request->get('tab', 'input');
         $q = $request->get('q');
         $studentsQuery = $assignment->classStudents()->with('student');
         if ($q) {
@@ -86,29 +85,17 @@ class WaliKelasController extends Controller
                     ->orWhere('nisn', 'like', "%$q%");
             });
         }
-        $students = $studentsQuery->paginate(20)->appends(['tab' => $tab, 'q' => $q]);
+        $students = $studentsQuery->paginate(20)->appends(['q' => $q]);
         $studentList = $students->pluck('student');
-        // Absensi harian (input hari ini)
-        $today = now()->format('Y-m-d');
-        $absensiHarian = Attendance::where('classroom_assignment_id', $assignment->id)
-            ->where('semester_id', $activeSemester->id)
-            ->where('attendance_date', $today)
-            ->get()
-            ->keyBy('student_id');
-        // Rekap semester
+
+        // Get semester attendance data
         $rekapAbsensi = Attendance::whereIn('student_id', $studentList->pluck('id'))
             ->where('semester_id', $activeSemester->id)
-            ->select('student_id', 'status', DB::raw('count(*) as total'))
-            ->groupBy('student_id', 'status')
-            ->get()
-            ->groupBy('student_id');
-        $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
-        $raports = Raport::where('classroom_id', $kelas->id)
-            ->where('academic_year_id', $activeSemester->academic_year_id)
-            ->where('semester', $semesterInt)
+            ->where('classroom_assignment_id', $assignment->id)
             ->get()
             ->keyBy('student_id');
-        return view('guru.wali-absensi', compact('kelas', 'students', 'absensiHarian', 'rekapAbsensi', 'raports', 'activeSemester', 'tab', 'q'));
+
+        return view('guru.wali-absensi', compact('kelas', 'students', 'rekapAbsensi', 'activeSemester', 'q'));
     }
 
     public function storeAbsensi(Request $request)
@@ -119,32 +106,34 @@ class WaliKelasController extends Controller
         $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
             ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->firstOrFail();
-        $kelas = $assignment->classroom;
+
         $request->validate([
             'attendances' => 'required|array',
-            'attendances.*.status' => 'required|in:Hadir,Sakit,Izin,Alpha',
-            'attendances.*.notes' => 'nullable|string|max:255',
+            'attendances.*.sakit' => 'required|integer|min:0',
+            'attendances.*.izin' => 'required|integer|min:0',
+            'attendances.*.alpha' => 'required|integer|min:0',
         ]);
-        $attendanceDate = now()->format('Y-m-d');
-        DB::transaction(function () use ($request, $teacher, $activeSemester, $attendanceDate, $assignment) {
+
+        DB::transaction(function () use ($request, $teacher, $activeSemester, $assignment) {
             foreach ($request->attendances as $studentId => $data) {
                 Attendance::updateOrCreate(
                     [
                         'student_id' => $studentId,
                         'classroom_assignment_id' => $assignment->id,
                         'semester_id' => $activeSemester->id,
-                        'attendance_date' => $attendanceDate,
                     ],
                     [
                         'teacher_id' => $teacher->id,
                         'academic_year_id' => $activeSemester->academic_year_id,
-                        'status' => $data['status'],
-                        'notes' => $data['notes'],
+                        'sakit' => $data['sakit'],
+                        'izin' => $data['izin'],
+                        'alpha' => $data['alpha'],
                     ]
                 );
             }
         });
-        return redirect()->route('wali.absensi')->with('success', 'Absensi harian berhasil disimpan.');
+
+        return redirect()->route('wali.absensi')->with('success', 'Absensi semester berhasil disimpan.');
     }
 
     public function finalisasi()
@@ -218,9 +207,7 @@ class WaliKelasController extends Controller
                 // Rekap absensi dari tabel attendances
                 $attendance = Attendance::where('student_id', $student->id)
                     ->where('semester_id', $activeSemester->id)
-                    ->selectRaw(
-                        "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
-                    )->first();
+                    ->first();
 
                 // Buat raport baru (CREATE, bukan UPDATE)
                 Raport::create([
@@ -259,16 +246,16 @@ class WaliKelasController extends Controller
         if ($assignment->classroom_assignment_id !== $waliKelasAssignment?->id) {
             return back()->with('error', 'Anda tidak memiliki hak akses untuk melihat raport siswa ini.');
         }
-        
+
         // Ambil semua tahun ajaran yang pernah diikuti siswa (untuk filter)
-        $academicYears = AcademicYear::whereHas('classroomAssignments.classStudents', function($query) use ($student) {
+        $academicYears = AcademicYear::whereHas('classroomAssignments.classStudents', function ($query) use ($student) {
             $query->where('student_id', $student->id);
         })->orderBy('year', 'desc')->get();
-        
+
         // Gunakan tahun ajaran aktif sebagai selectedYear
         $selectedYear = $activeSemester->academicYear;
         $selectedSemester = $activeSemester->name === 'Ganjil' ? 1 : 2;
-        
+
         $raport = Raport::where('student_id', $student->id)
             ->where('classroom_id', $kelas->id)
             ->where('academic_year_id', $activeSemester->academic_year_id)
@@ -286,9 +273,7 @@ class WaliKelasController extends Controller
         if (!$raport || (!$raport->attendance_sick && !$raport->attendance_permit && !$raport->attendance_absent)) {
             $attendance = Attendance::where('student_id', $student->id)
                 ->where('semester_id', $activeSemester->id)
-                ->selectRaw(
-                    "SUM(status = 'Sakit') as sakit, SUM(status = 'Izin') as izin, SUM(status = 'Alpha') as alpha"
-                )->first();
+                ->first();
             $attendance_sick = $attendance->sakit ?? 0;
             $attendance_permit = $attendance->izin ?? 0;
             $attendance_absent = $attendance->alpha ?? 0;
@@ -298,17 +283,17 @@ class WaliKelasController extends Controller
             $attendance_absent = $raport->attendance_absent;
         }
         return view('siswa.raport', compact(
-            'student', 
-            'selectedYear', 
-            'selectedSemester', 
-            'academicYears', 
-            'kelas', 
-            'waliKelas', 
-            'raport', 
-            'grades', 
-            'subjectSettings', 
-            'attendance_sick', 
-            'attendance_permit', 
+            'student',
+            'selectedYear',
+            'selectedSemester',
+            'academicYears',
+            'kelas',
+            'waliKelas',
+            'raport',
+            'grades',
+            'subjectSettings',
+            'attendance_sick',
+            'attendance_permit',
             'attendance_absent'
         ));
     }
