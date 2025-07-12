@@ -65,6 +65,7 @@ $filteredKelasNon12 = $selectedKelasNon12 && $classroomAssignments->has($selecte
                             <th class="py-2 px-4">NIS</th>
                             <th class="py-2 px-4">Nama</th>
                             <th class="py-2 px-4">Kelas</th>
+                            <th class="py-2 px-4">Nilai Akhir Tahun</th>
                             <th class="py-2 px-4">Keputusan</th>
                         </tr>
                     </thead>
@@ -77,6 +78,7 @@ $filteredKelasNon12 = $selectedKelasNon12 && $classroomAssignments->has($selecte
                             <td class="py-2 px-4">{{ optional($promotion->student)->nis ?? '-' }}</td>
                             <td class="py-2 px-4">{{ optional($promotion->student)->full_name ?? '-' }}</td>
                             <td class="py-2 px-4">{{ $promotion->fromClassroom->name ?? '-' }}</td>
+                            <td class="py-2 px-4">{{ $promotion->yearly_grade ?? '-' }}</td>
                             <td class="py-2 px-4">
                                 @if($promotion->final_decision == 'Naik Kelas')
                                 <span class="bg-green-200 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Lulus</span>

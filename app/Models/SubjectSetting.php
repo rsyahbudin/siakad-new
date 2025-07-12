@@ -21,6 +21,9 @@ class SubjectSetting extends Model
         'assignment_weight',
         'uts_weight',
         'uas_weight',
+        'allow_remedial',
+        'remedial_max_grade',
+        'is_active',
     ];
 
     /**
@@ -33,6 +36,8 @@ class SubjectSetting extends Model
         'assignment_weight' => 'integer',
         'uts_weight' => 'integer',
         'uas_weight' => 'integer',
+        'allow_remedial' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function subject()
@@ -43,5 +48,13 @@ class SubjectSetting extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    /**
+     * Get settings for active semester
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

@@ -23,6 +23,7 @@ use App\Http\Controllers\WaliKelasController;
 use App\Http\Controllers\SiswaRaportController;
 use App\Http\Controllers\GuruAbsensiController;
 use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\Admin\NilaiSiswaController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('check.role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index');
         Route::post('promotions/process', [PromotionController::class, 'process'])->name('promotions.process');
+        Route::resource('nilai-siswa', NilaiSiswaController::class)->only(['show']);
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
@@ -104,6 +106,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
     Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
     Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');
+    Route::post('/pengaturan-kkm/update-semester-weights', [\App\Http\Controllers\SubjectSettingController::class, 'updateSemesterWeights'])->name('pengaturan.kkm.update-semester-weights');
     Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen.pengguna');
     // Guru Wali Kelas
     Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.dashboard');
@@ -140,6 +143,7 @@ Route::middleware('is.homeroom.teacher')->prefix('wali-kelas')->name('wali.')->g
     Route::post('/catatan', [WaliKelasController::class, 'storeCatatan'])->name('catatan.store');
     Route::get('/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('finalisasi');
     Route::post('/finalisasi', [WaliKelasController::class, 'storeFinalisasi'])->name('finalisasi.store');
+    Route::get('/detail-nilai/{id}', [WaliKelasController::class, 'detailNilaiSiswa'])->name('detail-nilai');
 });
 
 Route::get('/home', function () {

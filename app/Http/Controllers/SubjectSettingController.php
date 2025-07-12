@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubjectSetting;
+use App\Models\SemesterWeight;
 use Illuminate\Http\Request;
 
 class SubjectSettingController extends Controller
@@ -12,10 +13,21 @@ class SubjectSettingController extends Controller
      */
     public function index()
     {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYear = $activeSemester?->academicYear;
         $subjects = \App\Models\Subject::orderBy('name')->get();
-        $settings = \App\Models\SubjectSetting::where('academic_year_id', $activeYear?->id)->get()->keyBy('subject_id');
-        return view('admin.pengaturan-kkm', compact('subjects', 'settings', 'activeYear'));
+
+        // Get settings for active semester
+        $settings = \App\Models\SubjectSetting::where('academic_year_id', $activeYear?->id)
+            ->get()
+            ->keyBy('subject_id');
+
+        // Get semester weights
+        $semesterWeights = SemesterWeight::where('academic_year_id', $activeYear?->id)
+            ->where('is_active', true)
+            ->first();
+
+        return view('admin.pengaturan-kkm', compact('subjects', 'settings', 'activeYear', 'activeSemester', 'semesterWeights'));
     }
 
     /**
@@ -55,14 +67,34 @@ class SubjectSettingController extends Controller
      */
     public function update(Request $request)
     {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYear = $activeSemester?->academicYear;
+
+        // Hanya bisa diubah pada semester Ganjil
+        if (!$activeSemester || $activeSemester->name !== 'Ganjil') {
+            return back()->with('error', 'Pengaturan hanya dapat diubah pada semester Ganjil.');
+        }
+
+        // Cek jika sudah pernah disimpan untuk tahun ajaran+semester ganjil
+        $existing = \App\Models\SubjectSetting::where('academic_year_id', $activeYear->id)
+            ->exists();
+        if ($existing) {
+            return back()->with('error', 'Pengaturan sudah pernah disimpan untuk tahun ajaran dan semester ini. Tidak dapat diubah lagi.');
+        }
+
+        if (!$activeSemester || !$activeYear) {
+            return back()->with('error', 'Tidak ada semester atau tahun ajaran aktif.');
+        }
+
         $data = $request->input('settings', []);
         $errors = [];
+
         foreach ($data as $subject_id => $row) {
             $kkm = (int)($row['kkm'] ?? 0);
             $tugas = (int)($row['assignment_weight'] ?? 0);
             $uts = (int)($row['uts_weight'] ?? 0);
             $uas = (int)($row['uas_weight'] ?? 0);
+
             if ($kkm < 1) {
                 $errors[] = "KKM untuk mapel ID $subject_id wajib diisi.";
             }
@@ -70,14 +102,16 @@ class SubjectSettingController extends Controller
                 $errors[] = "Total bobot untuk mapel ID $subject_id harus 100%.";
             }
         }
+
         if ($errors) {
             return back()->with('error', implode(' ', $errors));
         }
+
         foreach ($data as $subject_id => $row) {
             \App\Models\SubjectSetting::updateOrCreate(
                 [
                     'subject_id' => $subject_id,
-                    'academic_year_id' => $activeYear?->id,
+                    'academic_year_id' => $activeYear->id,
                 ],
                 [
                     'kkm' => $row['kkm'],
@@ -87,6 +121,7 @@ class SubjectSettingController extends Controller
                 ]
             );
         }
+
         return back()->with('success', 'Pengaturan KKM & bobot berhasil disimpan.');
     }
 
@@ -109,30 +144,54 @@ class SubjectSettingController extends Controller
             'max_failed_subjects.max' => 'Maksimal 20.',
         ]);
         $value = (int) $request->max_failed_subjects;
-        // Update config/siakad.php secara dinamis
-        $configPath = config_path('siakad.php');
-        $config = file_get_contents($configPath);
-        $config = preg_replace(
-            "/('max_failed_subjects'\s*=>\s*)env\('SIAKAD_MAX_FAILED_SUBJECTS',\s*\d+\)/",
-            "'max_failed_subjects' => env('SIAKAD_MAX_FAILED_SUBJECTS', $value)",
-            $config
-        );
-        file_put_contents($configPath, $config);
-        // Update juga .env jika ada akses
-        // (Abaikan jika tidak bisa tulis .env)
-        try {
-            $envPath = base_path('.env');
-            if (is_writable($envPath)) {
-                $env = file_get_contents($envPath);
-                if (preg_match('/^SIAKAD_MAX_FAILED_SUBJECTS=.*/m', $env)) {
-                    $env = preg_replace('/^SIAKAD_MAX_FAILED_SUBJECTS=.*/m', "SIAKAD_MAX_FAILED_SUBJECTS=$value", $env);
-                } else {
-                    $env .= "\nSIAKAD_MAX_FAILED_SUBJECTS=$value\n";
-                }
-                file_put_contents($envPath, $env);
-            }
-        } catch (\Exception $e) {
-        }
+        \App\Models\AppSetting::setValue('max_failed_subjects', $value, 'Batas maksimal mapel gagal agar naik/lulus');
         return back()->with('success_failed_subjects', 'Batas maksimal mapel gagal berhasil diubah. Silakan reload halaman jika belum berubah.');
+    }
+
+    /**
+     * Update semester weights for yearly grade calculation
+     */
+    public function updateSemesterWeights(Request $request)
+    {
+        $request->validate([
+            'ganjil_weight' => 'required|integer|min:0|max:100',
+            'genap_weight' => 'required|integer|min:0|max:100',
+        ], [
+            'ganjil_weight.required' => 'Bobot semester ganjil wajib diisi.',
+            'ganjil_weight.integer' => 'Bobot semester ganjil harus berupa bilangan bulat.',
+            'ganjil_weight.min' => 'Bobot semester ganjil minimal 0%.',
+            'ganjil_weight.max' => 'Bobot semester ganjil maksimal 100%.',
+            'genap_weight.required' => 'Bobot semester genap wajib diisi.',
+            'genap_weight.integer' => 'Bobot semester genap harus berupa bilangan bulat.',
+            'genap_weight.min' => 'Bobot semester genap minimal 0%.',
+            'genap_weight.max' => 'Bobot semester genap maksimal 100%.',
+        ]);
+
+        $ganjilWeight = (int) $request->ganjil_weight;
+        $genapWeight = (int) $request->genap_weight;
+
+        if (($ganjilWeight + $genapWeight) !== 100) {
+            return back()->with('error_semester_weights', 'Total bobot semester ganjil dan genap harus tepat 100%.');
+        }
+
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYear = $activeSemester?->academicYear;
+
+        if (!$activeYear) {
+            return back()->with('error_semester_weights', 'Tidak ada tahun ajaran aktif.');
+        }
+
+        SemesterWeight::updateOrCreate(
+            [
+                'academic_year_id' => $activeYear->id,
+            ],
+            [
+                'ganjil_weight' => $ganjilWeight,
+                'genap_weight' => $genapWeight,
+                'is_active' => true,
+            ]
+        );
+
+        return back()->with('success_semester_weights', 'Bobot semester berhasil disimpan.');
     }
 }

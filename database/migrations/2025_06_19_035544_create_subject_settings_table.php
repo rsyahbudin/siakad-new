@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use App\Models\AcademicYear;
 use App\Models\Subject;
+use App\Models\Semester;
 
 return new class extends Migration
 {
@@ -18,6 +19,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(AcademicYear::class)->constrained()->onDelete('cascade');
+            $table->foreignIdFor(Semester::class)->constrained()->onDelete('cascade');
 
             // KKM and grade weights
             $table->decimal('kkm', 5, 2)->comment('Kriteria Ketuntasan Minimal');
@@ -30,11 +32,11 @@ return new class extends Migration
             $table->decimal('remedial_max_grade', 5, 2)->nullable()->comment('Nilai Maksimal Remedial');
             $table->boolean('is_active')->default(true)->comment('Status Aktif');
 
-            // Unique constraint
-            $table->unique(['subject_id', 'academic_year_id'], 'unique_subject_year_settings');
+            // Unique constraint - now includes semester
+            $table->unique(['subject_id', 'academic_year_id', 'semester_id'], 'unique_subject_year_semester_settings');
 
             // Common query index
-            $table->index(['academic_year_id', 'is_active']);
+            $table->index(['academic_year_id', 'semester_id', 'is_active']);
 
             $table->timestamps();
         });

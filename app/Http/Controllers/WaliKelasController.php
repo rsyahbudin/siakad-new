@@ -23,13 +23,29 @@ class WaliKelasController extends Controller
         $user = Auth::user();
         $teacher = $user->teacher;
         $activeSemester = Semester::where('is_active', true)->first();
+        $activeYear = $activeSemester?->academicYear;
         $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
             ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->first();
         $kelas = $assignment?->classroom;
+
+        // Inisialisasi statistik default
+        $classStatistics = [
+            'total_students' => 0,
+            'lulus_semua' => 0,
+            'perlu_perhatian' => 0,
+            'total_mapel' => 0,
+            'total_completed_subjects' => 0,
+            'total_passed_subjects' => 0,
+            'overall_pass_rate' => 0
+        ];
+        $studentStatistics = [];
+        $studentAverages = [];
+
         if (!$assignment || !$kelas) {
             return view('guru.wali-leger-empty');
         }
+
         $students = $assignment->classStudents()->with('student.user')->get()->pluck('student');
         $mapels = $kelas ? Schedule::where('classroom_id', $kelas->id)
             ->with('subject')
@@ -37,15 +53,202 @@ class WaliKelasController extends Controller
             ->pluck('subject')
             ->unique('id')
             ->sortBy('name') : collect();
+
         $grades = Grade::where('classroom_id', $kelas?->id)
             ->where('semester_id', $activeSemester?->id)
             ->get()
             ->groupBy(['student_id', 'subject_id']);
-        $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester?->academic_year_id)
+
+        $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
             ->whereIn('subject_id', $mapels->pluck('id'))
             ->get()
             ->keyBy('subject_id');
-        return view('guru.wali-leger', compact('kelas', 'students', 'mapels', 'grades', 'subjectSettings', 'activeSemester'));
+
+        // Ambil bobot semester
+        $semesterWeight = \App\Models\SemesterWeight::where('academic_year_id', $activeYear->id)
+            ->where('is_active', true)
+            ->first();
+
+        $ganjilSemester = \App\Models\Semester::where('academic_year_id', $activeYear->id)->where('name', 'Ganjil')->first();
+        $genapSemester = \App\Models\Semester::where('academic_year_id', $activeYear->id)->where('name', 'Genap')->first();
+
+        $gradesGanjil = \App\Models\Grade::where('classroom_id', $kelas?->id)
+            ->where('semester_id', $ganjilSemester?->id)
+            ->get()
+            ->groupBy(['student_id', 'subject_id']);
+
+        $gradesGenap = \App\Models\Grade::where('classroom_id', $kelas?->id)
+            ->where('semester_id', $genapSemester?->id)
+            ->get()
+            ->groupBy(['student_id', 'subject_id']);
+
+        // Hitung rata-rata per siswa
+        foreach ($students as $student) {
+            $studentId = $student->id;
+            $ganjilArr = [];
+            $genapArr = [];
+            $yearlyArr = [];
+
+            foreach ($mapels as $mapel) {
+                $ganjil = $gradesGanjil->get($studentId)?->get($mapel->id)?->first();
+                $genap = $gradesGenap->get($studentId)?->get($mapel->id)?->first();
+                $nilaiGanjil = $ganjil?->final_grade;
+                $nilaiGenap = $genap?->final_grade;
+
+                if (!is_null($nilaiGanjil)) $ganjilArr[] = $nilaiGanjil;
+                if (!is_null($nilaiGenap)) $genapArr[] = $nilaiGenap;
+
+                if (!is_null($nilaiGanjil) && !is_null($nilaiGenap) && $semesterWeight) {
+                    $yearly = ($nilaiGanjil * $semesterWeight->ganjil_weight + $nilaiGenap * $semesterWeight->genap_weight) / 100;
+                    $yearlyArr[] = $yearly;
+                }
+            }
+
+            $studentAverages[$studentId] = [
+                'ganjil' => count($ganjilArr) ? round(array_sum($ganjilArr) / count($ganjilArr), 2) : null,
+                'genap' => count($genapArr) ? round(array_sum($genapArr) / count($genapArr), 2) : null,
+                'yearly' => count($yearlyArr) ? round(array_sum($yearlyArr) / count($yearlyArr), 2) : null,
+            ];
+        }
+
+        // Hitung statistik kelas
+        $classStatistics = $this->calculateWaliClassStatistics($students, $mapels, $gradesGanjil, $gradesGenap, $semesterWeight);
+
+        // Hitung statistik per siswa
+        foreach ($students as $student) {
+            $studentStatistics[$student->id] = $this->calculateWaliStudentStatistics(
+                $student->id,
+                $mapels,
+                $gradesGanjil,
+                $gradesGenap,
+                $semesterWeight
+            );
+        }
+
+        return view('guru.wali-leger', compact(
+            'kelas',
+            'students',
+            'mapels',
+            'grades',
+            'subjectSettings',
+            'activeSemester',
+            'gradesGanjil',
+            'gradesGenap',
+            'semesterWeight',
+            'classStatistics',
+            'studentStatistics',
+            'studentAverages'
+        ));
+    }
+
+    /**
+     * Calculate statistics for wali kelas class
+     */
+    private function calculateWaliClassStatistics($students, $mapels, $gradesGanjil, $gradesGenap, $semesterWeight)
+    {
+        $totalStudents = $students->count();
+        $lulusSemua = 0;
+        $totalMapel = $mapels->count();
+        $totalCompletedSubjects = 0;
+        $totalPassedSubjects = 0;
+
+        foreach ($students as $student) {
+            $studentId = $student->id;
+            $semuaLulus = true;
+            $adaNilai = false;
+
+            foreach ($mapels as $mapel) {
+                $ganjil = $gradesGanjil->get($studentId)?->get($mapel->id)?->first();
+                $genap = $gradesGenap->get($studentId)?->get($mapel->id)?->first();
+                $nilaiGanjil = $ganjil?->final_grade;
+                $nilaiGenap = $genap?->final_grade;
+
+                if (!is_null($nilaiGanjil) && !is_null($nilaiGenap) && $semesterWeight) {
+                    $adaNilai = true;
+                    $yearly = ($nilaiGanjil * $semesterWeight->ganjil_weight + $nilaiGenap * $semesterWeight->genap_weight) / 100;
+                    $kkm = $ganjil?->getKKM() ?? $genap?->getKKM();
+
+                    if ($kkm !== null && $yearly < $kkm) {
+                        $semuaLulus = false;
+                    }
+
+                    $totalCompletedSubjects++;
+                    if ($yearly >= $kkm) {
+                        $totalPassedSubjects++;
+                    }
+                }
+            }
+
+            if ($adaNilai && $semuaLulus) {
+                $lulusSemua++;
+            }
+        }
+
+        return [
+            'total_students' => $totalStudents,
+            'lulus_semua' => $lulusSemua,
+            'perlu_perhatian' => $totalStudents - $lulusSemua,
+            'total_mapel' => $totalMapel,
+            'total_completed_subjects' => $totalCompletedSubjects,
+            'total_passed_subjects' => $totalPassedSubjects,
+            'overall_pass_rate' => $totalCompletedSubjects > 0 ? round(($totalPassedSubjects / $totalCompletedSubjects) * 100, 1) : 0
+        ];
+    }
+
+    /**
+     * Calculate statistics for a single student in wali kelas
+     */
+    private function calculateWaliStudentStatistics($studentId, $mapels, $gradesGanjil, $gradesGenap, $semesterWeight)
+    {
+        $completedSubjects = 0;
+        $passedSubjects = 0;
+        $failedSubjects = 0;
+        $subjectDetails = [];
+
+        foreach ($mapels as $mapel) {
+            $ganjil = $gradesGanjil->get($studentId)?->get($mapel->id)?->first();
+            $genap = $gradesGenap->get($studentId)?->get($mapel->id)?->first();
+            $nilaiGanjil = $ganjil?->final_grade;
+            $nilaiGenap = $genap?->final_grade;
+
+            $yearly = null;
+            if (!is_null($nilaiGanjil) && !is_null($nilaiGenap) && $semesterWeight) {
+                $yearly = ($nilaiGanjil * $semesterWeight->ganjil_weight + $nilaiGenap * $semesterWeight->genap_weight) / 100;
+            }
+
+            // Hitung statistik
+            if ($nilaiGanjil !== null || $nilaiGenap !== null) {
+                $completedSubjects++;
+            }
+
+            // Simpan detail untuk ditampilkan
+            $subjectDetails[] = [
+                'subject' => $mapel,
+                'ganjil' => $nilaiGanjil,
+                'genap' => $nilaiGenap,
+                'yearly' => $yearly,
+                'kkm' => $ganjil?->getKKM() ?? $genap?->getKKM()
+            ];
+
+            // Tentukan status berdasarkan nilai akhir tahun
+            if ($yearly !== null && $ganjil?->getKKM() !== null) {
+                if ($yearly >= $ganjil->getKKM()) {
+                    $passedSubjects++;
+                } else {
+                    $failedSubjects++;
+                }
+            }
+        }
+
+        return [
+            'total_subjects' => $mapels->count(),
+            'completed_subjects' => $completedSubjects,
+            'passed_subjects' => $passedSubjects,
+            'failed_subjects' => $failedSubjects,
+            'completion_rate' => $mapels->count() > 0 ? round(($completedSubjects / $mapels->count()) * 100, 1) : 0,
+            'pass_rate' => $completedSubjects > 0 ? round(($passedSubjects / $completedSubjects) * 100, 1) : 0,
+            'subject_details' => $subjectDetails
+        ];
     }
 
     public function kelas(Request $request)
@@ -362,72 +565,73 @@ class WaliKelasController extends Controller
             ->where('name', 'Ganjil')
             ->first();
 
+        // Get semester weights for yearly grade calculation
+        $semesterWeights = \App\Models\SemesterWeight::where('academic_year_id', $activeSemester->academic_year_id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$semesterWeights) {
+            return view('guru.wali-kenaikan-disabled', [
+                'message' => 'Pengaturan bobot semester belum diatur. Silakan atur bobot semester di menu Pengaturan KKM.',
+                'kelas' => $kelas,
+                'activeSemester' => $activeSemester
+            ]);
+        }
+
         // Ambil data nilai dan KKM untuk menghitung rekomendasi
         $grades = Grade::whereIn('student_id', $students->pluck('id'))
             ->whereIn('semester_id', [$activeSemester->id, $ganjilSemester?->id])
             ->get()->groupBy('student_id');
 
         $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
-            ->get()->keyBy('subject_id');
+            ->whereIn('subject_id', $grades->pluck('subject_id'))
+            ->get()
+            ->keyBy('subject_id');
 
         // Ambil data promosi yang sudah ada
         $promotions = StudentPromotion::where('from_classroom_id', $kelas->id)
-            ->where('promotion_year_id', $activeSemester->academic_year_id) // promotion is tied to the academic year
+            ->where('promotion_year_id', $activeSemester->academic_year_id)
             ->get()->keyBy('student_id');
 
-        // Ambil setting maksimal mapel gagal dari config
-        $maxFailedSubjects = config('siakad.max_failed_subjects', 0);
+        // Ambil setting maksimal mapel gagal dari database (AppSetting)
+        $maxFailedSubjects = \App\Models\AppSetting::getValue('max_failed_subjects', 0);
 
-        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeSemester, $ganjilSemester, $maxFailedSubjects) {
+        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeSemester, $ganjilSemester, $maxFailedSubjects, $semesterWeights) {
             $studentGrades = $grades->get($student->id, collect())->groupBy('subject_id');
             $failedSubjects = 0;
 
             $subjectsInClass = Schedule::where('classroom_id', $kelas->id)->pluck('subject_id')->unique();
 
             foreach ($subjectsInClass as $subjectId) {
-                $setting = $subjectSettings->get($subjectId);
-                if ($setting) {
+                $ganjilSettings = $subjectSettings->get($subjectId)?->get($ganjilSemester->id);
+                $genapSettings = $subjectSettings->get($subjectId)?->get($activeSemester->id);
+
+                if ($ganjilSettings && $genapSettings) {
                     $gradesForSubject = $studentGrades->get($subjectId, collect());
                     $gradeGanjil = $gradesForSubject->firstWhere('semester_id', $ganjilSemester->id);
                     $gradeGenap = $gradesForSubject->firstWhere('semester_id', $activeSemester->id);
 
-                    // Calculate Ganjil average
-                    $ganjilGrades = $gradesForSubject->where('semester_id', $ganjilSemester->id);
-                    $totalNilaiGanjil = 0;
-                    $mapelCountGanjil = 0;
-                    foreach ($ganjilGrades as $grade) {
-                        $settings = $subjectSettings->get($grade->subject_id);
-                        if ($settings) {
-                            $totalNilaiGanjil += $grade->getFinalScore($settings->assignment_weight, $settings->uts_weight, $settings->uas_weight);
-                        } else {
-                            // Use default weights if settings not found
-                            $totalNilaiGanjil += $grade->getFinalScore(30, 30, 40);
+                    if ($gradeGanjil && $gradeGenap) {
+                        // Calculate semester grades using proper weights
+                        $ganjilGrade = $gradeGanjil->getFinalScore(
+                            $ganjilSettings->assignment_weight,
+                            $ganjilSettings->uts_weight,
+                            $ganjilSettings->uas_weight
+                        );
+
+                        $genapGrade = $gradeGenap->getFinalScore(
+                            $genapSettings->assignment_weight,
+                            $genapSettings->uts_weight,
+                            $genapSettings->uas_weight
+                        );
+
+                        // Calculate yearly grade using semester weights
+                        $yearlyGrade = $semesterWeights->calculateYearlyGrade($ganjilGrade, $genapGrade);
+
+                        // Check if yearly grade meets KKM (use Genap KKM as reference)
+                        if ($yearlyGrade < $genapSettings->kkm) {
+                            $failedSubjects++;
                         }
-                        $mapelCountGanjil++;
-                    }
-                    $avgGanjil = $mapelCountGanjil > 0 ? $totalNilaiGanjil / $mapelCountGanjil : 0;
-
-                    // Calculate Genap average
-                    $genapGrades = $gradesForSubject->where('semester_id', $activeSemester->id);
-                    $totalNilaiGenap = 0;
-                    $mapelCountGenap = 0;
-                    foreach ($genapGrades as $grade) {
-                        $settings = $subjectSettings->get($grade->subject_id);
-                        if ($settings) {
-                            $totalNilaiGenap += $grade->getFinalScore($settings->assignment_weight, $settings->uts_weight, $settings->uas_weight);
-                        } else {
-                            // Use default weights if settings not found
-                            $totalNilaiGenap += $grade->getFinalScore(30, 30, 40);
-                        }
-                        $mapelCountGenap++;
-                    }
-                    $avgGenap = $mapelCountGenap > 0 ? $totalNilaiGenap / $mapelCountGenap : 0;
-
-                    // Yearly average score
-                    $yearlyScore = ($avgGanjil + $avgGenap) / 2;
-
-                    if ($yearlyScore < ($setting->kkm ?? 75)) {
-                        $failedSubjects++;
                     }
                 }
             }
@@ -455,7 +659,6 @@ class WaliKelasController extends Controller
                 'final_decision' => $finalDecision,
             ];
         });
-
 
         return view('guru.wali-kenaikan', compact('kelas', 'promotionData', 'activeSemester'));
     }
@@ -561,5 +764,48 @@ class WaliKelasController extends Controller
             );
         }
         return redirect()->route('wali.pindahan')->with('success', 'Nilai konversi berhasil disimpan.');
+    }
+
+    /**
+     * Tampilkan detail nilai siswa untuk wali kelas
+     */
+    public function detailNilaiSiswa($id)
+    {
+        $user = Auth::user();
+        $teacher = $user->teacher;
+        $activeSemester = Semester::where('is_active', true)->first();
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
+            ->first();
+        $kelas = $assignment?->classroom;
+        $student = Student::with('user')->findOrFail($id);
+        // Pastikan siswa memang di kelas yang diwalikan
+        $classStudent = $student->classStudents()->where('academic_year_id', $activeSemester?->academic_year_id)->first();
+        if (!$classStudent || $classStudent->classroom_assignment_id != $assignment?->id) {
+            abort(403, 'Anda tidak berhak mengakses detail nilai siswa ini.');
+        }
+        $grades = Grade::with(['subject', 'semester'])
+            ->where('student_id', $id)
+            ->orderBy('academic_year_id')
+            ->orderBy('semester_id')
+            ->orderBy('subject_id')
+            ->get();
+        $rekap = [];
+        foreach ($grades as $nilai) {
+            $th = $nilai->academic_year_id;
+            $sm = $nilai->semester->name;
+            $mp = $nilai->subject->name;
+            $rekap[$th][$sm][$mp] = [
+                'final_grade' => $nilai->final_grade,
+                'kkm' => $nilai->getKKM(),
+                'subject_id' => $nilai->subject_id,
+                'tugas' => $nilai->assignment_grade ?? null,
+                'uts' => $nilai->uts_grade ?? null,
+                'uas' => $nilai->uas_grade ?? null,
+            ];
+        }
+        $tahunAjaranIds = array_keys($rekap);
+        $tahunAjaranMap = \App\Models\AcademicYear::whereIn('id', $tahunAjaranIds)->pluck('year', 'id');
+        return view('admin.nilai-siswa-detail', compact('student', 'rekap', 'grades', 'tahunAjaranMap', 'kelas'));
     }
 }

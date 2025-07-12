@@ -8,6 +8,7 @@ use App\Models\Subject;
 use App\Models\Student;
 use App\Models\AcademicYear;
 use App\Models\SubjectSetting;
+use App\Models\SemesterWeight;
 
 class Grade extends Model
 {
@@ -63,6 +64,11 @@ class Grade extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
     }
 
     /**
@@ -129,6 +135,57 @@ class Grade extends Model
             ($this->uas_grade * $uasWeight / 100);
 
         return round($final, 2);
+    }
+
+    /**
+     * Calculate yearly grade for a subject using semester weights
+     *
+     * @param int $studentId
+     * @param int $subjectId
+     * @param int $academicYearId
+     * @return float|null
+     */
+    public static function calculateYearlyGradeForStudentSubject($studentId, $subjectId, $academicYearId)
+    {
+        $semesterWeights = \App\Models\SemesterWeight::where('academic_year_id', $academicYearId)
+            ->where('is_active', true)
+            ->first();
+        if (!$semesterWeights) {
+            return null;
+        }
+        $ganjilGrade = self::where('student_id', $studentId)
+            ->where('subject_id', $subjectId)
+            ->where('academic_year_id', $academicYearId)
+            ->whereHas('semester', function ($query) {
+                $query->where('name', 'Ganjil');
+            })
+            ->first();
+        $genapGrade = self::where('student_id', $studentId)
+            ->where('subject_id', $subjectId)
+            ->where('academic_year_id', $academicYearId)
+            ->whereHas('semester', function ($query) {
+                $query->where('name', 'Genap');
+            })
+            ->first();
+        if (!$ganjilGrade || !$genapGrade) {
+            return null;
+        }
+        $yearlyGrade = $semesterWeights->calculateYearlyGrade(
+            $ganjilGrade->final_grade ?? 0,
+            $genapGrade->final_grade ?? 0
+        );
+        return $yearlyGrade;
+    }
+
+    /**
+     * Get KKM for this grade's subject and semester
+     */
+    public function getKKM(): ?int
+    {
+        $setting = SubjectSetting::where('subject_id', $this->subject_id)
+            ->where('academic_year_id', $this->academic_year_id)
+            ->first();
+        return $setting?->kkm;
     }
 
     protected static function booted()
