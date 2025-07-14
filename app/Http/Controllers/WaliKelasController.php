@@ -583,10 +583,33 @@ class WaliKelasController extends Controller
             ->whereIn('semester_id', [$activeSemester->id, $ganjilSemester?->id])
             ->get()->groupBy('student_id');
 
+        // Ambil semua mata pelajaran di kelas ini
+        $subjectsInClass = Schedule::where('classroom_id', $kelas->id)
+            ->with('subject')
+            ->get()
+            ->pluck('subject')
+            ->unique('id')
+            ->sortBy('name');
+
+        // Ambil SubjectSetting untuk semua mata pelajaran
         $subjectSettings = SubjectSetting::where('academic_year_id', $activeSemester->academic_year_id)
-            ->whereIn('subject_id', $grades->pluck('subject_id'))
+            ->whereIn('subject_id', $subjectsInClass->pluck('id'))
             ->get()
             ->keyBy('subject_id');
+
+        // Validasi: Pastikan semua mata pelajaran memiliki pengaturan KKM
+        $subjectsWithoutSettings = $subjectsInClass->filter(function ($subject) use ($subjectSettings) {
+            return !$subjectSettings->has($subject->id);
+        });
+
+        if ($subjectsWithoutSettings->count() > 0) {
+            $subjectNames = $subjectsWithoutSettings->pluck('name')->implode(', ');
+            return view('guru.wali-kenaikan-disabled', [
+                'message' => "Pengaturan KKM belum lengkap untuk mata pelajaran: {$subjectNames}. Silakan atur KKM di menu Pengaturan KKM.",
+                'kelas' => $kelas,
+                'activeSemester' => $activeSemester
+            ]);
+        }
 
         // Ambil data promosi yang sudah ada
         $promotions = StudentPromotion::where('from_classroom_id', $kelas->id)
@@ -596,20 +619,27 @@ class WaliKelasController extends Controller
         // Ambil setting maksimal mapel gagal dari database (AppSetting)
         $maxFailedSubjects = \App\Models\AppSetting::getValue('max_failed_subjects', 0);
 
-        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeSemester, $ganjilSemester, $maxFailedSubjects, $semesterWeights) {
+        $promotionData = $students->map(function ($student) use ($grades, $subjectSettings, $promotions, $kelas, $activeSemester, $ganjilSemester, $maxFailedSubjects, $semesterWeights, $subjectsInClass) {
             $studentGrades = $grades->get($student->id, collect())->groupBy('subject_id');
             $failedSubjects = 0;
+            $subjectDetails = [];
 
-            $subjectsInClass = Schedule::where('classroom_id', $kelas->id)->pluck('subject_id')->unique();
-
-            foreach ($subjectsInClass as $subjectId) {
-                $ganjilSettings = $subjectSettings->get($subjectId)?->get($ganjilSemester->id);
-                $genapSettings = $subjectSettings->get($subjectId)?->get($activeSemester->id);
+            foreach ($subjectsInClass as $subject) {
+                $subjectId = $subject->id;
+                $ganjilSettings = $subjectSettings->get($subjectId);
+                $genapSettings = $subjectSettings->get($subjectId);
 
                 if ($ganjilSettings && $genapSettings) {
                     $gradesForSubject = $studentGrades->get($subjectId, collect());
                     $gradeGanjil = $gradesForSubject->firstWhere('semester_id', $ganjilSemester->id);
                     $gradeGenap = $gradesForSubject->firstWhere('semester_id', $activeSemester->id);
+
+                    $ganjilGrade = null;
+                    $genapGrade = null;
+                    $yearlyGrade = null;
+                    $kkm = null;
+                    $isFailed = false;
+                    $hasCompleteGrades = false;
 
                     if ($gradeGanjil && $gradeGenap) {
                         // Calculate semester grades using proper weights
@@ -627,12 +657,25 @@ class WaliKelasController extends Controller
 
                         // Calculate yearly grade using semester weights
                         $yearlyGrade = $semesterWeights->calculateYearlyGrade($ganjilGrade, $genapGrade);
+                        $kkm = $genapSettings->kkm;
+                        $hasCompleteGrades = true;
 
-                        // Check if yearly grade meets KKM (use Genap KKM as reference)
-                        if ($yearlyGrade < $genapSettings->kkm) {
+                        // Check if yearly grade meets KKM
+                        if ($yearlyGrade < $kkm) {
                             $failedSubjects++;
+                            $isFailed = true;
                         }
                     }
+
+                    $subjectDetails[] = [
+                        'subject' => $subject,
+                        'ganjil_grade' => $ganjilGrade,
+                        'genap_grade' => $genapGrade,
+                        'yearly_grade' => $yearlyGrade,
+                        'kkm' => $kkm,
+                        'is_failed' => $isFailed,
+                        'has_complete_grades' => $hasCompleteGrades
+                    ];
                 }
             }
 
@@ -657,15 +700,31 @@ class WaliKelasController extends Controller
                 'failed_subjects' => $failedSubjects,
                 'system_recommendation' => $recommendation,
                 'final_decision' => $finalDecision,
+                'subject_details' => $subjectDetails,
+                'max_failed_subjects' => $maxFailedSubjects,
+                'is_last_grade' => $isLastGrade
             ];
         });
 
-        return view('guru.wali-kenaikan', compact('kelas', 'promotionData', 'activeSemester'));
+        // Tentukan apakah kelas ini tingkat akhir
+        $isLastGrade = str_starts_with($kelas->name, 'XII');
+        // Hitung statistik ringkasan keputusan
+        $countNaik = $promotionData->where('final_decision', $isLastGrade ? 'Lulus' : 'Naik Kelas')->count();
+        $countTidakNaik = $promotionData->where('final_decision', $isLastGrade ? 'Tidak Lulus' : 'Tidak Naik Kelas')->count();
+        $countBelum = $promotionData->whereNull('final_decision')->count();
+
+        return view('guru.wali-kenaikan', compact('kelas', 'promotionData', 'activeSemester', 'maxFailedSubjects', 'countNaik', 'countTidakNaik', 'countBelum'));
     }
 
     public function storeKenaikan(Request $request)
     {
         $activeSemester = Semester::where('is_active', true)->first();
+
+        // Validasi semester harus Genap
+        if ($activeSemester->name !== 'Genap') {
+            return redirect()->route('wali.kenaikan')->with('error', 'Fitur penilaian kenaikan dan kelulusan hanya dapat diakses pada akhir semester Genap.');
+        }
+
         $assignment = ClassroomAssignment::where('homeroom_teacher_id', Auth::user()->teacher->id)
             ->where('academic_year_id', $activeSemester?->academic_year_id)
             ->firstOrFail();
@@ -680,13 +739,8 @@ class WaliKelasController extends Controller
             'promotions.*.notes' => 'nullable|string|max:500',
         ]);
 
-
         DB::transaction(function () use ($request, $kelas, $activeSemester) {
             foreach ($request->promotions as $studentId => $data) {
-                // For security, re-calculate recommendation on the server
-                // (Logic is already complex in kenaikan(), for now we trust the flow)
-                // In a real-world scenario with higher security needs, re-calculating here is a must.
-
                 StudentPromotion::updateOrCreate(
                     [
                         'student_id' => $studentId,
@@ -694,10 +748,9 @@ class WaliKelasController extends Controller
                         'from_classroom_id' => $kelas->id,
                     ],
                     [
-                        // We don't store the recommendation, it's informative.
-                        // 'system_recommendation' => $recommendation, 
                         'final_decision' => $data['final_decision'],
                         'notes' => $data['notes'] ?? null,
+                        'processed_by_user_id' => Auth::id(),
                     ]
                 );
             }

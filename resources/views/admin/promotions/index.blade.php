@@ -15,6 +15,50 @@
 </div>
 @endif
 
+@php
+$totalNaik = $promotionStatus->sum('count_naik');
+$totalTidakNaik = $promotionStatus->sum('count_tidak_naik');
+$totalBelum = $promotionStatus->sum('count_belum');
+$totalSiswa = $promotionStatus->sum('student_count');
+@endphp
+
+<!-- Ringkasan Statistik Seluruh Sekolah -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="flex items-center bg-green-50 p-4 rounded-lg border border-green-200 shadow">
+        <div class="p-2 bg-green-100 rounded-lg">
+            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-green-600">Total Naik/Lulus</p>
+            <p class="text-2xl font-bold text-green-900">{{ $totalNaik }}</p>
+        </div>
+    </div>
+    <div class="flex items-center bg-red-50 p-4 rounded-lg border border-red-200 shadow">
+        <div class="p-2 bg-red-100 rounded-lg">
+            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-red-600">Total Tidak Naik/Tidak Lulus</p>
+            <p class="text-2xl font-bold text-red-900">{{ $totalTidakNaik }}</p>
+        </div>
+    </div>
+    <div class="flex items-center bg-gray-50 p-4 rounded-lg border border-gray-200 shadow">
+        <div class="p-2 bg-gray-100 rounded-lg">
+            <svg class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Belum Diputuskan</p>
+            <p class="text-2xl font-bold text-gray-900">{{ $totalBelum }}</p>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white shadow-md rounded-lg overflow-hidden">
     <div class="p-4 border-b">
         <h3 class="text-lg font-semibold">Status Kesiapan Penilaian per Kelas</h3>
@@ -27,6 +71,7 @@
                     <th class="py-2 px-4 text-left">Wali Kelas</th>
                     <th class="py-2 px-4 text-center">Jumlah Siswa</th>
                     <th class="py-2 px-4 text-center">Data Tersimpan</th>
+                    <th class="py-2 px-4 text-center">Rekap Keputusan</th>
                     <th class="py-2 px-4 text-left">Status</th>
                 </tr>
             </thead>
@@ -37,6 +82,28 @@
                     <td class="py-2 px-4">{{ $status->assignment->homeroomTeacher->user->name ?? 'N/A' }}</td>
                     <td class="py-2 px-4 text-center">{{ $status->student_count }}</td>
                     <td class="py-2 px-4 text-center">{{ $status->promotion_count }}</td>
+                    <td class="py-2 px-4 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <span class="inline-flex items-center bg-green-100 text-green-800 rounded px-2 py-0.5 text-xs font-semibold min-w-[90px]" title="{{ $status->is_last_grade ? 'Lulus' : 'Naik Kelas' }}">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                {{ $status->count_naik }} {{ $status->is_last_grade ? 'Lulus' : 'Naik' }}
+                            </span>
+                            <span class="inline-flex items-center bg-red-100 text-red-800 rounded px-2 py-0.5 text-xs font-semibold min-w-[90px]" title="{{ $status->is_last_grade ? 'Tidak Lulus' : 'Tinggal Kelas' }}">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                {{ $status->count_tidak_naik }} {{ $status->is_last_grade ? 'Tidak Lulus' : 'Tinggal' }}
+                            </span>
+                            <span class="inline-flex items-center bg-gray-100 text-gray-800 rounded px-2 py-0.5 text-xs font-semibold min-w-[90px]" title="Belum Diputuskan">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3" />
+                                </svg>
+                                {{ $status->count_belum }} Belum
+                            </span>
+                        </div>
+                    </td>
                     <td class="py-2 px-4">
                         @if($status->is_ready)
                         <span class="px-3 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">{{ $status->status_message }}</span>
@@ -47,7 +114,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="py-4 px-4 text-center text-gray-500">Tidak ada data kelas untuk tahun ajaran ini.</td>
+                    <td colspan="7" class="py-4 px-4 text-center text-gray-500">Tidak ada data kelas untuk tahun ajaran ini.</td>
                 </tr>
                 @endforelse
             </tbody>

@@ -42,13 +42,24 @@ class PromotionController extends Controller
                     'student_count' => 0,
                     'promotion_count' => 0,
                     'is_ready' => true,
-                    'status_message' => 'Kelas kosong'
+                    'status_message' => 'Kelas kosong',
+                    'count_naik' => 0,
+                    'count_tidak_naik' => 0,
+                    'count_belum' => 0,
+                    'is_last_grade' => false
                 ];
             }
 
-            $promotionCount = StudentPromotion::where('from_classroom_id', $assignment->classroom_id)
+            $promotions = \App\Models\StudentPromotion::where('from_classroom_id', $assignment->classroom_id)
                 ->where('promotion_year_id', $academicYear->id)
-                ->count();
+                ->get();
+            $promotionCount = $promotions->count();
+
+            // Tentukan apakah kelas ini tingkat akhir
+            $isLastGrade = str_starts_with($assignment->classroom->name, 'XII');
+            $countNaik = $promotions->where('final_decision', $isLastGrade ? 'Lulus' : 'Naik Kelas')->count();
+            $countTidakNaik = $promotions->where('final_decision', $isLastGrade ? 'Tidak Lulus' : 'Tidak Naik Kelas')->count();
+            $countBelum = $studentCount - ($countNaik + $countTidakNaik);
 
             $isReady = $studentCount === $promotionCount;
 
@@ -57,7 +68,11 @@ class PromotionController extends Controller
                 'student_count' => $studentCount,
                 'promotion_count' => $promotionCount,
                 'is_ready' => $isReady,
-                'status_message' => $isReady ? 'Siap diproses' : 'Menunggu keputusan wali kelas'
+                'status_message' => $isReady ? 'Siap diproses' : 'Menunggu keputusan wali kelas',
+                'count_naik' => $countNaik,
+                'count_tidak_naik' => $countTidakNaik,
+                'count_belum' => $countBelum,
+                'is_last_grade' => $isLastGrade
             ];
         });
 
