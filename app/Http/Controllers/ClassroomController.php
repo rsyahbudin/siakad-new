@@ -14,14 +14,39 @@ class ClassroomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $activeSemester = \App\Models\Semester::where('is_active', true)->first();
         $activeYearId = $activeSemester?->academic_year_id;
-        $classrooms = \App\Models\Classroom::with(['major', 'classroomAssignments' => function ($q) use ($activeYearId) {
+
+        $query = \App\Models\Classroom::with(['major', 'classroomAssignments' => function ($q) use ($activeYearId) {
             $q->where('academic_year_id', $activeYearId)->with('homeroomTeacher');
-        }])->orderBy('name')->get();
-        return view('master.kelas.index', compact('classrooms', 'activeSemester'));
+        }]);
+
+        // Search functionality
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('major', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('short_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('classroomAssignments.homeroomTeacher', function ($q) use ($search) {
+                        $q->where('full_name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by major
+        if ($request->filled('major_id')) {
+            $query->where('major_id', $request->major_id);
+        }
+
+        $classrooms = $query->orderBy('name')->paginate(12);
+        $majors = Major::orderBy('short_name')->get();
+
+        return view('master.kelas.index', compact('classrooms', 'activeSemester', 'majors'));
     }
 
     /**
@@ -122,7 +147,7 @@ class ClassroomController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource in storage.
      */
     public function destroy(Classroom $kelas)
     {

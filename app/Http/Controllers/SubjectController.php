@@ -11,10 +11,32 @@ class SubjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $subjects = Subject::with('major')->orderBy('name')->get();
-        return view('master.mapel.index', compact('subjects'));
+        $query = Subject::with('major');
+
+        // Search functionality
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhereHas('major', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('short_name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by major
+        if ($request->filled('major_id')) {
+            $query->where('major_id', $request->major_id);
+        }
+
+        $subjects = $query->orderBy('name')->paginate(12);
+        $majors = Major::orderBy('short_name')->get();
+
+        return view('master.mapel.index', compact('subjects', 'majors'));
     }
 
     /**
@@ -82,7 +104,7 @@ class SubjectController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource in storage.
      */
     public function destroy(Subject $mapel)
     {
