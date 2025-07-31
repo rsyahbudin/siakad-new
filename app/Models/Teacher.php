@@ -19,6 +19,10 @@ class Teacher extends Model
         'phone_number',
         'address',
         'subject_id',
+        'degree',
+        'major',
+        'university',
+        'graduation_year',
     ];
     public function user()
     {

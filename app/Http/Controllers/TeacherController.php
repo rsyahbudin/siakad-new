@@ -13,7 +13,8 @@ class TeacherController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Teacher::query();
+        $query = Teacher::with(['user', 'subject']);
+
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
@@ -25,7 +26,9 @@ class TeacherController extends Controller
                     });
             });
         }
-        $teachers = $query->orderBy('full_name')->get();
+
+        $teachers = $query->orderBy('full_name')->paginate(12);
+
         return view('master.guru.index', compact('teachers'));
     }
 
@@ -48,6 +51,11 @@ class TeacherController extends Controller
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
             'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'degree' => 'nullable|string|max:20',
+            'major' => 'nullable|string|max:100',
+            'university' => 'nullable|string|max:100',
+            'graduation_year' => 'nullable|integer|min:1950|max:' . (date('Y') + 5),
             'subject_id' => 'required|exists:subjects,id',
         ], [
             'nip.required' => 'NIP wajib diisi.',
@@ -57,6 +65,9 @@ class TeacherController extends Controller
             'email.unique' => 'Email sudah digunakan.',
             'subject_id.required' => 'Mata pelajaran wajib dipilih.',
             'subject_id.exists' => 'Mata pelajaran tidak valid.',
+            'graduation_year.integer' => 'Tahun lulus harus berupa angka.',
+            'graduation_year.min' => 'Tahun lulus minimal 1950.',
+            'graduation_year.max' => 'Tahun lulus tidak boleh lebih dari ' . (date('Y') + 5) . '.',
         ]);
 
         // Buat user baru untuk guru
@@ -74,6 +85,10 @@ class TeacherController extends Controller
             'full_name' => $request->full_name,
             'phone_number' => $request->phone,
             'address' => $request->address,
+            'degree' => $request->degree,
+            'major' => $request->major,
+            'university' => $request->university,
+            'graduation_year' => $request->graduation_year,
             'subject_id' => $request->subject_id,
         ]);
         return redirect()->route('guru.index')->with('success', 'Guru berhasil ditambahkan.');
@@ -106,6 +121,11 @@ class TeacherController extends Controller
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email,' . $guru->user_id,
             'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'degree' => 'nullable|string|max:20',
+            'major' => 'nullable|string|max:100',
+            'university' => 'nullable|string|max:100',
+            'graduation_year' => 'nullable|integer|min:1950|max:' . (date('Y') + 5),
             'subject_id' => 'required|exists:subjects,id',
         ], [
             'nip.required' => 'NIP wajib diisi.',
@@ -115,6 +135,9 @@ class TeacherController extends Controller
             'email.unique' => 'Email sudah digunakan.',
             'subject_id.required' => 'Mata pelajaran wajib dipilih.',
             'subject_id.exists' => 'Mata pelajaran tidak valid.',
+            'graduation_year.integer' => 'Tahun lulus harus berupa angka.',
+            'graduation_year.min' => 'Tahun lulus minimal 1950.',
+            'graduation_year.max' => 'Tahun lulus tidak boleh lebih dari ' . (date('Y') + 5) . '.',
         ]);
 
         // Update email ke tabel users
@@ -126,6 +149,10 @@ class TeacherController extends Controller
             'full_name' => $request->full_name,
             'phone_number' => $request->phone,
             'address' => $request->address,
+            'degree' => $request->degree,
+            'major' => $request->major,
+            'university' => $request->university,
+            'graduation_year' => $request->graduation_year,
             'subject_id' => $request->subject_id,
         ]);
         return redirect()->route('guru.index')->with('success', 'Guru berhasil diupdate.');

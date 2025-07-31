@@ -23,12 +23,20 @@ class TeacherSeeder extends Seeder
                 'full_name' => 'Budi Santoso, S.Pd.',
                 'phone_number' => '081234567890',
                 'address' => 'Jl. Pendidikan No. 1, Jakarta',
+                'degree' => 'S1',
+                'major' => 'Pendidikan Bahasa Indonesia',
+                'university' => 'Universitas Indonesia',
+                'graduation_year' => 2010,
             ],
             [
                 'nip' => '196501011990032002',
                 'full_name' => 'Siti Rahayu, M.Pd.',
                 'phone_number' => '081234567891',
                 'address' => 'Jl. Guru No. 2, Jakarta',
+                'degree' => 'S2',
+                'major' => 'Pendidikan Matematika',
+                'university' => 'Universitas Negeri Jakarta',
+                'graduation_year' => 2015,
             ],
         ];
 
