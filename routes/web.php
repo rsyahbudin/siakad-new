@@ -24,6 +24,8 @@ use App\Http\Controllers\SiswaRaportController;
 use App\Http\Controllers\GuruAbsensiController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\Admin\NilaiSiswaController;
+use App\Http\Controllers\KepalaSekolahController;
+use App\Http\Controllers\WaliMuridController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -121,6 +123,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/nilai-admin', [GradeController::class, 'index'])->name('nilai.admin');
     Route::post('/admin/user/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.user.reset-password')->middleware('auth');
     Route::post('semesters/{semester}/set-active', [\App\Http\Controllers\SemesterController::class, 'setActive'])->name('semesters.set-active');
+
+    // Kepala Sekolah Routes
+    Route::middleware('check.role:kepala_sekolah')->prefix('kepala-sekolah')->name('kepala.')->group(function () {
+        Route::get('/dashboard', [KepalaSekolahController::class, 'dashboard'])->name('dashboard');
+        Route::get('/laporan-akademik', [KepalaSekolahController::class, 'laporanAkademik'])->name('laporan.akademik');
+        Route::get('/laporan-keuangan', [KepalaSekolahController::class, 'laporanKeuangan'])->name('laporan.keuangan');
+        Route::get('/pengaturan-sekolah', [KepalaSekolahController::class, 'pengaturanSekolah'])->name('pengaturan.sekolah');
+    });
+
+    // Wali Murid Routes
+    Route::middleware('check.role:wali_murid')->prefix('wali-murid')->name('wali.')->group(function () {
+        Route::get('/dashboard', [WaliMuridController::class, 'dashboard'])->name('dashboard');
+        Route::get('/nilai-anak', [WaliMuridController::class, 'nilaiAnak'])->name('nilai.anak');
+        Route::get('/raport-anak', [WaliMuridController::class, 'raportAnak'])->name('raport.anak');
+        Route::get('/jadwal-anak', [WaliMuridController::class, 'jadwalAnak'])->name('jadwal.anak');
+        Route::get('/absensi-anak', [WaliMuridController::class, 'absensiAnak'])->name('absensi.anak');
+    });
 });
 
 Route::prefix('pengaturan-mapel')->name('pengaturan.mapel.')->group(function () {

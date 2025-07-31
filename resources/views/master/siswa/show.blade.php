@@ -208,6 +208,48 @@
     </div>
 </div>
 
+{{-- Wali Murid Information --}}
+@if($siswa->waliMurids->count() > 0)
+<div class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+        <h3 class="text-lg font-semibold text-gray-900">Informasi Wali Murid</h3>
+    </div>
+    <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            @foreach($siswa->waliMurids as $wali)
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="mb-3">
+                    <h4 class="text-sm font-medium text-gray-500">Wali Murid {{ $loop->iteration }}</h4>
+                </div>
+                <dl class="space-y-3">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Nama Lengkap</dt>
+                        <dd class="mt-1 text-sm font-semibold text-gray-900">{{ $wali->full_name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Hubungan</dt>
+                        <dd class="mt-1">
+                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                {{ $wali->relationship }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Nomor Telepon</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ $wali->phone_number ?: 'Tidak diisi' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Alamat</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ $wali->address ?: 'Tidak diisi' }}</dd>
+                    </div>
+                </dl>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Back Button --}}
 <div class="mt-8">
     <a href="{{ route('siswa.index') }}" class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">

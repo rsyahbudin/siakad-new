@@ -70,6 +70,39 @@
         </div>
     </form>
 </div>
+
+<!-- Informasi Wali Murid -->
+<div class="max-w-xl mx-auto bg-white p-8 rounded shadow mt-8">
+    <h2 class="text-xl font-bold mb-6">Informasi Wali Murid</h2>
+    @if($siswa->waliMurids->count() > 0)
+    @foreach($siswa->waliMurids as $wali)
+    <div class="border rounded p-4 mb-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block mb-1 font-semibold text-gray-600">Nama Wali</label>
+                <p class="font-medium">{{ $wali->full_name }}</p>
+            </div>
+            <div>
+                <label class="block mb-1 font-semibold text-gray-600">Hubungan</label>
+                <p class="font-medium">{{ $wali->relationship }}</p>
+            </div>
+            <div>
+                <label class="block mb-1 font-semibold text-gray-600">No. Telepon</label>
+                <p class="font-medium">{{ $wali->phone_number ?? 'Tidak ada' }}</p>
+            </div>
+            <div>
+                <label class="block mb-1 font-semibold text-gray-600">Alamat</label>
+                <p class="font-medium">{{ $wali->address ?? 'Tidak ada' }}</p>
+            </div>
+        </div>
+    </div>
+    @endforeach
+    @else
+    <div class="text-center py-8">
+        <p class="text-gray-500">Belum ada data wali murid yang terdaftar</p>
+    </div>
+    @endif
+</div>
 <div class="max-w-xl mx-auto bg-white p-8 rounded shadow mt-8">
     <h2 class="text-xl font-bold mb-6">Ganti Password</h2>
     @if(session('password_success'))

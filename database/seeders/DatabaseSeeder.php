@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             ClassroomSeeder::class,
             SubjectSettingSeeder::class,
             ClassroomAssignmentSeeder::class,
+            KepalaSekolahSeeder::class,
+            WaliMuridSeeder::class,
         ]);
     }
 }

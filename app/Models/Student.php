@@ -69,4 +69,9 @@ class Student extends Model
     {
         return $this->hasManyThrough(ClassroomAssignment::class, ClassStudent::class, 'student_id', 'id', 'id', 'classroom_assignment_id');
     }
+
+    public function waliMurids()
+    {
+        return $this->hasMany(WaliMurid::class);
+    }
 }

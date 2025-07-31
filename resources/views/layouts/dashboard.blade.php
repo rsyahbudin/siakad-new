@@ -383,6 +383,92 @@
                             <span class="font-medium">Raport Digital</span>
                         </a>
                     </li>
+
+                    @elseif($role === 'kepala_sekolah')
+                    <li>
+                        <a href="{{ route('kepala.dashboard') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kepala.dashboard') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                            </svg>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('kepala.laporan.akademik') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kepala.laporan.akademik') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="font-medium">Laporan Akademik</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('kepala.laporan.keuangan') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kepala.laporan.keuangan') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                            <span class="font-medium">Laporan Keuangan</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('kepala.pengaturan.sekolah') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('kepala.pengaturan.sekolah') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="font-medium">Pengaturan Sekolah</span>
+                        </a>
+                    </li>
+
+                    @elseif($role === 'wali_murid')
+                    <li>
+                        <a href="{{ route('wali.dashboard') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.dashboard') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                            </svg>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('wali.nilai.anak') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.nilai.anak') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="font-medium">Nilai Anak</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('wali.raport.anak') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.raport.anak') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="font-medium">Raport Anak</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('wali.jadwal.anak') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.jadwal.anak') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="font-medium">Jadwal Anak</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('wali.absensi.anak') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('wali.absensi.anak') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <span class="font-medium">Absensi Anak</span>
+                        </a>
+                    </li>
                     @endif
                 </ul>
             </nav>

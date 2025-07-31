@@ -60,5 +60,25 @@ class UserSeeder extends Seeder
         foreach ($students as $student) {
             User::create($student);
         }
+
+        // Create Sample Kepala Sekolah
+        $kepalaSekolah = [
+            'name' => 'Dr. Ahmad Supriyadi',
+            'email' => 'kepala@siakad.test',
+            'password' => Hash::make('kepala123'),
+            'role' => User::ROLE_KEPALA_SEKOLAH,
+        ];
+
+        User::create($kepalaSekolah);
+
+        // Create Sample Wali Murid
+        $waliMurid = [
+            'name' => 'Siti Aminah',
+            'email' => 'wali@siakad.test',
+            'password' => Hash::make('wali123'),
+            'role' => User::ROLE_WALI_MURID,
+        ];
+
+        User::create($waliMurid);
     }
 }

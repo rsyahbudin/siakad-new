@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Teacher;
 use App\Models\Student;
+use App\Models\KepalaSekolah;
+use App\Models\WaliMurid;
 
 class User extends Authenticatable
 {
@@ -18,6 +20,8 @@ class User extends Authenticatable
     public const ROLE_ADMIN = 'admin';
     public const ROLE_TEACHER = 'teacher';
     public const ROLE_STUDENT = 'student';
+    public const ROLE_KEPALA_SEKOLAH = 'kepala_sekolah';
+    public const ROLE_WALI_MURID = 'wali_murid';
 
     /**
      * The attributes that are mass assignable.
@@ -71,6 +75,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the kepala sekolah record associated with the user.
+     */
+    public function kepalaSekolah()
+    {
+        return $this->hasOne(KepalaSekolah::class);
+    }
+
+    /**
+     * Get the wali murid record associated with the user.
+     */
+    public function waliMurid()
+    {
+        return $this->hasOne(WaliMurid::class);
+    }
+
+    /**
      * Check if the user is an admin
      */
     public function isAdmin(): bool
@@ -92,6 +112,22 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === self::ROLE_STUDENT;
+    }
+
+    /**
+     * Check if the user is a kepala sekolah
+     */
+    public function isKepalaSekolah(): bool
+    {
+        return $this->role === self::ROLE_KEPALA_SEKOLAH;
+    }
+
+    /**
+     * Check if the user is a wali murid
+     */
+    public function isWaliMurid(): bool
+    {
+        return $this->role === self::ROLE_WALI_MURID;
     }
 
     /**

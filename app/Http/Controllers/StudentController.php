@@ -164,6 +164,7 @@ class StudentController extends Controller
         // Load student with related data
         $siswa->load([
             'user',
+            'waliMurids',
             'classStudents' => function ($q) use ($activeYearId) {
                 $q->where('academic_year_id', $activeYearId)->with('classroomAssignment.classroom');
             }
@@ -270,7 +271,7 @@ class StudentController extends Controller
     public function profilSiswa()
     {
         $user = Auth::user();
-        $siswa = $user->student;
+        $siswa = $user->student->load('waliMurids');
         return view('siswa.profil', compact('siswa'));
     }
 

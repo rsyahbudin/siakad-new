@@ -26,6 +26,10 @@ class DashboardController extends Controller
                     ->get();
             }
             return view('dashboard.siswa', compact('todaySchedules'));
+        } elseif ($user->isKepalaSekolah()) {
+            return redirect()->route('kepala.dashboard');
+        } elseif ($user->isWaliMurid()) {
+            return redirect()->route('wali.dashboard');
         }
         abort(403, 'Akses tidak diizinkan.');
     }
