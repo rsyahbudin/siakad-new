@@ -759,65 +759,7 @@ class WaliKelasController extends Controller
         return redirect()->route('wali.kenaikan')->with('success', 'Keputusan kenaikan kelas berhasil disimpan.');
     }
 
-    public function siswaPindahan(Request $request)
-    {
-        $user = Auth::user();
-        $teacher = $user->teacher;
-        $activeSemester = Semester::where('is_active', true)->first();
-        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeSemester?->academic_year_id)
-            ->first();
-        $kelas = $assignment?->classroom;
-        if (!$assignment || !$kelas) {
-            return view('guru.wali-kelas-empty');
-        }
-        $students = $kelas->students()->where('status', 'Pindahan')->with('user')->orderBy('full_name')->get();
-        $subjects = Schedule::where('classroom_id', $kelas->id)
-            ->with('subject')
-            ->get()
-            ->pluck('subject')
-            ->unique('id')
-            ->sortBy('name');
-        $grades = Grade::where('classroom_id', $kelas->id)
-            ->where('semester_id', $activeSemester->id)
-            ->where('source', 'konversi')
-            ->get()
-            ->groupBy(['student_id', 'subject_id']);
-        return view('guru.wali-pindahan', compact('kelas', 'students', 'subjects', 'grades', 'activeSemester'));
-    }
 
-    public function storeKonversi(Request $request)
-    {
-        $request->validate([
-            'grades' => 'required|array',
-            'grades.*.student_id' => 'required|exists:students,id',
-            'grades.*.subject_id' => 'required|exists:subjects,id',
-            'grades.*.nilai' => 'required|numeric|min:0|max:100',
-        ]);
-        $user = Auth::user();
-        $teacher = $user->teacher;
-        $activeSemester = Semester::where('is_active', true)->first();
-        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeSemester?->academic_year_id)
-            ->firstOrFail();
-        $kelas = $assignment->classroom;
-        foreach ($request->grades as $data) {
-            Grade::updateOrCreate(
-                [
-                    'student_id' => $data['student_id'],
-                    'subject_id' => $data['subject_id'],
-                    'classroom_id' => $kelas->id,
-                    'semester_id' => $activeSemester->id,
-                    'source' => 'konversi',
-                ],
-                [
-                    'final_grade' => $data['nilai'],
-                    'is_passed' => $data['nilai'] >= 75,
-                ]
-            );
-        }
-        return redirect()->route('wali.pindahan')->with('success', 'Nilai konversi berhasil disimpan.');
-    }
 
     /**
      * Tampilkan detail nilai siswa untuk wali kelas

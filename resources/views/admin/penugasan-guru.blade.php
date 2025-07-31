@@ -98,12 +98,23 @@
             <h2 class="text-lg font-semibold text-gray-900">Filter & Pencarian</h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Search by Teacher -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari Guru</label>
                 <input type="text" id="teacherSearch" placeholder="Ketik nama guru..."
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Filter by Classroom -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter Kelas</label>
+                <select id="classroomFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua Kelas</option>
+                    @foreach($classrooms as $classroom)
+                    <option value="{{ $classroom->name }}">{{ $classroom->name }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- Filter by Day -->
@@ -191,6 +202,7 @@
                     @forelse($assignments as $a)
                     <tr class="hover:bg-gray-50 transition-colors assignment-row"
                         data-teacher="{{ $a->teacher->full_name ?? '' }}"
+                        data-classroom="{{ $a->classroom->name ?? '' }}"
                         data-day="{{ $a->day }}"
                         data-subject="{{ $a->subject->name ?? '' }}">
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -275,25 +287,29 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const teacherSearch = document.getElementById('teacherSearch');
+        const classroomFilter = document.getElementById('classroomFilter');
         const dayFilter = document.getElementById('dayFilter');
         const subjectFilter = document.getElementById('subjectFilter');
         const assignmentRows = document.querySelectorAll('.assignment-row');
 
         function filterAssignments() {
             const teacherQuery = teacherSearch.value.toLowerCase();
+            const classroomQuery = classroomFilter.value;
             const dayQuery = dayFilter.value;
             const subjectQuery = subjectFilter.value;
 
             assignmentRows.forEach(row => {
                 const teacher = row.getAttribute('data-teacher').toLowerCase();
+                const classroom = row.getAttribute('data-classroom');
                 const day = row.getAttribute('data-day');
                 const subject = row.getAttribute('data-subject');
 
                 const teacherMatch = teacher.includes(teacherQuery);
+                const classroomMatch = !classroomQuery || classroom === classroomQuery;
                 const dayMatch = !dayQuery || day === dayQuery;
                 const subjectMatch = !subjectQuery || subject === subjectQuery;
 
-                if (teacherMatch && dayMatch && subjectMatch) {
+                if (teacherMatch && classroomMatch && dayMatch && subjectMatch) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -302,6 +318,7 @@
         }
 
         teacherSearch.addEventListener('input', filterAssignments);
+        classroomFilter.addEventListener('change', filterAssignments);
         dayFilter.addEventListener('change', filterAssignments);
         subjectFilter.addEventListener('change', filterAssignments);
     });

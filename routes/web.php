@@ -62,6 +62,12 @@ Route::middleware('auth')->group(function () {
         Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index');
         Route::post('promotions/process', [PromotionController::class, 'process'])->name('promotions.process');
         Route::resource('nilai-siswa', NilaiSiswaController::class)->only(['show']);
+
+        // Admin Siswa Pindahan routes
+        Route::get('siswa-pindahan', [\App\Http\Controllers\AdminController::class, 'siswaPindahan'])->name('siswa-pindahan');
+        Route::post('siswa-pindahan/store-konversi', [\App\Http\Controllers\AdminController::class, 'storeKonversi'])->name('store-konversi');
+        Route::get('siswa-pindahan/daftar', [\App\Http\Controllers\AdminController::class, 'daftarSiswaPindahan'])->name('daftar-siswa-pindahan');
+        Route::get('siswa-pindahan/{id}/detail', [\App\Http\Controllers\AdminController::class, 'detailSiswaPindahan'])->name('detail-siswa-pindahan');
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
@@ -118,8 +124,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/wali/finalisasi', [WaliKelasController::class, 'storeFinalisasi'])->name('wali.finalisasi.store');
     Route::get('/wali/kenaikan', [WaliKelasController::class, 'kenaikan'])->name('wali.kenaikan');
     Route::post('/wali/kenaikan', [WaliKelasController::class, 'storeKenaikan'])->name('wali.kenaikan.store');
-    Route::get('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'siswaPindahan'])->name('wali.pindahan');
-    Route::post('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'storeKonversi'])->name('wali.pindahan.store');
+    // Route::get('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'siswaPindahan'])->name('wali.pindahan');
+    // Route::post('/wali/pindahan', [\App\Http\Controllers\WaliKelasController::class, 'storeKonversi'])->name('wali.pindahan.store');
     Route::get('/nilai-admin', [GradeController::class, 'index'])->name('nilai.admin');
     Route::post('/admin/user/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.user.reset-password')->middleware('auth');
     Route::post('semesters/{semester}/set-active', [\App\Http\Controllers\SemesterController::class, 'setActive'])->name('semesters.set-active');
