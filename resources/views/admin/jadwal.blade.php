@@ -185,8 +185,12 @@
                         @for($i=1; $i<=10; $i++)
                             <td class="px-3 py-4 text-center">
                             @php
-                            $slot = $schedules->first(function($s) use ($day, $i, $timeSlots) {
-                            return $s->day == $day && $s->time_start == $timeSlots[$i]['start'] && $s->time_end == $timeSlots[$i]['end'];
+                            $currentTimeSlot = $timeSlots[$i];
+                            $slot = $schedules->first(function($s) use ($day, $currentTimeSlot) {
+                            // Normalize time format to handle HH:MM vs HH:MM:SS
+                            $dbTimeStart = substr($s->time_start, 0, 5); // Get HH:MM from HH:MM:SS
+                            $dbTimeEnd = substr($s->time_end, 0, 5); // Get HH:MM from HH:MM:SS
+                            return $s->day == $day && $dbTimeStart == $currentTimeSlot['start'] && $dbTimeEnd == $currentTimeSlot['end'];
                             });
                             @endphp
                             @if($slot)
@@ -206,7 +210,7 @@
                                             {{ $slot->teacher->full_name }}
                                         </div>
                                         <div class="text-gray-500 text-xs">
-                                            {{ $slot->time_start }} - {{ $slot->time_end }}
+                                            {{ substr($slot->time_start, 0, 5) }} - {{ substr($slot->time_end, 0, 5) }}
                                         </div>
                                     </div>
                                     <div class="flex gap-1 justify-center pt-2 border-t border-blue-200">

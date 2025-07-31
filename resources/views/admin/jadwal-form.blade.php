@@ -101,12 +101,22 @@
                             $breakTimes = config('siakad.break_times');
                             $selectedJam = old('jam', $jam ?? request('jam'));
                             $isJamPreselected = !empty($selectedJam);
+
+                            // For edit mode, get the slot from existing schedule
+                            if(isset($jadwal) && !$isJamPreselected) {
+                            foreach($timeSlots as $slotNumber => $slot) {
+                            if($slot['start'] === $jadwal->time_start && $slot['end'] === $jadwal->time_end) {
+                            $selectedJam = $slotNumber;
+                            $isJamPreselected = true;
+                            break;
+                            }
+                            }
+                            }
+
+                            $selectedSlot = $isJamPreselected ? ($timeSlots[$selectedJam] ?? null) : null;
                             @endphp
-                            @if($isJamPreselected)
-                            <!-- Read-only display when pre-selected -->
-                            @php
-                            $selectedSlot = $timeSlots[$selectedJam] ?? null;
-                            @endphp
+                            @if($isJamPreselected && !isset($jadwal))
+                            <!-- Read-only display when pre-selected for new schedule -->
                             <div class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-700">
                                 <div class="flex items-center justify-between">
                                     <div>
@@ -118,7 +128,7 @@
                             </div>
                             <input type="hidden" name="jam" value="{{ $selectedJam }}">
                             @else
-                            <!-- Editable dropdown when not pre-selected -->
+                            <!-- Editable dropdown for edit mode or when not pre-selected -->
                             <select name="jam" id="jam" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('jam') border-red-500 @enderror">
                                 <option value="">Pilih jam pelajaran</option>
                                 @foreach($timeSlots as $slotNumber => $slot)
@@ -140,8 +150,10 @@
                             </select>
                             @endif
                             <p class="text-gray-500 text-sm mt-1">
-                                @if($isDayPreselected && $isJamPreselected)
+                                @if($isDayPreselected && $isJamPreselected && !isset($jadwal))
                                 Hari dan jam pelajaran sudah dipilih dari jadwal utama
+                                @elseif(isset($jadwal))
+                                Pilih jam pelajaran untuk mengubah jadwal
                                 @else
                                 Pilih jam pelajaran yang tersedia
                                 @endif
@@ -228,8 +240,8 @@
                 </div>
 
                 <!-- Hidden Time Inputs -->
-                <input type="hidden" name="time_start" id="time_start">
-                <input type="hidden" name="time_end" id="time_end">
+                <input type="hidden" name="time_start" id="time_start" value="{{ $selectedSlot['start'] ?? ($jadwal->time_start ?? '') }}">
+                <input type="hidden" name="time_end" id="time_end" value="{{ $selectedSlot['end'] ?? ($jadwal->time_end ?? '') }}">
             </div>
 
             <!-- Form Actions -->
@@ -285,6 +297,8 @@
         }
 
         function updateTimeSlots() {
+            if (!jamSelect) return; // If jamSelect doesn't exist (pre-selected case)
+
             const selectedOption = jamSelect.options[jamSelect.selectedIndex];
             if (selectedOption && selectedOption.dataset.start && selectedOption.dataset.end) {
                 timeStartInput.value = selectedOption.dataset.start;

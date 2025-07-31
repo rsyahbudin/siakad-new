@@ -32,7 +32,7 @@ class ScheduleController extends Controller
             ->where('academic_year_id', $activeYearId)
             ->get();
         $selectedAssignment = $request->assignment_id ?? $assignments->first()?->id;
-        $schedules = $selectedAssignment ? Schedule::where('classroom_assignment_id', $selectedAssignment)->get() : collect();
+        $schedules = $selectedAssignment ? Schedule::with(['subject', 'teacher'])->where('classroom_assignment_id', $selectedAssignment)->get() : collect();
         $subjects = Subject::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
 
@@ -54,10 +54,17 @@ class ScheduleController extends Controller
         $day = $request->day;
         $jam = $request->jam;
 
+        // Get time slot information if jam is pre-selected
+        $selectedSlot = null;
+        if ($jam) {
+            $timeSlots = $this->getTimeSlots();
+            $selectedSlot = $timeSlots[$jam] ?? null;
+        }
+
         // Get available time slots for the selected day
         $availableSlots = $this->getAvailableTimeSlots($day, $assignment->id);
 
-        return view('admin.jadwal-form', compact('assignment', 'classroom', 'subjects', 'teachers', 'day', 'jam', 'availableSlots'));
+        return view('admin.jadwal-form', compact('assignment', 'classroom', 'subjects', 'teachers', 'day', 'jam', 'availableSlots', 'selectedSlot'));
     }
 
     /**
@@ -70,9 +77,24 @@ class ScheduleController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'jam' => 'required|integer|min:1|max:10',
             'time_start' => 'required|date_format:H:i',
             'time_end' => 'required|date_format:H:i|after:time_start',
         ]);
+
+        // Get time slot information
+        $timeSlots = $this->getTimeSlots();
+        $jam = $request->jam;
+
+        // If time_start and time_end are not provided, get them from the selected jam
+        if (empty($request->time_start) || empty($request->time_end)) {
+            if (isset($timeSlots[$jam])) {
+                $request->merge([
+                    'time_start' => $timeSlots[$jam]['start'],
+                    'time_end' => $timeSlots[$jam]['end']
+                ]);
+            }
+        }
 
         // Check if the time slot conflicts with break times
         $breakConflicts = $this->checkBreakTimeConflicts($request->time_start, $request->time_end);
@@ -127,10 +149,20 @@ class ScheduleController extends Controller
         $subjects = Subject::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
 
+        // Get time slot information for the existing schedule
+        $timeSlots = $this->getTimeSlots();
+        $selectedSlot = null;
+        foreach ($timeSlots as $slotNumber => $slot) {
+            if ($slot['start'] === $jadwal->time_start && $slot['end'] === $jadwal->time_end) {
+                $selectedSlot = $slot;
+                break;
+            }
+        }
+
         // Get available time slots for the selected day
         $availableSlots = $this->getAvailableTimeSlots($jadwal->day, $jadwal->classroom_assignment_id, $jadwal->id);
 
-        return view('admin.jadwal-form', compact('jadwal', 'classroom', 'subjects', 'teachers', 'availableSlots'));
+        return view('admin.jadwal-form', compact('jadwal', 'classroom', 'subjects', 'teachers', 'availableSlots', 'selectedSlot'));
     }
 
     /**
@@ -142,9 +174,24 @@ class ScheduleController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'jam' => 'required|integer|min:1|max:10',
             'time_start' => 'required|date_format:H:i',
             'time_end' => 'required|date_format:H:i|after:time_start',
         ]);
+
+        // Get time slot information
+        $timeSlots = $this->getTimeSlots();
+        $jam = $request->jam;
+
+        // If time_start and time_end are not provided, get them from the selected jam
+        if (empty($request->time_start) || empty($request->time_end)) {
+            if (isset($timeSlots[$jam])) {
+                $request->merge([
+                    'time_start' => $timeSlots[$jam]['start'],
+                    'time_end' => $timeSlots[$jam]['end']
+                ]);
+            }
+        }
 
         // Check if the time slot conflicts with break times
         $breakConflicts = $this->checkBreakTimeConflicts($request->time_start, $request->time_end);
