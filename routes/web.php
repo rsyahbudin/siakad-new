@@ -27,9 +27,20 @@ use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\Admin\NilaiSiswaController;
 use App\Http\Controllers\KepalaSekolahController;
 use App\Http\Controllers\WaliMuridController;
+use App\Http\Controllers\PPDBApplicationController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
+});
+
+// PPDB Public Routes (No Authentication Required)
+Route::prefix('ppdb')->name('ppdb.')->group(function () {
+    Route::get('/register', [PPDBApplicationController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [PPDBApplicationController::class, 'register'])->name('register.store');
+    Route::get('/success', [PPDBApplicationController::class, 'showSuccess'])->name('success');
+    Route::get('/status-check', [PPDBApplicationController::class, 'showStatusCheck'])->name('status-check');
+    Route::post('/status-check', [PPDBApplicationController::class, 'checkStatus'])->name('status-check.post');
+    Route::get('/status', [PPDBApplicationController::class, 'checkStatus'])->name('status');
 });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
@@ -69,6 +80,12 @@ Route::middleware('auth')->group(function () {
         Route::post('siswa-pindahan/store-konversi', [\App\Http\Controllers\AdminController::class, 'storeKonversi'])->name('store-konversi');
         Route::get('siswa-pindahan/daftar', [\App\Http\Controllers\AdminController::class, 'daftarSiswaPindahan'])->name('daftar-siswa-pindahan');
         Route::get('siswa-pindahan/{id}/detail', [\App\Http\Controllers\AdminController::class, 'detailSiswaPindahan'])->name('detail-siswa-pindahan');
+
+        // PPDB Admin Routes
+        Route::get('ppdb', [PPDBApplicationController::class, 'adminIndex'])->name('ppdb.index');
+        Route::get('ppdb/{application}', [PPDBApplicationController::class, 'adminShow'])->name('ppdb.show');
+        Route::put('ppdb/{application}', [PPDBApplicationController::class, 'adminUpdate'])->name('ppdb.update');
+        Route::get('ppdb/{application}/download/{documentType}', [PPDBApplicationController::class, 'downloadDocument'])->name('ppdb.download');
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
