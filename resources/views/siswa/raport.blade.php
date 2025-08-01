@@ -170,28 +170,121 @@
     </table>
 
     <!-- Absensi dan Catatan -->
-    <div class="grid grid-cols-2 gap-8 mt-8 text-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         <div>
-            <h3 class="text-lg font-bold mb-2">B. Ketidakhadiran</h3>
-            <table class="w-full border">
-                <tr class="border-b">
-                    <td class="px-4 py-2 border-r">Sakit</td>
-                    <td class="px-4 py-2 text-center">{{ $attendance_sick }} hari</td>
-                </tr>
-                <tr class="border-b">
-                    <td class="px-4 py-2 border-r">Izin</td>
-                    <td class="px-4 py-2 text-center">{{ $attendance_permit }} hari</td>
-                </tr>
-                <tr>
-                    <td class="px-4 py-2 border-r">Tanpa Keterangan</td>
-                    <td class="px-4 py-2 text-center">{{ $attendance_absent }} hari</td>
-                </tr>
-            </table>
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                B. Kehadiran
+            </h3>
+
+            <!-- Attendance Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Sakit</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $attendance_sick }} hari</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Izin</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $attendance_permit }} hari</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Alpha</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $attendance_absent }} hari</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Details Table -->
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <h4 class="font-medium text-gray-900">Detail Ketidakhadiran</h4>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="font-medium text-gray-900">Sakit</span>
+                        </div>
+                        <span class="font-bold text-gray-900">{{ $attendance_sick }} hari</span>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="font-medium text-gray-900">Izin</span>
+                        </div>
+                        <span class="font-bold text-gray-900">{{ $attendance_permit }} hari</span>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                            <span class="font-medium text-gray-900">Tanpa Keterangan</span>
+                        </div>
+                        <span class="font-bold text-gray-900">{{ $attendance_absent }} hari</span>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div>
-            <h3 class="text-lg font-bold mb-2">C. Catatan Wali Kelas</h3>
-            <div class="border p-4 h-32">
-                <p>{{ $raport->homeroom_teacher_notes ?? 'Tidak ada catatan.' }}</p>
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                C. Catatan Wali Kelas
+            </h3>
+            <div class="bg-white rounded-lg border border-gray-200 p-4 min-h-[200px]">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-700 leading-relaxed">{{ $raport->homeroom_teacher_notes ?? 'Tidak ada catatan dari wali kelas.' }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

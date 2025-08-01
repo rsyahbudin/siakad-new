@@ -18,6 +18,14 @@ class Attendance extends Model
         'sakit',
         'izin',
         'alpha',
+        'is_locked',
+        'locked_at',
+        'locked_by',
+    ];
+
+    protected $casts = [
+        'is_locked' => 'boolean',
+        'locked_at' => 'datetime',
     ];
 
     public function student()
@@ -33,5 +41,20 @@ class Attendance extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
+    public function classroomAssignment()
+    {
+        return $this->belongsTo(ClassroomAssignment::class);
+    }
+
+    public function lockedByTeacher()
+    {
+        return $this->belongsTo(Teacher::class, 'locked_by');
     }
 }

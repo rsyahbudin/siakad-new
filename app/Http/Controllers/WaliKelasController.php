@@ -13,6 +13,7 @@ use App\Models\Raport;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\StudentPromotion;
+use App\Services\AttendanceService;
 use Illuminate\Support\Facades\DB;
 use App\Models\Semester;
 
@@ -289,7 +290,6 @@ class WaliKelasController extends Controller
             });
         }
         $students = $studentsQuery->paginate(20)->appends(['q' => $q]);
-        $studentList = $students->pluck('student');
 
         // Cek apakah raport kelas ini sudah difinalisasi
         $semesterInt = $activeSemester->name === 'Ganjil' ? 1 : 2;
@@ -299,14 +299,49 @@ class WaliKelasController extends Controller
             ->where('is_finalized', true)
             ->exists();
 
-        // Get semester attendance data
-        $rekapAbsensi = Attendance::whereIn('student_id', $studentList->pluck('id'))
-            ->where('semester_id', $activeSemester->id)
-            ->where('classroom_assignment_id', $assignment->id)
-            ->get()
-            ->keyBy('student_id');
+        // Get accumulated attendance data from daily attendance system
+        $attendanceService = new AttendanceService();
+        $accumulatedAttendances = [];
+        $lockedAttendances = [];
 
-        return view('guru.wali-absensi', compact('kelas', 'students', 'rekapAbsensi', 'activeSemester', 'q', 'isFinalized'));
+        foreach ($students as $classStudent) {
+            $studentId = $classStudent->student->id;
+            $semesterStats = $attendanceService->getSemesterStats($studentId, $activeSemester->id);
+
+            // Check if there's locked attendance data
+            $lockedAttendance = Attendance::where('student_id', $studentId)
+                ->where('classroom_assignment_id', $assignment->id)
+                ->where('semester_id', $activeSemester->id)
+                ->where('is_locked', true)
+                ->first();
+
+            if ($lockedAttendance) {
+                $lockedAttendances[$studentId] = $lockedAttendance;
+                $accumulatedAttendances[$studentId] = [
+                    'sakit' => $lockedAttendance->sakit,
+                    'izin' => $lockedAttendance->izin,
+                    'alpha' => $lockedAttendance->alpha,
+                    'hadir' => $semesterStats['hadir'],
+                    'total_days' => $semesterStats['total_days'],
+                    'percentage' => $semesterStats['percentage'],
+                    'is_locked' => true,
+                    'locked_at' => $lockedAttendance->locked_at,
+                    'locked_by' => $lockedAttendance->locked_by
+                ];
+            } else {
+                $accumulatedAttendances[$studentId] = [
+                    'sakit' => $semesterStats['sakit'],
+                    'izin' => $semesterStats['izin'],
+                    'alpha' => $semesterStats['alpha'],
+                    'hadir' => $semesterStats['hadir'],
+                    'total_days' => $semesterStats['total_days'],
+                    'percentage' => $semesterStats['percentage'],
+                    'is_locked' => false
+                ];
+            }
+        }
+
+        return view('guru.wali-absensi', compact('kelas', 'students', 'accumulatedAttendances', 'activeSemester', 'q', 'isFinalized'));
     }
 
     public function storeAbsensi(Request $request)
@@ -331,6 +366,7 @@ class WaliKelasController extends Controller
         }
 
         $request->validate([
+            'action' => 'required|in:save,lock',
             'attendances' => 'required|array',
             'attendances.*.sakit' => 'required|integer|min:0',
             'attendances.*.izin' => 'required|integer|min:0',
@@ -338,25 +374,36 @@ class WaliKelasController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $teacher, $activeSemester, $assignment) {
-            foreach ($request->attendances as $studentId => $data) {
+            $semester = $activeSemester;
+            $isLocked = $request->action === 'lock';
+
+            // Process attendance data and save to semester summary
+            foreach ($request->attendances as $studentId => $attendanceData) {
                 Attendance::updateOrCreate(
                     [
                         'student_id' => $studentId,
                         'classroom_assignment_id' => $assignment->id,
-                        'semester_id' => $activeSemester->id,
+                        'semester_id' => $semester->id,
                     ],
                     [
-                        'teacher_id' => $teacher->id,
-                        'academic_year_id' => $activeSemester->academic_year_id,
-                        'sakit' => $data['sakit'],
-                        'izin' => $data['izin'],
-                        'alpha' => $data['alpha'],
+                        'teacher_id' => $assignment->homeroom_teacher_id,
+                        'academic_year_id' => $semester->academic_year_id,
+                        'sakit' => $attendanceData['sakit'],
+                        'izin' => $attendanceData['izin'],
+                        'alpha' => $attendanceData['alpha'],
+                        'is_locked' => $isLocked,
+                        'locked_at' => $isLocked ? now() : null,
+                        'locked_by' => $isLocked ? $teacher->id : null,
                     ]
                 );
             }
         });
 
-        return redirect()->route('wali.absensi')->with('success', 'Absensi semester berhasil disimpan.');
+        $message = $request->action === 'lock'
+            ? 'Absensi semester berhasil disimpan dan dikunci.'
+            : 'Absensi semester berhasil disimpan.';
+
+        return redirect()->route('wali.absensi')->with('success', $message);
     }
 
     public function finalisasi()

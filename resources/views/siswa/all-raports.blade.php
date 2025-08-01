@@ -69,25 +69,55 @@
                         </div>
 
                         @if($raport->is_finalized)
-                        <div class="flex justify-between">
-                            <span>Absensi Sakit:</span>
-                            <span>{{ $raport->attendance_sick }} hari</span>
+                        <!-- Attendance Summary -->
+                        <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <h6 class="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Kehadiran
+                            </h6>
+                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div class="text-center">
+                                    <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="font-medium text-gray-900">{{ $raport->attendance_sick }}</p>
+                                    <p class="text-gray-500">Sakit</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <svg class="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="font-medium text-gray-900">{{ $raport->attendance_permit }}</p>
+                                    <p class="text-gray-500">Izin</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="font-medium text-gray-900">{{ $raport->attendance_absent }}</p>
+                                    <p class="text-gray-500">Alpha</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Absensi Izin:</span>
-                            <span>{{ $raport->attendance_permit }} hari</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Absensi Alpha:</span>
-                            <span>{{ $raport->attendance_absent }} hari</span>
-                        </div>
-                        <div class="flex justify-between">
+
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
                             <span>Finalisasi:</span>
-                            <span class="text-xs">{{ $raport->finalized_at ? $raport->finalized_at->format('d/m/Y H:i') : '-' }}</span>
+                            <span>{{ $raport->finalized_at ? $raport->finalized_at->format('d/m/Y H:i') : '-' }}</span>
                         </div>
                         @else
-                        <div class="text-center py-2 text-gray-500">
-                            Raport belum difinalisasi
+                        <div class="text-center py-3 text-gray-500 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <svg class="w-6 h-6 text-yellow-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <p class="text-sm font-medium">Raport belum difinalisasi</p>
                         </div>
                         @endif
                     </div>

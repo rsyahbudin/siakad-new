@@ -46,6 +46,11 @@ class Schedule extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function studentAttendances()
+    {
+        return $this->hasMany(StudentAttendance::class);
+    }
+
     public function classroomAssignment()
     {
         return $this->belongsTo(\App\Models\ClassroomAssignment::class);

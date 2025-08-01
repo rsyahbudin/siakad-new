@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Student;
 use App\Models\Grade;
 use App\Models\Raport;
 use App\Models\Attendance;
 use App\Models\Schedule;
+use App\Services\AttendanceService;
 
 class WaliMuridController extends Controller
 {
@@ -32,7 +34,7 @@ class WaliMuridController extends Controller
 
         // Get attendance
         $attendance = Attendance::where('student_id', $student->id)
-            ->with(['semester', 'classroom'])
+            ->with(['semester'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -106,7 +108,7 @@ class WaliMuridController extends Controller
         return view('wali-murid.jadwal-anak', compact('student', 'schedules'));
     }
 
-    public function absensiAnak()
+    public function absensiAnak(Request $request)
     {
         $user = Auth::user();
         $waliMurid = $user->waliMurid;
@@ -117,12 +119,53 @@ class WaliMuridController extends Controller
 
         $student = $waliMurid->student;
 
-        // Get student's attendance
-        $attendance = Attendance::where('student_id', $student->id)
-            ->with(['semester', 'classroom'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        // Get active semester
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        if (!$activeSemester) {
+            return redirect()->back()->with('error', 'Tidak ada semester aktif.');
+        }
 
-        return view('wali-murid.absensi-anak', compact('student', 'attendance'));
+        // Get month and year from request, default to current month
+        $selectedMonth = $request->get('month', now()->month);
+        $selectedYear = $request->get('year', now()->year);
+        $currentMonth = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1);
+
+        // Get student's attendance using the new service
+        $attendanceService = new AttendanceService();
+        $semesterStats = $attendanceService->getSemesterStats($student->id, $activeSemester->id);
+
+        // Get semester attendance summaries
+        $attendance = Attendance::where('student_id', $student->id)
+            ->where('semester_id', $activeSemester->id)
+            ->with(['semester', 'semester.academicYear'])
+            ->get();
+
+        // Get detailed attendance records
+        $query = \App\Models\StudentAttendance::where('student_id', $student->id)
+            ->with(['schedule.subject', 'schedule.classroom', 'teacher.user']);
+
+        // Apply month/year filter if provided
+        if ($request->filled('month') && $request->filled('year')) {
+            $query->whereYear('attendance_date', $selectedYear)
+                ->whereMonth('attendance_date', $selectedMonth);
+        } else {
+            // Show data from last 3 months by default
+            $threeMonthsAgo = now()->subMonths(3);
+            $query->where('attendance_date', '>=', $threeMonthsAgo);
+        }
+
+        $attendanceRecords = $query->orderBy('attendance_date', 'desc')->paginate(20);
+
+        return view('wali-murid.absensi-anak', compact(
+            'student',
+            'attendanceRecords',
+            'semesterStats',
+            'activeSemester',
+            'attendance',
+            'attendanceService',
+            'currentMonth',
+            'selectedMonth',
+            'selectedYear'
+        ));
     }
 }

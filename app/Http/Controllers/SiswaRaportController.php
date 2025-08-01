@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Attendance;
 use App\Models\ClassStudent;
+use App\Services\AttendanceService;
 
 class SiswaRaportController extends Controller
 {
@@ -89,14 +90,14 @@ class SiswaRaportController extends Controller
             ->get()
             ->keyBy('subject_id');
 
-        // Ambil data absensi
+        // Ambil data absensi menggunakan attendance service
+        $attendanceService = new AttendanceService();
+        $semesterStats = $attendanceService->getSemesterStats($student->id, $semester->id);
+
         if (!$raport || (!$raport->attendance_sick && !$raport->attendance_permit && !$raport->attendance_absent)) {
-            $attendance = Attendance::where('student_id', $student->id)
-                ->where('semester_id', $semester->id)
-                ->first();
-            $attendance_sick = $attendance->sakit ?? 0;
-            $attendance_permit = $attendance->izin ?? 0;
-            $attendance_absent = $attendance->alpha ?? 0;
+            $attendance_sick = $semesterStats['sakit'];
+            $attendance_permit = $semesterStats['izin'];
+            $attendance_absent = $semesterStats['alpha'];
         } else {
             $attendance_sick = $raport->attendance_sick;
             $attendance_permit = $raport->attendance_permit;

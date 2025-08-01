@@ -22,6 +22,7 @@ use App\Http\Controllers\GuruNilaiController;
 use App\Http\Controllers\WaliKelasController;
 use App\Http\Controllers\SiswaRaportController;
 use App\Http\Controllers\GuruAbsensiController;
+use App\Http\Controllers\TeacherAttendanceController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\Admin\NilaiSiswaController;
 use App\Http\Controllers\KepalaSekolahController;
@@ -89,6 +90,16 @@ Route::middleware('auth')->group(function () {
     Route::get('guru/nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
     Route::post('guru/nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
     Route::get('guru/nilai/import/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
+
+    // Teacher Attendance Routes
+    Route::middleware('check.role:teacher')->prefix('teacher/attendance')->name('teacher.attendance.')->group(function () {
+        Route::get('/', [TeacherAttendanceController::class, 'index'])->name('index');
+        Route::get('/take/{schedule}', [TeacherAttendanceController::class, 'takeAttendance'])->name('take');
+        Route::post('/store/{schedule}', [TeacherAttendanceController::class, 'storeAttendance'])->name('store');
+        Route::get('/view/{schedule}', [TeacherAttendanceController::class, 'viewAttendance'])->name('view');
+        Route::get('/edit/{schedule}/{date}', [TeacherAttendanceController::class, 'editAttendance'])->name('edit');
+        Route::put('/update/{schedule}/{date}', [TeacherAttendanceController::class, 'updateAttendance'])->name('update');
+    });
 
 
     // Siswa

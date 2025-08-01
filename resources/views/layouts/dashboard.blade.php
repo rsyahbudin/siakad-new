@@ -267,6 +267,15 @@
                     </li>
 
                     <li>
+                        <a href="{{ route('teacher.attendance.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('teacher.attendance.*') ? 'bg-white/20 shadow-lg' : '' }} group">
+                            <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <span class="font-medium">Manajemen Absensi</span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'bg-white/20 shadow-lg' : '' }} group">
                             <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
