@@ -414,7 +414,6 @@
     </div>
 </div>
 
-@push('scripts')
 <script>
     function exportToExcel() {
         // Implementation for Excel export
@@ -539,5 +538,5 @@
         console.log('Attendance view loaded');
     });
 </script>
-@endpush
+
 @endsection

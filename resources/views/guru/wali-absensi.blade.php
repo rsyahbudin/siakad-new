@@ -41,8 +41,8 @@
             </svg>
             <span class="text-green-800 font-medium">{{ session('success') }}</span>
         </div>
-</div>
-@endif
+    </div>
+    @endif
 
     @if(session('error'))
     <!-- Error Message -->
@@ -52,9 +52,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
             </svg>
             <span class="text-red-800 font-medium">{{ session('error') }}</span>
-</div>
-</div>
-@endif
+        </div>
+    </div>
+    @endif
 
     <!-- Search Section -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -74,15 +74,15 @@
                 </svg>
                 Cari
             </button>
-    @if($q)
+            @if($q)
             <a href="{{ route('wali.absensi') }}" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
                 Reset
             </a>
-    @endif
-</form>
+            @endif
+        </form>
     </div>
 
     <!-- Summary Statistics -->
@@ -160,26 +160,26 @@
                     <h2 class="text-lg font-semibold text-gray-900">Data Absensi Siswa</h2>
                     <p class="text-sm text-gray-600">Lihat akumulasi absensi dan kelola data semester. Gunakan "Simpan & Kunci" untuk mengunci data yang sudah benar.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="previewData()" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <button type="button" onclick="showPreviewModal()" class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
-                        Preview Data
+                        Lihat Preview
                     </button>
-                    <button type="button" onclick="exportData()" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <button type="button" onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export
+                        Export Excel
                     </button>
                 </div>
             </div>
         </div>
 
         <form method="POST" action="{{ route('wali.absensi.store') }}" id="attendanceForm">
-        @csrf
+            @csrf
             <input type="hidden" name="semester_id" value="{{ $activeSemester->id }}">
             <input type="hidden" name="classroom_id" value="{{ $kelas->id }}">
 
@@ -318,7 +318,7 @@
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Tidak Ada Hasil</h3>
                     <p class="text-gray-600">Tidak ada siswa yang sesuai dengan pencarian Anda.</p>
-        </div>
+                </div>
                 @endif
             </div>
 
@@ -348,12 +348,51 @@
                         </button>
                     </div>
                 </div>
-        </div>
-    </form>
+            </div>
+        </form>
     </div>
 </div>
 
-@push('scripts')
+<!-- Preview Modal -->
+<div id="previewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Preview Data Absensi</h3>
+                <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Siswa</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIS</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hadir</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sakit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Izin</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alpha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button onclick="closePreviewModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const inputs = document.querySelectorAll('.attendance-input');
@@ -444,38 +483,88 @@
         });
     }
 
-    function previewData() {
-        const form = document.getElementById('attendanceForm');
-        const formData = new FormData(form);
+    function showPreviewModal() {
+        const modal = document.getElementById('previewModal');
+        const tableBody = document.getElementById('previewTableBody');
 
-        // Create preview modal
-        let previewHtml = '<div class="modal fade" id="previewModal" tabindex="-1">';
-        previewHtml += '<div class="modal-dialog modal-lg"><div class="modal-content">';
-        previewHtml += '<div class="modal-header"><h5 class="modal-title">Preview Data Absensi</h5>';
-        previewHtml += '<button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
-        previewHtml += '<div class="modal-body">';
-        previewHtml += '<div class="table-responsive"><table class="table table-sm">';
-        previewHtml += '<thead><tr><th>Nama</th><th>Sakit</th><th>Izin</th><th>Alpha</th><th>Total</th></tr></thead><tbody>';
+        // Clear existing data
+        tableBody.innerHTML = '';
 
-        // Add preview data here
-        previewHtml += '</tbody></table></div></div>';
-        previewHtml += '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div>';
-        previewHtml += '</div></div></div>';
+        // Get all student items
+        const studentItems = document.querySelectorAll('.student-item');
 
-        document.body.insertAdjacentHTML('beforeend', previewHtml);
+        studentItems.forEach(item => {
+            const studentName = item.querySelector('h4').textContent;
+            const studentNis = item.querySelector('p').textContent;
+            const hadirSpan = item.querySelector('[data-hadir]');
+            const sakitInput = item.querySelector('input[data-type="sakit"]');
+            const izinInput = item.querySelector('input[data-type="izin"]');
+            const alphaInput = item.querySelector('input[data-type="alpha"]');
+            const totalBadge = item.querySelector('.total-badge');
+            const percentageSpan = item.querySelector('.bg-purple-100');
 
-        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-        modal.show();
+            const hadir = hadirSpan ? parseInt(hadirSpan.dataset.hadir) || 0 : 0;
+            const sakit = sakitInput ? parseInt(sakitInput.value) || 0 : 0;
+            const izin = izinInput ? parseInt(izinInput.value) || 0 : 0;
+            const alpha = alphaInput ? parseInt(alphaInput.value) || 0 : 0;
+            const total = sakit + izin + alpha;
+            const percentage = percentageSpan ? percentageSpan.textContent : '0%';
 
-        // Remove modal after hidden
-        document.getElementById('previewModal').addEventListener('hidden.bs.modal', function() {
-            this.remove();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${studentName}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${studentNis}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${hadir}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${sakit}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${izin}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${alpha}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${total}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${percentage}</td>
+            `;
+            tableBody.appendChild(row);
         });
+
+        modal.classList.remove('hidden');
     }
 
-    function exportData() {
-        // Implementation for data export
-        alert('Fitur export akan segera tersedia!');
+    function closePreviewModal() {
+        const modal = document.getElementById('previewModal');
+        modal.classList.add('hidden');
+    }
+
+    function exportToExcel() {
+        // Create a simple CSV export
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Nama,NIS,Hadir,Sakit,Izin,Alpha,Total,Persentase\n";
+
+        const studentItems = document.querySelectorAll('.student-item');
+
+        studentItems.forEach(item => {
+            const studentName = item.querySelector('h4').textContent;
+            const studentNis = item.querySelector('p').textContent;
+            const hadirSpan = item.querySelector('[data-hadir]');
+            const sakitInput = item.querySelector('input[data-type="sakit"]');
+            const izinInput = item.querySelector('input[data-type="izin"]');
+            const alphaInput = item.querySelector('input[data-type="alpha"]');
+            const percentageSpan = item.querySelector('.bg-purple-100');
+
+            const hadir = hadirSpan ? parseInt(hadirSpan.dataset.hadir) || 0 : 0;
+            const sakit = sakitInput ? parseInt(sakitInput.value) || 0 : 0;
+            const izin = izinInput ? parseInt(izinInput.value) || 0 : 0;
+            const alpha = alphaInput ? parseInt(alphaInput.value) || 0 : 0;
+            const total = sakit + izin + alpha;
+            const percentage = percentageSpan ? percentageSpan.textContent : '0%';
+
+            csvContent += `"${studentName}","${studentNis}",${hadir},${sakit},${izin},${alpha},${total},"${percentage}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "absensi_semester_{{ $kelas->name }}_{{ $activeSemester->name }}.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Search and filter functionality
@@ -558,5 +647,5 @@
         });
     });
 </script>
-@endpush
+
 @endsection

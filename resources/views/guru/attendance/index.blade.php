@@ -275,7 +275,7 @@
     </div>
 </div>
 
-@push('scripts')
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchSchedules');
@@ -402,5 +402,5 @@
         }
     });
 </script>
-@endpush
+
 @endsection

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -12,25 +16,41 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'password.required' => 'Kata sandi wajib diisi.',
-        ]);
+        try {
+            // Attempt authentication with rate limiting
+            $request->authenticate();
 
-        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
-        }
 
-        return back()->withErrors([
-            'email' => 'Email atau kata sandi salah.',
-        ])->onlyInput('email');
+            // Add success message
+            return redirect()->intended('/dashboard')->with('success', __('login berhasil'));
+        } catch (ValidationException $e) {
+            // Handle rate limiting errors
+            if (str_contains($e->getMessage(), 'throttle')) {
+                return back()->withErrors([
+                    'email' => __('auth.throttle', [
+                        'seconds' => $e->getMessage(),
+                        'minutes' => ceil($e->getMessage() / 60),
+                    ]),
+                ])->withInput($request->only('email'));
+            }
+
+            // Handle authentication failures with more specific messages
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                return back()->withErrors([
+                    'email' => __('email tidak ditemukan'),
+                ])->withInput($request->only('email'));
+            }
+
+            // If user exists but password is wrong
+            return back()->withErrors([
+                'password' => __('password salah'),
+            ])->withInput($request->only('email', 'remember'));
+        }
     }
 
     public function logout(Request $request)
@@ -38,6 +58,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login');
+
+        return redirect('/login')->with('success', __('logout berhasil'));
     }
 }
