@@ -163,6 +163,12 @@
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div>
+                            <label for="parent_email" class="block text-sm font-medium text-gray-700 mb-2">Email Orang Tua</label>
+                            <input type="email" id="parent_email" name="parent_email" value="{{ old('parent_email') }}" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="text-sm text-gray-600 mt-1">Email ini akan digunakan untuk login wali murid di SIAKAD</p>
+                        </div>
+                        <div>
                             <label for="parent_occupation" class="block text-sm font-medium text-gray-700 mb-2">Pekerjaan Orang Tua</label>
                             <input type="text" id="parent_occupation" name="parent_occupation" value="{{ old('parent_occupation') }}"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">

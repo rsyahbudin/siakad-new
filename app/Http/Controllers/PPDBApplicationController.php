@@ -29,7 +29,7 @@ class PPDBApplicationController extends Controller
     {
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'nisn' => 'required|string|unique:ppdb_applications,nisn|size:10',
+            'nisn' => 'required|string|unique:ppdb_applications,nisn|size:10|regex:/^[0-9]+$/',
             'birth_place' => 'required|string|max:255',
             'birth_date' => 'required|date',
             'gender' => 'required|in:L,P',
@@ -39,6 +39,7 @@ class PPDBApplicationController extends Controller
             'address' => 'required|string',
             'parent_name' => 'required|string|max:255',
             'parent_phone' => 'required|string|max:20',
+            'parent_email' => 'required|email|max:255',
             'parent_occupation' => 'nullable|string|max:255',
             'parent_address' => 'nullable|string',
             'entry_path' => 'required|in:tes,prestasi,afirmasi',
@@ -82,6 +83,7 @@ class PPDBApplicationController extends Controller
                 'address' => $request->address,
                 'parent_name' => $request->parent_name,
                 'parent_phone' => $request->parent_phone,
+                'parent_email' => $request->parent_email,
                 'parent_occupation' => $request->parent_occupation,
                 'parent_address' => $request->parent_address,
                 'entry_path' => $request->entry_path,
@@ -257,7 +259,7 @@ class PPDBApplicationController extends Controller
         // Create wali murid account
         $waliMuridUser = User::create([
             'name' => $application->parent_name,
-            'email' => 'wali_' . $application->email,
+            'email' => $application->parent_email,
             'password' => Hash::make('wali123'), // Default password
             'role' => User::ROLE_WALI_MURID,
         ]);
@@ -290,7 +292,17 @@ class PPDBApplicationController extends Controller
             return back()->withErrors(['error' => 'File tidak ditemukan.']);
         }
 
-        return Storage::disk('public')->download($filePath);
+        // Get file extension to determine if it's an image
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
+
+        if ($isImage) {
+            // For images, return the file for preview/download
+            return response()->file(storage_path('app/public/' . $filePath));
+        } else {
+            // For other files, force download
+            return Storage::disk('public')->download($filePath);
+        }
     }
 
     /**

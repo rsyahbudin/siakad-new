@@ -110,6 +110,10 @@
                             <p class="text-gray-900">{{ $application->parent_phone }}</p>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Orang Tua</label>
+                            <p class="text-gray-900">{{ $application->parent_email }}</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Pekerjaan Orang Tua</label>
                             <p class="text-gray-900">{{ $application->parent_occupation ?? '-' }}</p>
                         </div>
@@ -197,10 +201,22 @@
                                 @endif
                             </div>
                             @if($application->$field)
-                            <a href="{{ route('admin.ppdb.download', ['application' => $application, 'documentType' => $field]) }}"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
-                                Download
-                            </a>
+                            @php
+                            $extension = pathinfo($application->$field, PATHINFO_EXTENSION);
+                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
+                            @endphp
+                            <div class="flex gap-2">
+                                @if($isImage)
+                                <button onclick="previewImage('{{ route('admin.ppdb.download', ['application' => $application, 'documentType' => $field]) }}', '{{ $label }}')"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
+                                    Preview
+                                </button>
+                                @endif
+                                <a href="{{ route('admin.ppdb.download', ['application' => $application, 'documentType' => $field]) }}"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
+                                    Download
+                                </a>
+                            </div>
                             @else
                             <span class="text-gray-400 text-sm">Tidak tersedia</span>
                             @endif
@@ -346,4 +362,40 @@
         </div>
     </div>
 </div>
+
+<!-- Image Preview Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900"></h3>
+            <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <img id="modalImage" src="" alt="Preview" class="max-w-full max-h-96 object-contain">
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(imageUrl, title) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+</script>
 @endsection

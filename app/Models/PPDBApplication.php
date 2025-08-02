@@ -24,6 +24,7 @@ class PPDBApplication extends Model
         'address',
         'parent_name',
         'parent_phone',
+        'parent_email',
         'parent_occupation',
         'parent_address',
         'entry_path',

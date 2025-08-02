@@ -133,6 +133,9 @@ return [
     'prohibits' => ':attribute melarang :other ada.',
     'regex' => 'Format :attribute tidak valid.',
     'required' => ':attribute wajib diisi.',
+    'nisn' => [
+        'regex' => 'NISN harus berupa 10 digit angka.',
+    ],
     'required_array_keys' => ':attribute field harus berisi entri untuk: :values.',
     'required_if' => ':attribute wajib diisi ketika :other adalah :value.',
     'required_if_accepted' => ':attribute wajib diisi ketika :other diterima.',

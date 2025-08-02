@@ -62,8 +62,15 @@ If account creation is not working:
 
 1. Check Laravel logs: `storage/logs/laravel.log`
 2. Verify admin is logged in when changing status
-3. Check if application has valid email address
+3. Check if application has valid email address for both student and parent
 4. Ensure all required documents are uploaded
+5. Make sure parent_email field is filled in the PPDB application
+
+### Login Information
+
+- **Siswa**: Login menggunakan email siswa yang didaftarkan di form PPDB
+- **Wali Murid**: Login menggunakan email orang tua yang didaftarkan di form PPDB (field "Email Orang Tua")
+- **Password**: `student123` untuk siswa, `wali123` untuk wali murid
 
 ## Current Data
 
@@ -75,8 +82,23 @@ If account creation is not working:
 
 ## Sample Email Addresses for Testing
 
+### Student Accounts (untuk login siswa)
+
 - **Ahmad Rizki Pratama**: ahmad.rizki@example.com (Lulus)
 - **Dewi Putri Sari**: dewi.putri@example.com (Lulus)
 - **Muhammad Fadli**: muhammad.fadli@example.com (Pending)
 - **Nina Safitri**: nina.safitri@example.com (Ditolak)
 - **Rizki Ramadhan**: rizki.ramadhan@example.com (Ditolak)
+
+### Wali Murid Accounts (untuk login wali murid)
+
+- **Budi Santoso** (orang tua Ahmad): budi.santoso@example.com
+- **Siti Rahayu** (orang tua Dewi): siti.rahayu@example.com
+- **Ahmad Supriyadi** (orang tua Muhammad): ahmad.supriyadi@example.com
+- **Bambang Sutrisno** (orang tua Nina): bambang.sutrisno@example.com
+- **Dedi Kurniawan** (orang tua Rizki): dedi.kurniawan@example.com
+
+### Default Passwords
+
+- **Student**: `student123`
+- **Wali Murid**: `wali123`
