@@ -28,19 +28,30 @@ use App\Http\Controllers\Admin\NilaiSiswaController;
 use App\Http\Controllers\KepalaSekolahController;
 use App\Http\Controllers\WaliMuridController;
 use App\Http\Controllers\PPDBApplicationController;
+use App\Http\Controllers\TransferStudentController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
 });
 
 // PPDB Public Routes (No Authentication Required)
-Route::prefix('ppdb')->name('ppdb.')->group(function () {
+Route::prefix('ppdb')->name('ppdb.')->middleware('check.system.enabled:ppdb')->group(function () {
     Route::get('/register', [PPDBApplicationController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [PPDBApplicationController::class, 'register'])->name('register.store');
     Route::get('/success', [PPDBApplicationController::class, 'showSuccess'])->name('success');
     Route::get('/status-check', [PPDBApplicationController::class, 'showStatusCheck'])->name('status-check');
     Route::post('/status-check', [PPDBApplicationController::class, 'checkStatus'])->name('status-check.post');
     Route::get('/status', [PPDBApplicationController::class, 'checkStatus'])->name('status');
+});
+
+// Transfer Student Public Routes (No Authentication Required)
+Route::prefix('transfer')->name('transfer.')->middleware('check.system.enabled:transfer')->group(function () {
+    Route::get('/register', [TransferStudentController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [TransferStudentController::class, 'register'])->name('register.store');
+    Route::get('/success', [TransferStudentController::class, 'showSuccess'])->name('success');
+    Route::get('/status-check', [TransferStudentController::class, 'showStatusCheck'])->name('status-check');
+    Route::post('/status-check', [TransferStudentController::class, 'checkStatus'])->name('status-check.post');
+    Route::get('/status', [TransferStudentController::class, 'checkStatus'])->name('status');
 });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
@@ -83,9 +94,25 @@ Route::middleware('auth')->group(function () {
 
         // PPDB Admin Routes
         Route::get('ppdb', [PPDBApplicationController::class, 'adminIndex'])->name('ppdb.index');
+        Route::get('ppdb/batch-test-score', [PPDBApplicationController::class, 'showBatchTestScore'])->name('ppdb.batch-test-score');
+        Route::post('ppdb/batch-test-score', [PPDBApplicationController::class, 'updateBatchTestScore'])->name('ppdb.update-batch-test-score');
         Route::get('ppdb/{application}', [PPDBApplicationController::class, 'adminShow'])->name('ppdb.show');
         Route::put('ppdb/{application}', [PPDBApplicationController::class, 'adminUpdate'])->name('ppdb.update');
+        Route::patch('ppdb/{application}/test-score', [PPDBApplicationController::class, 'updateTestScore'])->name('ppdb.update-test-score');
         Route::get('ppdb/{application}/download/{documentType}', [PPDBApplicationController::class, 'downloadDocument'])->name('ppdb.download');
+
+        // Transfer Student Admin Routes
+        Route::get('transfer', [TransferStudentController::class, 'adminIndex'])->name('transfer.index');
+        Route::get('transfer/{transferStudent}', [TransferStudentController::class, 'adminShow'])->name('transfer.show');
+        Route::put('transfer/{transferStudent}', [TransferStudentController::class, 'adminUpdate'])->name('transfer.update');
+        Route::get('transfer/{transferStudent}/download/{documentType}', [TransferStudentController::class, 'downloadDocument'])->name('transfer.download');
+        Route::get('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'showGradeConversion'])->name('transfer.grade-conversion');
+        Route::post('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'saveGradeConversion'])->name('transfer.save-grade-conversion');
+
+        // System Settings Routes
+        Route::get('system-settings', [\App\Http\Controllers\SystemSettingController::class, 'index'])->name('system-settings.index');
+        Route::post('system-settings/toggle-ppdb', [\App\Http\Controllers\SystemSettingController::class, 'togglePPDB'])->name('system-settings.toggle-ppdb');
+        Route::post('system-settings/toggle-transfer-student', [\App\Http\Controllers\SystemSettingController::class, 'toggleTransferStudent'])->name('system-settings.toggle-transfer-student');
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
@@ -145,7 +172,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pengaturan-kkm/update-semester-weights', [\App\Http\Controllers\SubjectSettingController::class, 'updateSemesterWeights'])->name('pengaturan.kkm.update-semester-weights');
     Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen.pengguna');
     // Guru Wali Kelas
-    Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.dashboard');
+    Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.guru.dashboard');
     Route::get('/wali/kelas', [\App\Http\Controllers\WaliKelasController::class, 'kelas'])->name('wali.kelas');
     Route::get('/wali/leger', [\App\Http\Controllers\WaliKelasController::class, 'leger'])->name('wali.leger');
     Route::get('/wali/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('wali.finalisasi');

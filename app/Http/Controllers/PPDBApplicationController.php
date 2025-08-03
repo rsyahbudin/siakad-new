@@ -178,20 +178,91 @@ class PPDBApplicationController extends Controller
     /**
      * Update application status and test score
      */
+    /**
+     * Update test score only
+     */
+    public function updateTestScore(Request $request, PPDBApplication $application)
+    {
+        $request->validate([
+            'test_score' => 'required|numeric|min:0|max:100',
+        ]);
+
+        try {
+            $application->update([
+                'test_score' => $request->test_score,
+            ]);
+
+            return back()->with('success', 'Nilai tes berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui nilai tes.']);
+        }
+    }
+
+    /**
+     * Show batch test score input form
+     */
+    public function showBatchTestScore()
+    {
+        $applications = PPDBApplication::where('entry_path', 'tes')
+            ->where('status', 'pending')
+            ->whereNull('test_score')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.ppdb.batch-test-score', compact('applications'));
+    }
+
+    /**
+     * Update batch test scores
+     */
+    public function updateBatchTestScore(Request $request)
+    {
+        $request->validate([
+            'test_scores' => 'required|array',
+            'test_scores.*' => 'required|numeric|min:0|max:100',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->test_scores as $applicationId => $testScore) {
+                $application = PPDBApplication::find($applicationId);
+                if ($application && $application->entry_path === 'tes') {
+                    $application->update([
+                        'test_score' => $testScore,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Nilai tes berhasil diperbarui untuk ' . count($request->test_scores) . ' pendaftar.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui nilai tes.']);
+        }
+    }
+
+    /**
+     * Update application status
+     */
     public function adminUpdate(Request $request, PPDBApplication $application)
     {
         $request->validate([
             'status' => 'required|in:pending,lulus,ditolak',
-            'test_score' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|string',
         ]);
+
+        // Check if test score is required for tes entry path
+        if ($application->entry_path === 'tes' && !$application->test_score) {
+            return back()->withErrors(['error' => 'Untuk jalur tes, nilai tes harus diinput terlebih dahulu sebelum mengubah status.']);
+        }
 
         try {
             DB::beginTransaction();
 
             $application->update([
                 'status' => $request->status,
-                'test_score' => $request->test_score,
                 'notes' => $request->notes,
                 'processed_at' => now(),
                 'processed_by' => auth()->id(),

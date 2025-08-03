@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'check.role' => \App\Http\Middleware\CheckRole::class,
             'is.homeroom.teacher' => \App\Http\Middleware\IsHomeroomTeacher::class,
+            'check.system.enabled' => \App\Http\Middleware\CheckSystemEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

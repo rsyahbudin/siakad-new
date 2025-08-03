@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Detail Pendaftaran PPDB')
+@section('title', 'Detail Pendaftar PPDB')
 
 @section('content')
 <div class="space-y-6">
@@ -8,7 +8,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Detail Pendaftaran PPDB</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Detail Pendaftar PPDB</h1>
                 <p class="text-gray-600 mt-1">Nomor Pendaftaran: {{ $application->application_number }}</p>
             </div>
             <div class="flex items-center gap-3">
@@ -50,7 +50,7 @@
             <!-- Basic Information -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Informasi Pendaftar</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">Informasi Calon Siswa</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -106,7 +106,7 @@
                             <p class="text-gray-900">{{ $application->parent_name }}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon Orang Tua</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon</label>
                             <p class="text-gray-900">{{ $application->parent_phone }}</p>
                         </div>
                         <div>
@@ -114,39 +114,35 @@
                             <p class="text-gray-900">{{ $application->parent_email }}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pekerjaan Orang Tua</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pekerjaan</label>
                             <p class="text-gray-900">{{ $application->parent_occupation ?? '-' }}</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Alamat Orang Tua</label>
-                            <p class="text-gray-900">{{ $application->parent_address ?? $application->address }}</p>
+                            <p class="text-gray-900">{{ $application->parent_address ?? 'Sama dengan alamat siswa' }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Application Details -->
+            <!-- Application Information -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Detail Pendaftaran</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">Informasi Pendaftaran</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Jalur Pendaftaran</label>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                @if($application->entry_path === 'tes') bg-blue-100 text-blue-800
-                                @elseif($application->entry_path === 'prestasi') bg-green-100 text-green-800
-                                @else bg-purple-100 text-purple-800
-                                @endif">
-                                {{ $application->entry_path_label }}
-                            </span>
+                            <p class="text-gray-900">{{ $application->entry_path_label }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Jurusan yang Diminati</label>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {{ $application->desired_major_label }}
-                            </span>
+                            <p class="text-gray-900">{{ $application->desired_major_label }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <p class="text-gray-900">{{ $application->status_label }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pendaftaran</label>
@@ -191,18 +187,22 @@
                         $requiredDocuments = $application->getRequiredDocuments();
                         @endphp
                         @foreach($requiredDocuments as $field => $label)
+                        @php
+                        $fileField = $field . '_file';
+                        $filePath = $application->$fileField;
+                        @endphp
                         <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                             <div>
                                 <h4 class="font-medium text-gray-900">{{ $label }}</h4>
-                                @if($application->$field)
+                                @if($filePath)
                                 <p class="text-sm text-green-600">✓ Dokumen tersedia</p>
                                 @else
                                 <p class="text-sm text-red-600">✗ Dokumen belum diupload</p>
                                 @endif
                             </div>
-                            @if($application->$field)
+                            @if($filePath)
                             @php
-                            $extension = pathinfo($application->$field, PATHINFO_EXTENSION);
+                            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
                             $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
                             @endphp
                             <div class="flex gap-2">
@@ -229,10 +229,41 @@
 
         <!-- Action Panel -->
         <div class="space-y-6">
+            @if($application->entry_path === 'tes')
+            <!-- Input Nilai Tes -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Input Nilai Tes</h3>
+                    <p class="text-sm text-gray-600 mt-1">Input nilai tes terlebih dahulu sebelum mengubah status</p>
+                </div>
+                <div class="p-6">
+                    <form method="POST" action="{{ route('admin.ppdb.update-test-score', $application) }}" class="space-y-4">
+                        @csrf
+                        @method('PATCH')
+
+                        <div>
+                            <label for="test_score" class="block text-sm font-medium text-gray-700 mb-2">Nilai Tes</label>
+                            <input type="number" id="test_score" name="test_score" value="{{ $application->test_score }}"
+                                min="0" max="100" step="0.01" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="text-sm text-gray-600 mt-1">Minimal 70 untuk kelulusan jalur tes</p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            {{ $application->test_score ? 'Update Nilai Tes' : 'Input Nilai Tes' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
             <!-- Status Update -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900">Update Status</h3>
+                    @if($application->entry_path === 'tes' && !$application->test_score)
+                    <p class="text-sm text-amber-600 mt-1">⚠️ Input nilai tes terlebih dahulu untuk jalur tes</p>
+                    @endif
                 </div>
                 <div class="p-6">
                     <form method="POST" action="{{ route('admin.ppdb.update', $application) }}" class="space-y-4">
@@ -248,16 +279,6 @@
                                 <option value="ditolak" {{ $application->status === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
                         </div>
-
-                        @if($application->entry_path === 'tes')
-                        <div>
-                            <label for="test_score" class="block text-sm font-medium text-gray-700 mb-2">Nilai Tes</label>
-                            <input type="number" id="test_score" name="test_score" value="{{ $application->test_score }}"
-                                min="0" max="100" step="0.01"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <p class="text-sm text-gray-600 mt-1">Minimal 70 untuk kelulusan</p>
-                        </div>
-                        @endif
 
                         <div>
                             <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
@@ -278,60 +299,58 @@
                     <h3 class="text-lg font-semibold text-gray-900">Persyaratan Kelulusan</h3>
                 </div>
                 <div class="p-6">
-                    <div class="space-y-4">
-                        @if($application->entry_path === 'tes')
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Nilai Tes ≥ 70</h4>
-                                <p class="text-sm text-gray-600">{{ $application->test_score ?? 'Belum diinput' }}</p>
-                            </div>
-                            @if($application->test_score && $application->test_score >= 70)
-                            <span class="text-green-600">✓</span>
-                            @elseif($application->test_score)
-                            <span class="text-red-600">✗</span>
-                            @else
-                            <span class="text-yellow-600">?</span>
-                            @endif
+                    @if($application->entry_path === 'tes')
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Nilai Tes Minimal 70</h4>
+                            <p class="text-sm text-gray-600">{{ $application->test_score ?? 'Belum diinput' }}</p>
                         </div>
-                        @elseif($application->entry_path === 'prestasi')
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Rata-rata Rapor ≥ 85</h4>
-                                <p class="text-sm text-gray-600">{{ $application->average_raport_score ?? 'Belum diinput' }}</p>
-                            </div>
-                            @if($application->average_raport_score && $application->average_raport_score >= 85)
-                            <span class="text-green-600">✓</span>
-                            @elseif($application->average_raport_score)
-                            <span class="text-red-600">✗</span>
-                            @else
-                            <span class="text-yellow-600">?</span>
-                            @endif
-                        </div>
-                        @elseif($application->entry_path === 'afirmasi')
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Dokumen Lengkap</h4>
-                                <p class="text-sm text-gray-600">Berdasarkan kelengkapan dokumen</p>
-                            </div>
-                            @if($application->hasAllRequiredDocuments())
-                            <span class="text-green-600">✓</span>
-                            @else
-                            <span class="text-red-600">✗</span>
-                            @endif
-                        </div>
+                        @if($application->test_score && $application->test_score >= 70)
+                        <span class="text-green-600">✓</span>
+                        @elseif($application->test_score)
+                        <span class="text-red-600">✗</span>
+                        @else
+                        <span class="text-yellow-600">?</span>
                         @endif
-
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Dokumen Lengkap</h4>
-                                <p class="text-sm text-gray-600">{{ $application->hasAllRequiredDocuments() ? 'Semua dokumen tersedia' : 'Beberapa dokumen belum diupload' }}</p>
-                            </div>
-                            @if($application->hasAllRequiredDocuments())
-                            <span class="text-green-600">✓</span>
-                            @else
-                            <span class="text-red-600">✗</span>
-                            @endif
+                    </div>
+                    @elseif($application->entry_path === 'prestasi')
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Rata-rata Nilai Rapor Minimal 85</h4>
+                            <p class="text-sm text-gray-600">{{ $application->average_raport_score ?? 'Belum diinput' }}</p>
                         </div>
+                        @if($application->average_raport_score && $application->average_raport_score >= 85)
+                        <span class="text-green-600">✓</span>
+                        @elseif($application->average_raport_score)
+                        <span class="text-red-600">✗</span>
+                        @else
+                        <span class="text-yellow-600">?</span>
+                        @endif
+                    </div>
+                    @elseif($application->entry_path === 'afirmasi')
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Dokumen Lengkap</h4>
+                            <p class="text-sm text-gray-600">Berdasarkan kelengkapan dokumen</p>
+                        </div>
+                        @if($application->hasAllRequiredDocuments())
+                        <span class="text-green-600">✓</span>
+                        @else
+                        <span class="text-red-600">✗</span>
+                        @endif
+                    </div>
+                    @endif
+
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Dokumen Lengkap</h4>
+                            <p class="text-sm text-gray-600">{{ $application->hasAllRequiredDocuments() ? 'Semua dokumen tersedia' : 'Beberapa dokumen belum diupload' }}</p>
+                        </div>
+                        @if($application->hasAllRequiredDocuments())
+                        <span class="text-green-600">✓</span>
+                        @else
+                        <span class="text-red-600">✗</span>
+                        @endif
                     </div>
                 </div>
             </div>
