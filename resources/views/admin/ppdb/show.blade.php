@@ -172,6 +172,16 @@
                             <p class="text-gray-900">{{ $application->average_raport_score }}</p>
                         </div>
                         @endif
+
+                        @if($application->status === 'lulus')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIS yang Akan Digenerate</label>
+                            <p class="text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
+                                {{ \App\Services\NISGeneratorService::getNISFormatExample() }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">Format: YY + 6 digit urutan (contoh: 25000001)</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

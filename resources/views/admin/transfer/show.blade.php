@@ -66,6 +66,15 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">NIS Sekolah Asal</label>
                             <p class="text-gray-900">{{ $transferStudent->nis_previous ?? '-' }}</p>
                         </div>
+                        @if($transferStudent->status === 'approved')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIS yang Akan Digenerate</label>
+                            <p class="text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
+                                {{ \App\Services\NISGeneratorService::getNISFormatExample() }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">Format: YY + 6 digit urutan (berbeda dari NIS sebelumnya)</p>
+                        </div>
+                        @endif
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email Siswa</label>
                             <p class="text-gray-900">{{ $transferStudent->email }}</p>

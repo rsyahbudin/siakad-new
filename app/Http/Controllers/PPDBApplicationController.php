@@ -6,6 +6,7 @@ use App\Models\PPDBApplication;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\WaliMurid;
+use App\Services\NISGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -310,10 +311,13 @@ class PPDBApplicationController extends Controller
             'role' => User::ROLE_STUDENT,
         ]);
 
+        // Generate unique NIS for the student
+        $nis = NISGeneratorService::generateNIS();
+
         // Create student record
         $student = Student::create([
             'user_id' => $user->id,
-            'nis' => $application->nisn, // Using NISN as NIS for now
+            'nis' => $nis, // Generated unique NIS
             'nisn' => $application->nisn,
             'full_name' => $application->full_name,
             'gender' => $application->gender,

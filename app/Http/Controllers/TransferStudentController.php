@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\WaliMurid;
 use App\Models\Subject;
+use App\Services\NISGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -258,10 +259,13 @@ class TransferStudentController extends Controller
             'role' => User::ROLE_STUDENT,
         ]);
 
+        // Generate unique NIS for transfer student (different from previous NIS)
+        $nis = NISGeneratorService::generateNISForTransferStudent($transferStudent->nis_previous);
+
         // Create student record
         $student = Student::create([
             'user_id' => $user->id,
-            'nis' => $transferStudent->nisn, // Using NISN as NIS for now
+            'nis' => $nis, // Generated unique NIS
             'nisn' => $transferStudent->nisn,
             'full_name' => $transferStudent->full_name,
             'gender' => $transferStudent->gender,
