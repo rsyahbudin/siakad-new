@@ -181,6 +181,12 @@
                             </p>
                             <p class="text-xs text-gray-500 mt-1">Format: YY + 6 digit urutan (contoh: 25000001)</p>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Penempatan Kelas</label>
+                            <p class="text-gray-900 font-semibold">Kelas X {{ $application->desired_major }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Siswa akan ditempatkan otomatis di kelas sesuai jurusan yang diminati</p>
+                        </div>
                         @endif
                     </div>
                 </div>

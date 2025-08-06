@@ -9,6 +9,7 @@ use App\Models\Schedule;
 use App\Models\Major;
 use App\Models\AcademicYear;
 use App\Models\ClassroomAssignment;
+use App\Models\ClassStudent;
 
 class Classroom extends Model
 {
@@ -49,5 +50,10 @@ class Classroom extends Model
     public function classroomAssignments()
     {
         return $this->hasMany(ClassroomAssignment::class);
+    }
+
+    public function classStudents()
+    {
+        return $this->hasMany(ClassStudent::class);
     }
 }

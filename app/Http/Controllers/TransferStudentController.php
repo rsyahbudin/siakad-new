@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\WaliMurid;
 use App\Models\Subject;
 use App\Services\NISGeneratorService;
+use App\Services\ClassPlacementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -296,6 +297,15 @@ class TransferStudentController extends Controller
             'address' => $transferStudent->parent_address ?? $transferStudent->address,
             'relationship' => 'Orang Tua',
         ]);
+
+        // Place student in appropriate class based on target grade and major
+        $placementSuccess = ClassPlacementService::placeTransferStudent($student, $transferStudent->target_grade, $transferStudent->target_major);
+
+        if ($placementSuccess) {
+            Log::info("Transfer student {$student->full_name} successfully placed in class");
+        } else {
+            Log::warning("Failed to place transfer student {$student->full_name} in class");
+        }
 
         Log::info('Student account created successfully for transfer student: ' . $transferStudent->registration_number);
     }

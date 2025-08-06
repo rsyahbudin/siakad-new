@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\WaliMurid;
 use App\Services\NISGeneratorService;
+use App\Services\ClassPlacementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -348,6 +349,15 @@ class PPDBApplicationController extends Controller
             'address' => $application->parent_address ?? $application->address,
             'relationship' => 'Orang Tua',
         ]);
+
+        // Place student in appropriate class based on desired major
+        $placementSuccess = ClassPlacementService::placePPDBStudent($student, $application->desired_major);
+
+        if ($placementSuccess) {
+            Log::info("Student {$student->full_name} successfully placed in class");
+        } else {
+            Log::warning("Failed to place student {$student->full_name} in class");
+        }
     }
 
     /**

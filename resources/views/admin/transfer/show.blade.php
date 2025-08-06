@@ -74,6 +74,12 @@
                             </p>
                             <p class="text-xs text-gray-500 mt-1">Format: YY + 6 digit urutan (berbeda dari NIS sebelumnya)</p>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Penempatan Kelas</label>
+                            <p class="text-gray-900 font-semibold">Kelas {{ $transferStudent->target_grade }} {{ $transferStudent->target_major }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Siswa akan ditempatkan otomatis di kelas sesuai kelas dan jurusan tujuan</p>
+                        </div>
                         @endif
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email Siswa</label>

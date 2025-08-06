@@ -166,6 +166,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/penugasan-guru', [PenugasanGuruController::class, 'index'])->name('penugasan.guru');
     Route::get('/pembagian-kelas', [ClassAssignmentController::class, 'index'])->name('pembagian.kelas');
     Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
+    Route::post('/pembagian-kelas/auto-place', [ClassAssignmentController::class, 'autoPlaceStudents'])->name('pembagian.kelas.auto-place');
     Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
     Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
     Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');
