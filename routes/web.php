@@ -29,6 +29,7 @@ use App\Http\Controllers\KepalaSekolahController;
 use App\Http\Controllers\WaliMuridController;
 use App\Http\Controllers\PPDBApplicationController;
 use App\Http\Controllers\TransferStudentController;
+use App\Http\Controllers\ExamScheduleController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -109,6 +110,9 @@ Route::middleware('auth')->group(function () {
         Route::get('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'showGradeConversion'])->name('transfer.grade-conversion');
         Route::post('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'saveGradeConversion'])->name('transfer.save-grade-conversion');
 
+        // Exam Schedule Routes (Admin only)
+        Route::resource('exam-schedules', ExamScheduleController::class);
+
         // System Settings Routes
         Route::get('system-settings', [\App\Http\Controllers\SystemSettingController::class, 'index'])->name('system-settings.index');
         Route::post('system-settings/toggle-ppdb', [\App\Http\Controllers\SystemSettingController::class, 'togglePPDB'])->name('system-settings.toggle-ppdb');
@@ -135,6 +139,9 @@ Route::middleware('auth')->group(function () {
     Route::post('guru/nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
     Route::get('guru/nilai/import/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
 
+    // Teacher Exam Schedule Routes
+    Route::get('/jadwal-ujian-guru', [ExamScheduleController::class, 'teacherSchedule'])->name('guru.exam-schedule');
+
     // Teacher Attendance Routes
     Route::middleware('check.role:teacher')->prefix('teacher/attendance')->name('teacher.attendance.')->group(function () {
         Route::get('/', [TeacherAttendanceController::class, 'index'])->name('index');
@@ -154,6 +161,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/nilai-siswa', [\App\Http\Controllers\StudentController::class, 'nilaiAkademikSiswa'])->name('nilai.siswa');
     Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('siswa.raport');
     Route::get('/raport-siswa/semua', [SiswaRaportController::class, 'allRaports'])->name('siswa.all-raports');
+    Route::get('/jadwal-ujian-siswa', [ExamScheduleController::class, 'studentSchedule'])->name('siswa.exam-schedule');
     // Admin
     Route::prefix('jadwal-admin')->name('jadwal.admin.')->group(function () {
         Route::get('/', [ScheduleController::class, 'index'])->name('index');
@@ -201,6 +209,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/raport-anak', [WaliMuridController::class, 'raportAnak'])->name('raport.anak');
         Route::get('/jadwal-anak', [WaliMuridController::class, 'jadwalAnak'])->name('jadwal.anak');
         Route::get('/absensi-anak', [WaliMuridController::class, 'absensiAnak'])->name('absensi.anak');
+        Route::get('/jadwal-ujian-anak', [ExamScheduleController::class, 'parentSchedule'])->name('exam-schedule');
     });
 });
 
