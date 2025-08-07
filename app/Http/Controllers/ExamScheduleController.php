@@ -112,13 +112,24 @@ class ExamScheduleController extends Controller
         $examSchedules = $query->orderBy('exam_date')->orderBy('start_time')->paginate(20);
 
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
-        $semesters = Semester::orderBy('name')->get();
+        // Only show active semesters in filter to avoid duplication
+        $semesters = Semester::where('is_active', true)->orderBy('name')->get();
         $classrooms = Classroom::orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
         $majors = Major::orderBy('name')->get();
         $supervisors = Teacher::orderBy('full_name')->get();
+        // Get total counts for statistics
+        $totalUts = ExamSchedule::where('exam_type', 'uts')
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->count();
 
-        return view('admin.exam-schedule.index', compact('examSchedules', 'academicYears', 'semesters', 'classrooms', 'subjects', 'majors', 'supervisors', 'activeSemester', 'activeAcademicYear'));
+        $totalUas = ExamSchedule::where('exam_type', 'uas')
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->count();
+
+        return view('admin.exam-schedule.index', compact('examSchedules', 'academicYears', 'semesters', 'classrooms', 'subjects', 'majors', 'supervisors', 'activeSemester', 'activeAcademicYear', 'totalUts', 'totalUas'));
     }
 
     /**
@@ -139,11 +150,48 @@ class ExamScheduleController extends Controller
         $academicYears = AcademicYear::where('id', $activeAcademicYear->id)->get();
         $semesters = Semester::where('id', $activeSemester->id)->get();
         $subjects = Subject::with('major')->orderBy('name')->get();
-        $classrooms = Classroom::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         $majors = Major::orderBy('name')->get();
 
-        return view('admin.exam-schedule.create', compact('academicYears', 'semesters', 'subjects', 'classrooms', 'teachers', 'majors', 'activeSemester', 'activeAcademicYear'));
+        // Get available grades and majors from existing classrooms
+        $grades = Classroom::distinct()->pluck('grade_level')->sort()->values()->map(function ($gradeLevel) {
+            return $gradeLevel == 10 ? 'X' : ($gradeLevel == 11 ? 'XI' : 'XII');
+        });
+        $availableMajors = Classroom::whereNotNull('major_id')->distinct()->pluck('major_id')->values();
+        $availableMajorsData = Major::whereIn('id', $availableMajors)->orderBy('name')->get();
+
+        // Get classroom counts for each grade and major combination
+        $classroomCounts = [];
+        foreach ($grades as $grade) {
+            $gradeLevel = $grade === 'X' ? 10 : ($grade === 'XI' ? 11 : 12);
+
+            // Count general classrooms (no major)
+            $generalCount = Classroom::where('grade_level', $gradeLevel)
+                ->whereNull('major_id')
+                ->count();
+            $classroomCounts[$grade]['general'] = $generalCount;
+
+            // Count classrooms for each major
+            foreach ($availableMajorsData as $major) {
+                $majorCount = Classroom::where('grade_level', $gradeLevel)
+                    ->where('major_id', $major->id)
+                    ->count();
+                $classroomCounts[$grade][$major->id] = $majorCount;
+            }
+        }
+
+        return view('admin.exam-schedule.create', compact(
+            'academicYears',
+            'semesters',
+            'subjects',
+            'teachers',
+            'majors',
+            'grades',
+            'availableMajorsData',
+            'activeSemester',
+            'activeAcademicYear',
+            'classroomCounts'
+        ));
     }
 
     /**
@@ -164,14 +212,15 @@ class ExamScheduleController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'semester_id' => 'required|exists:semesters,id',
             'subject_id' => 'required|exists:subjects,id',
-            'classroom_id' => 'required|exists:classrooms,id',
-            'supervisor_id' => 'required|exists:teachers,id',
+            'grade' => 'required|in:X,XI,XII',
+            'major_id' => 'nullable|exists:majors,id',
+            'supervisor_ids' => 'required|array|min:1', // Changed to array for multiple supervisors
+            'supervisor_ids.*' => 'exists:teachers,id',
             'exam_type' => 'required|in:uts,uas',
             'exam_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'is_general_subject' => 'required|boolean',
-            'major_id' => 'nullable|exists:majors,id',
         ]);
 
         // Ensure only creating for active semester and academic year
@@ -183,38 +232,106 @@ class ExamScheduleController extends Controller
             return back()->withErrors(['semester_id' => 'Hanya dapat membuat jadwal ujian untuk semester aktif.']);
         }
 
-        // Validasi untuk memastikan hanya 1 UTS dan 1 UAS per semester
-        $existingExam = ExamSchedule::where('academic_year_id', $request->academic_year_id)
-            ->where('semester_id', $request->semester_id)
-            ->where('subject_id', $request->subject_id)
-            ->where('classroom_id', $request->classroom_id)
-            ->where('exam_type', $request->exam_type)
-            ->exists();
+        // Get subject to check if it's major-specific
+        $subject = Subject::find($request->subject_id);
 
-        if ($existingExam) {
-            return back()->withErrors(['exam_type' => 'Jadwal ujian ' . strtoupper($request->exam_type) . ' untuk mata pelajaran ini sudah ada.']);
+        // Validate major-specific subjects
+        if ($subject->major_id && $request->major_id != $subject->major_id) {
+            return back()->withErrors(['major_id' => "Mata pelajaran {$subject->name} hanya dapat dijadwalkan untuk jurusan {$subject->major->name}."]);
         }
 
-        // Validasi untuk memastikan guru tidak mengawasi 2 ujian pada waktu yang sama
-        $conflictingSchedule = ExamSchedule::where('supervisor_id', $request->supervisor_id)
-            ->where('exam_date', $request->exam_date)
-            ->where(function ($query) use ($request) {
+        // Get all classrooms for the specified grade and major
+        $gradeLevel = $request->grade === 'X' ? 10 : ($request->grade === 'XI' ? 11 : 12);
+        $classrooms = Classroom::where('grade_level', $gradeLevel);
+
+        if ($request->major_id) {
+            $classrooms = $classrooms->where('major_id', $request->major_id);
+        } else {
+            // For general subjects, get all classrooms of the grade
+            $classrooms = $classrooms->whereNull('major_id');
+        }
+
+        $classrooms = $classrooms->get();
+
+        if ($classrooms->isEmpty()) {
+            return back()->withErrors(['grade' => 'Tidak ada kelas yang ditemukan untuk angkatan dan jurusan yang dipilih.']);
+        }
+
+        // Check if we have enough supervisors for all classrooms
+        $supervisorIds = $request->supervisor_ids;
+        if (count($supervisorIds) < $classrooms->count()) {
+            return back()->withErrors(['supervisor_ids' => 'Jumlah pengawas harus sama dengan atau lebih dari jumlah kelas yang akan dibuat jadwalnya.']);
+        }
+
+        // Check for existing exam schedules to avoid duplicates
+        $existingSchedules = ExamSchedule::where([
+            'academic_year_id' => $request->academic_year_id,
+            'semester_id' => $request->semester_id,
+            'subject_id' => $request->subject_id,
+            'exam_type' => $request->exam_type,
+            'exam_date' => $request->exam_date,
+        ])->whereIn('classroom_id', $classrooms->pluck('id'))->get();
+
+        if ($existingSchedules->isNotEmpty()) {
+            return back()->withErrors(['exam_date' => 'Jadwal ujian untuk mata pelajaran ini pada tanggal tersebut sudah ada.']);
+        }
+
+        // Check supervisor availability for all supervisors
+        foreach ($supervisorIds as $supervisorId) {
+            $supervisorConflict = ExamSchedule::where([
+                'academic_year_id' => $request->academic_year_id,
+                'semester_id' => $request->semester_id,
+                'supervisor_id' => $supervisorId,
+                'exam_date' => $request->exam_date,
+            ])->where(function ($query) use ($request) {
                 $query->whereBetween('start_time', [$request->start_time, $request->end_time])
                     ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
                     ->orWhere(function ($q) use ($request) {
                         $q->where('start_time', '<=', $request->start_time)
                             ->where('end_time', '>=', $request->end_time);
                     });
-            })
-            ->exists();
+            })->exists();
 
-        if ($conflictingSchedule) {
-            return back()->withErrors(['supervisor_id' => 'Guru ini sudah ditugaskan mengawasi ujian lain pada waktu yang sama.']);
+            if ($supervisorConflict) {
+                $teacher = Teacher::find($supervisorId);
+                return back()->withErrors(['supervisor_ids' => "Pengawas {$teacher->full_name} sudah memiliki jadwal ujian pada waktu yang sama."]);
+            }
         }
 
-        ExamSchedule::create($request->all());
+        // Create exam schedules for all classrooms with different supervisors
+        $createdSchedules = [];
+        $classroomArray = $classrooms->toArray();
 
-        return redirect()->route('admin.exam-schedules.index')->with('success', 'Jadwal ujian berhasil ditambahkan.');
+        foreach ($classroomArray as $index => $classroom) {
+            // Assign supervisor in round-robin fashion
+            $supervisorIndex = $index % count($supervisorIds);
+            $supervisorId = $supervisorIds[$supervisorIndex];
+
+            $examSchedule = ExamSchedule::create([
+                'academic_year_id' => $request->academic_year_id,
+                'semester_id' => $request->semester_id,
+                'subject_id' => $request->subject_id,
+                'classroom_id' => $classroom['id'],
+                'supervisor_id' => $supervisorId,
+                'exam_type' => $request->exam_type,
+                'exam_date' => $request->exam_date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'is_general_subject' => $request->is_general_subject,
+                'major_id' => $request->major_id,
+            ]);
+            $createdSchedules[] = $examSchedule;
+        }
+
+        $subjectName = $subject->name;
+        $gradeText = $request->grade;
+        $majorText = $request->major_id ? Major::find($request->major_id)->name : 'Umum';
+        $examTypeText = strtoupper($request->exam_type);
+        $classCount = count($classrooms);
+        $supervisorCount = count($supervisorIds);
+
+        return redirect()->route('admin.exam-schedules.index')
+            ->with('success', "Berhasil membuat {$classCount} jadwal ujian {$examTypeText} untuk mata pelajaran {$subjectName} angkatan {$gradeText} jurusan {$majorText} dengan {$supervisorCount} pengawas.");
     }
 
     /**
@@ -375,16 +492,28 @@ class ExamScheduleController extends Controller
             return redirect()->back()->with('error', 'Siswa belum terdaftar di kelas manapun.');
         }
 
+        // Get total counts for statistics
+        $totalUts = ExamSchedule::where('classroom_id', $classroomId)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uts')
+            ->count();
+
+        $totalUas = ExamSchedule::where('classroom_id', $classroomId)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uas')
+            ->count();
+
         $examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
             ->where('classroom_id', $classroomId)
             ->where('academic_year_id', $activeAcademicYear->id)
             ->where('semester_id', $activeSemester->id)
             ->orderBy('exam_date')
             ->orderBy('start_time')
-            ->get()
-            ->groupBy('exam_type');
+            ->paginate(10);
 
-        return view('siswa.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear'));
+        return view('siswa.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear', 'totalUts', 'totalUas'));
     }
 
     /**
@@ -407,16 +536,28 @@ class ExamScheduleController extends Controller
             return redirect()->back()->with('error', 'Tidak ada tahun ajaran atau semester aktif.');
         }
 
+        // Get total counts for statistics
+        $totalUts = ExamSchedule::where('supervisor_id', $teacher->id)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uts')
+            ->count();
+
+        $totalUas = ExamSchedule::where('supervisor_id', $teacher->id)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uas')
+            ->count();
+
         $examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
             ->where('supervisor_id', $teacher->id)
             ->where('academic_year_id', $activeAcademicYear->id)
             ->where('semester_id', $activeSemester->id)
             ->orderBy('exam_date')
             ->orderBy('start_time')
-            ->get()
-            ->groupBy('exam_type');
+            ->paginate(10);
 
-        return view('guru.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear'));
+        return view('guru.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear', 'totalUts', 'totalUas'));
     }
 
     /**
@@ -450,15 +591,27 @@ class ExamScheduleController extends Controller
             return redirect()->back()->with('error', 'Siswa belum terdaftar di kelas manapun.');
         }
 
+        // Get total counts for statistics
+        $totalUts = ExamSchedule::where('classroom_id', $classroomId)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uts')
+            ->count();
+
+        $totalUas = ExamSchedule::where('classroom_id', $classroomId)
+            ->where('academic_year_id', $activeAcademicYear->id)
+            ->where('semester_id', $activeSemester->id)
+            ->where('exam_type', 'uas')
+            ->count();
+
         $examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
             ->where('classroom_id', $classroomId)
             ->where('academic_year_id', $activeAcademicYear->id)
             ->where('semester_id', $activeSemester->id)
             ->orderBy('exam_date')
             ->orderBy('start_time')
-            ->get()
-            ->groupBy('exam_type');
+            ->paginate(10);
 
-        return view('wali-murid.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear'));
+        return view('wali-murid.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear', 'totalUts', 'totalUas'));
     }
 }

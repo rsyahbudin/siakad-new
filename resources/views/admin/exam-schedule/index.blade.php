@@ -114,7 +114,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Jadwal UTS</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $examSchedules->where('exam_type', 'uts')->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalUts }}</p>
                 </div>
             </div>
         </div>
@@ -130,7 +130,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Jadwal UAS</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $examSchedules->where('exam_type', 'uas')->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalUas }}</p>
                 </div>
             </div>
         </div>
@@ -191,8 +191,8 @@
                     <label for="exam_type" class="block text-sm font-medium text-gray-700 mb-2">Jenis Ujian</label>
                     <select name="exam_type" id="exam_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Semua Jenis</option>
-                        <option value="uts" {{ request('exam_type') == 'uts' ? 'selected' : '' }}>UTS</option>
-                        <option value="uas" {{ request('exam_type') == 'uas' ? 'selected' : '' }}>UAS</option>
+                        <option value="uts" {{ request('exam_type') == 'UTS' ? 'selected' : '' }}>UTS</option>
+                        <option value="uas" {{ request('exam_type') == 'UAS' ? 'selected' : '' }}>UAS</option>
                     </select>
                 </div>
 
@@ -366,7 +366,7 @@
                             <div class="text-sm text-gray-500">{{ $schedule->classroom->grade }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($schedule->exam_type == 'uts')
+                            @if($schedule->exam_type == 'UTS')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>

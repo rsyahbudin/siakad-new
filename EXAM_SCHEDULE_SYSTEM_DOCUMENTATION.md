@@ -1,269 +1,455 @@
-# Sistem Jadwal Ujian SMA
+# Exam Schedule System Documentation
 
-## Deskripsi
+## Overview
 
-Sistem jadwal ujian SMA adalah fitur yang memungkinkan pengelolaan jadwal ujian untuk siswa SMA dengan ketentuan khusus sesuai dengan struktur pendidikan SMA.
+Sistem jadwal ujian SMA yang memungkinkan admin untuk mengelola jadwal ujian UTS dan UAS untuk semua siswa. Sistem ini mendukung mata pelajaran umum dan mata pelajaran jurusan spesifik.
 
 ## Fitur Utama
 
-### 1. Manajemen Jadwal Ujian (Admin)
+### 1. Manajemen Jadwal Ujian
 
-- **CRUD Jadwal Ujian**: Admin dapat membuat, membaca, memperbarui, dan menghapus jadwal ujian
-- **Filter Jadwal**: Filter berdasarkan tahun ajaran, semester, jenis ujian, dan kelas
-- **Validasi Jadwal**: Mencegah duplikasi jadwal dan konflik pengawas
-- **Pengaturan Pengawas**: Setiap ruang ujian memiliki 1 pengawas/guru
+- **Bulk Creation**: Membuat jadwal ujian untuk semua kelas berdasarkan angkatan dan jurusan sekaligus
+- **Role-based Access**: Akses berbeda untuk admin, guru, siswa, dan wali murid
+- **Active Semester Restriction**: Hanya semester aktif yang dapat dimanipulasi
+- **Major-specific Subjects**: Validasi mata pelajaran sesuai jurusan
 
-### 2. Tampilan Jadwal Ujian (Siswa)
+### 2. Filter dan Pencarian
 
-- **Jadwal Pribadi**: Siswa hanya dapat melihat jadwal ujian kelasnya
-- **Pemisahan UTS/UAS**: Jadwal dipisahkan berdasarkan jenis ujian
-- **Informasi Lengkap**: Menampilkan mata pelajaran, tanggal, waktu, ruangan, dan pengawas
+- **Advanced Filtering**: Filter berdasarkan tahun ajaran, semester, jenis ujian, kelas, mata pelajaran, jurusan, dan pengawas
+- **Search Functionality**: Pencarian berdasarkan nama mata pelajaran, kelas, atau pengawas
+- **Active Filter Display**: Menampilkan filter yang sedang aktif dengan badge berwarna
+- **Quick Access**: Tombol "Tampilkan Semester Aktif" untuk filter cepat
 
-### 3. Tampilan Jadwal Pengawasan (Guru)
+### 3. Validasi dan Keamanan
 
-- **Jadwal Pengawasan**: Guru hanya dapat melihat jadwal ujian yang dia awasi
-- **Informasi Ruangan**: Detail ruangan dan kelas yang diawasi
-- **Panduan Pengawasan**: Informasi penting untuk pengawas ujian
+- **Duplicate Prevention**: Mencegah pembuatan jadwal ganda
+- **Supervisor Conflict Check**: Memastikan pengawas tidak bentrok jadwal
+- **Major Validation**: Memastikan mata pelajaran jurusan hanya untuk jurusan yang sesuai
+- **Active Semester Enforcement**: Hanya semester aktif yang dapat dimodifikasi
 
-### 4. Tampilan Jadwal Anak (Wali Murid)
+## Database Schema
 
-- **Jadwal Anak**: Wali murid dapat melihat jadwal ujian anaknya
-- **Informasi Orang Tua**: Panduan untuk mendukung anak saat ujian
+### ExamSchedule Model
 
-## Ketentuan Sistem
-
-### 1. Jenis Mata Pelajaran
-
-- **Mata Pelajaran Umum**: Diikuti oleh semua siswa dari semua jurusan
-    - Bahasa Indonesia
-    - Matematika Wajib
-    - Bahasa Inggris
-    - PPKn
-- **Mata Pelajaran Jurusan**: Diikuti oleh siswa sesuai jurusannya
-    - IPA: Fisika, Kimia, Biologi, Matematika Peminatan
-    - IPS: Ekonomi, Geografi, Sosiologi, Sejarah
-
-### 2. Struktur Ujian
-
-- **UTS (Ujian Tengah Semester)**: 1 kali per semester
-- **UAS (Ujian Akhir Semester)**: 1 kali per semester
-- **Waktu Serentak**: Semua siswa kelas X, XI, dan XII mengikuti ujian pada waktu yang sama
-- **Ruangan Terpisah**: Setiap kelas memiliki ruangan sendiri
-
-### 3. Pengawasan
-
-- **1 Pengawas per Ruangan**: Setiap ruang ujian diawasi oleh 1 guru
-- **Validasi Konflik**: Sistem mencegah guru mengawasi 2 ujian pada waktu yang sama
-- **Panduan Pengawasan**: Informasi khusus untuk pengawas ujian
-
-## Struktur Database
-
-### Tabel: exam_schedules
-
-```sql
-CREATE TABLE exam_schedules (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    academic_year_id BIGINT UNSIGNED NOT NULL,
-    semester_id BIGINT UNSIGNED NOT NULL,
-    subject_id BIGINT UNSIGNED NOT NULL,
-    classroom_id BIGINT UNSIGNED NOT NULL,
-    supervisor_id BIGINT UNSIGNED NOT NULL,
-    exam_type ENUM('uts', 'uas') NOT NULL,
-    exam_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    is_general_subject BOOLEAN DEFAULT FALSE,
-    major_id BIGINT UNSIGNED NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-
-    FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE CASCADE,
-    FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
-    FOREIGN KEY (supervisor_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    FOREIGN KEY (major_id) REFERENCES majors(id) ON DELETE SET NULL
-);
+```php
+protected $fillable = [
+    'academic_year_id',
+    'semester_id',
+    'subject_id',
+    'classroom_id',
+    'supervisor_id',
+    'exam_type', // 'uts' or 'uas'
+    'exam_date',
+    'start_time',
+    'end_time',
+    'is_general_subject',
+    'major_id'
+];
 ```
 
-## Model dan Controller
+### Relationships
 
-### Model: ExamSchedule
+- `belongsTo(AcademicYear::class)`
+- `belongsTo(Semester::class)`
+- `belongsTo(Subject::class)`
+- `belongsTo(Classroom::class)`
+- `belongsTo(Teacher::class, 'supervisor_id')`
+- `belongsTo(Major::class)`
 
-- **Relasi**: AcademicYear, Semester, Subject, Classroom, Teacher, Major
-- **Scope**: UTS, UAS, GeneralSubjects, MajorSubjects, ByMajor, ByClassroom, ActiveSemester
-- **Validasi**: Mencegah duplikasi jadwal dan konflik pengawas
-
-### Controller: ExamScheduleController
-
-- **Admin Routes**: CRUD lengkap untuk jadwal ujian
-- **Student Routes**: Tampilan jadwal ujian siswa
-- **Teacher Routes**: Tampilan jadwal pengawasan guru
-- **Parent Routes**: Tampilan jadwal ujian anak
-
-## Routes
+## API Endpoints
 
 ### Admin Routes
 
+- `GET /admin/exam-schedules` - Daftar jadwal ujian dengan filter
+- `GET /admin/exam-schedules/create` - Form pembuatan jadwal ujian
+- `POST /admin/exam-schedules` - Simpan jadwal ujian (bulk creation)
+- `GET /admin/exam-schedules/{id}` - Detail jadwal ujian
+- `GET /admin/exam-schedules/{id}/edit` - Form edit jadwal ujian
+- `PUT /admin/exam-schedules/{id}` - Update jadwal ujian
+- `DELETE /admin/exam-schedules/{id}` - Hapus jadwal ujian
+
+### User-specific Routes
+
+- `GET /siswa/exam-schedules` - Jadwal ujian untuk siswa
+- `GET /guru/exam-schedules` - Jadwal ujian untuk guru
+- `GET /wali-murid/exam-schedules` - Jadwal ujian untuk wali murid
+
+## Fitur Baru (Update Terbaru)
+
+### 1. Perbaikan Filter Semester
+
+- **Masalah**: Filter semester menampilkan duplikasi
+- **Solusi**: Hanya menampilkan semester aktif di dropdown filter
+- **Implementasi**: `Semester::where('is_active', true)->orderBy('name')->get()`
+
+### 2. Perbaikan Database Column Issue
+
+- **Masalah**: Error `Unknown column 'grade' in 'field list'` karena tabel `classrooms` menggunakan kolom `grade_level` bukan `grade`
+- **Solusi**:
+    - Menggunakan `grade_level` (integer) untuk query database
+    - Menambahkan konversi `grade_level` ke format string (X, XI, XII)
+    - Menambahkan accessor `getGradeAttribute()` di model Classroom
+- **Implementasi**:
+
+    ```php
+    // Konversi grade_level ke string
+    $grades = Classroom::distinct()->pluck('grade_level')->sort()->values()->map(function($gradeLevel) {
+        return $gradeLevel == 10 ? 'X' : ($gradeLevel == 11 ? 'XI' : 'XII');
+    });
+
+    // Konversi string ke grade_level untuk query
+    $gradeLevel = $request->grade === 'X' ? 10 : ($request->grade === 'XI' ? 11 : 12);
+    $classrooms = Classroom::where('grade_level', $gradeLevel);
+    ```
+
+### 3. Bulk Creation System
+
+- **Fitur**: Membuat jadwal ujian untuk semua kelas berdasarkan angkatan dan jurusan
+- **Input**: Grade (X, XI, XII) dan Major (IPA, IPS, atau Umum)
+- **Output**: Otomatis membuat jadwal untuk semua kelas yang sesuai
+- **Validasi**:
+    - Memastikan kelas tersedia untuk kombinasi angkatan dan jurusan
+    - Mencegah duplikasi jadwal
+    - Validasi konflik pengawas
+
+### 4. Major-specific Subject Validation
+
+- **Fitur**: Memastikan mata pelajaran jurusan hanya untuk jurusan yang sesuai
+- **Contoh**: Mata pelajaran Biologi hanya untuk jurusan IPA
+- **Implementasi**: Validasi di controller dan JavaScript di form
+
+### 5. Enhanced Filter System
+
+- **Search**: Pencarian berdasarkan mata pelajaran, kelas, atau pengawas
+- **Multiple Filters**: 8 filter berbeda untuk pencarian yang tepat
+- **Active Filter Display**: Menampilkan filter yang sedang aktif
+- **Quick Access**: Tombol untuk filter semester aktif
+
+### 6. Role-Specific Schedule Display
+
+- **Student View**: Menampilkan jadwal ujian sesuai kelas siswa
+- **Teacher View**: Menampilkan jadwal pengawasan ujian yang dia awasi
+- **Parent View**: Menampilkan jadwal ujian anak mereka
+- **Active Semester Filter**: Semua tampilan hanya menampilkan jadwal semester aktif
+
+### 7. Pagination System
+
+- **Consistent Pagination**: Semua tampilan jadwal ujian menggunakan pagination (10 item per halaman)
+- **Improved Performance**: Mengurangi waktu loading untuk data yang besar
+- **Better UX**: Tampilan yang lebih rapi dan mudah dinavigasi
+- **Responsive Design**: Pagination yang responsif untuk semua ukuran layar
+
+#### Pagination Implementation
+
+**Controller Changes**:
+
 ```php
-Route::resource('exam-schedules', ExamScheduleController::class);
+// Before: Using get() and groupBy()
+$examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
+    ->where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->orderBy('exam_date')
+    ->orderBy('start_time')
+    ->get()
+    ->groupBy('exam_type');
+
+// After: Using paginate()
+$examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
+    ->where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->orderBy('exam_date')
+    ->orderBy('start_time')
+    ->paginate(10);
 ```
 
-### Student Routes
+**View Changes**:
 
 ```php
-Route::get('/jadwal-ujian-siswa', [ExamScheduleController::class, 'studentSchedule'])
-    ->name('siswa.exam-schedule');
+// Statistics using pagination
+{{ $examSchedules->total() }} // Total records
+{{ $totalUts }} // Total UTS across all pages
+{{ $totalUas }} // Total UAS across all pages
+
+// Pagination links
+{{ $examSchedules->links() }}
+
+// Loop through paginated collection
+@foreach($examSchedules as $schedule)
+    // Display schedule data
+@endforeach
 ```
 
-### Teacher Routes
+#### Implementation Details
+
+**Student Schedule (`studentSchedule()`)**:
 
 ```php
-Route::get('/jadwal-ujian-guru', [ExamScheduleController::class, 'teacherSchedule'])
-    ->name('guru.exam-schedule');
+// Get student's classroom for active academic year
+$classroomId = $student->classStudents()
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->first()?->classroom_id;
+
+// Get exam schedules for student's classroom
+$examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
+    ->where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->orderBy('exam_date')
+    ->orderBy('start_time')
+    ->get()
+    ->groupBy('exam_type');
 ```
 
-### Parent Routes
+**Teacher Schedule (`teacherSchedule()`)**:
 
 ```php
-Route::get('/jadwal-ujian-anak', [ExamScheduleController::class, 'parentSchedule'])
-    ->name('exam-schedule');
+// Get exam schedules where teacher is supervisor
+$examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
+    ->where('supervisor_id', $teacher->id)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->orderBy('exam_date')
+    ->orderBy('start_time')
+    ->get()
+    ->groupBy('exam_type');
 ```
 
-## Views
+**Parent Schedule (`parentSchedule()`)**:
 
-### Admin Views
+```php
+// Get child's classroom for active academic year
+$classroomId = $student->classStudents()
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->first()?->classroom_id;
 
-- `resources/views/admin/exam-schedule/index.blade.php` - Daftar jadwal ujian
-- `resources/views/admin/exam-schedule/create.blade.php` - Form tambah jadwal
-- `resources/views/admin/exam-schedule/edit.blade.php` - Form edit jadwal
-- `resources/views/admin/exam-schedule/show.blade.php` - Detail jadwal
+// Get exam schedules for child's classroom
+$examSchedules = ExamSchedule::with(['academicYear', 'semester', 'subject', 'classroom', 'supervisor', 'major'])
+    ->where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->orderBy('exam_date')
+    ->orderBy('start_time')
+    ->get()
+    ->groupBy('exam_type');
+```
 
-### Student Views
+## Form Pembuatan Jadwal Ujian
 
-- `resources/views/siswa/exam-schedule/index.blade.php` - Jadwal ujian siswa
+### Input Fields
 
-### Teacher Views
+1. **Tahun Ajaran**: Otomatis terisi semester aktif
+2. **Semester**: Otomatis terisi semester aktif
+3. **Angkatan**: X, XI, atau XII
+4. **Jurusan**: IPA, IPS, atau Umum (untuk mata pelajaran umum)
+5. **Mata Pelajaran**: Otomatis filter berdasarkan jurusan yang dipilih
+6. **Jenis Ujian**: UTS atau UAS
+7. **Pengawas**: Daftar guru yang tersedia
+8. **Tanggal Ujian**: Tanggal pelaksanaan
+9. **Waktu Mulai & Selesai**: Durasi ujian
+10. **Jenis Mata Pelajaran**: Umum atau Jurusan (otomatis)
 
-- `resources/views/guru/exam-schedule/index.blade.php` - Jadwal pengawasan guru
+### JavaScript Features
 
-### Parent Views
+- **Dynamic Subject Filtering**: Mata pelajaran otomatis filter berdasarkan jurusan
+- **Auto Major Detection**: Jenis mata pelajaran otomatis berdasarkan jurusan
+- **Real-time Validation**: Validasi form secara real-time
 
-- `resources/views/wali-murid/exam-schedule/index.blade.php` - Jadwal ujian anak
+## Role-based Access Control
 
-## Validasi
+### Admin
 
-### 1. Validasi Duplikasi Jadwal
+- **Full Access**: CRUD semua jadwal ujian
+- **Bulk Creation**: Membuat jadwal untuk semua kelas sekaligus
+- **Advanced Filtering**: Akses ke semua filter dan pencarian
+- **Active Semester Management**: Hanya dapat memodifikasi semester aktif
 
-- Mencegah jadwal UTS/UAS yang sama untuk mata pelajaran, kelas, dan semester yang sama
-- Validasi dilakukan saat create dan update
+### Guru
 
-### 2. Validasi Konflik Pengawas
+- **View Only**: Hanya dapat melihat jadwal yang dia awasi
+- **Active Semester**: Hanya jadwal semester aktif
+- **Filtered View**: Tidak dapat mengubah filter
 
-- Mencegah guru mengawasi 2 ujian pada waktu yang sama
-- Validasi berdasarkan tanggal dan waktu ujian
+### Siswa
 
-### 3. Validasi Data
+- **Class-specific**: Hanya jadwal kelasnya sendiri
+- **Active Semester**: Hanya jadwal semester aktif
+- **Read-only**: Tidak dapat memodifikasi
 
-- Semua field required kecuali major_id (opsional untuk mapel umum)
-- Format waktu dan tanggal yang valid
-- Relasi foreign key yang valid
+### Wali Murid
 
-## Seeder
+- **Child's Schedule**: Hanya jadwal anaknya
+- **Active Semester**: Hanya jadwal semester aktif
+- **Read-only**: Tidak dapat memodifikasi
 
-### ExamScheduleSeeder
+## Validasi dan Error Handling
 
-- Membuat data contoh jadwal ujian
-- Membagi jadwal berdasarkan mapel umum dan jurusan
-- Mengatur waktu ujian yang bervariasi
-- Menghindari konflik jadwal
+### Duplicate Prevention
 
-## Keamanan
+```php
+$existingSchedules = ExamSchedule::where([
+    'academic_year_id' => $request->academic_year_id,
+    'semester_id' => $request->semester_id,
+    'subject_id' => $request->subject_id,
+    'exam_type' => $request->exam_type,
+    'exam_date' => $request->exam_date,
+])->whereIn('classroom_id', $classrooms->pluck('id'))->get();
+```
 
-### 1. Role-Based Access
+### Supervisor Conflict Check
 
-- **Admin**: Akses penuh untuk CRUD jadwal ujian
-- **Siswa**: Hanya dapat melihat jadwal kelasnya
-- **Guru**: Hanya dapat melihat jadwal yang dia awasi
-- **Wali Murid**: Hanya dapat melihat jadwal anaknya
+```php
+$supervisorConflict = ExamSchedule::where([
+    'academic_year_id' => $request->academic_year_id,
+    'semester_id' => $request->semester_id,
+    'supervisor_id' => $request->supervisor_id,
+    'exam_date' => $request->exam_date,
+])->where(function($query) use ($request) {
+    // Time overlap validation
+})->exists();
+```
 
-### 2. Validasi Input
+### Major-specific Subject Validation
 
-- Sanitasi input untuk mencegah XSS
-- Validasi format data
-- Pengecekan relasi foreign key
+```php
+if ($subject->major_id && $request->major_id != $subject->major_id) {
+    return back()->withErrors(['major_id' => "Mata pelajaran {$subject->name} hanya dapat dijadwalkan untuk jurusan {$subject->major->name}."]);
+}
+```
 
-## Penggunaan
+## Total Statistics Fix
 
-### 1. Admin
+### Problem
 
-1. Login sebagai admin
-2. Akses menu "Jadwal Ujian"
-3. Gunakan fitur CRUD untuk mengelola jadwal
-4. Filter jadwal sesuai kebutuhan
+Statistik UTS dan UAS di tampilan siswa, guru, dan wali murid hanya menampilkan jumlah di halaman saat ini, bukan total keseluruhan.
 
-### 2. Siswa
+### Solution
 
-1. Login sebagai siswa
-2. Akses menu "Jadwal Ujian"
-3. Lihat jadwal UTS dan UAS kelasnya
+Menghitung total UTS dan UAS secara terpisah di controller dan mengirimkannya ke view.
 
-### 3. Guru
+### Implementation
 
-1. Login sebagai guru
-2. Akses menu "Jadwal Pengawasan"
-3. Lihat jadwal ujian yang dia awasi
+#### Controller Changes
 
-### 4. Wali Murid
+```php
+// Menambahkan perhitungan total di setiap method (studentSchedule, teacherSchedule, parentSchedule)
+$totalUts = ExamSchedule::where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->where('exam_type', 'uts')
+    ->count();
 
-1. Login sebagai wali murid
-2. Akses menu "Jadwal Ujian Anak"
-3. Lihat jadwal ujian anaknya
+$totalUas = ExamSchedule::where('classroom_id', $classroomId)
+    ->where('academic_year_id', $activeAcademicYear->id)
+    ->where('semester_id', $activeSemester->id)
+    ->where('exam_type', 'uas')
+    ->count();
 
-## Maintenance
+// Mengirim variabel ke view
+return view('siswa.exam-schedule.index', compact('examSchedules', 'activeSemester', 'activeAcademicYear', 'totalUts', 'totalUas'));
+```
 
-### 1. Backup Data
+#### View Changes
 
-- Backup tabel exam_schedules secara berkala
-- Backup relasi dengan tabel lain
+```php
+// Sebelum (hanya menghitung di halaman saat ini)
+<p class="text-2xl font-bold text-gray-900">{{ $examSchedules->where('exam_type', 'uts')->count() }}</p>
 
-### 2. Monitoring
+// Sesudah (menampilkan total keseluruhan)
+<p class="text-2xl font-bold text-gray-900">{{ $totalUts }}</p>
+```
 
-- Monitor performa query jadwal ujian
-- Periksa log error secara berkala
+### Benefits
 
-### 3. Update
+- **Accurate Statistics**: Statistik menampilkan total yang benar
+- **Consistent Display**: Semua tampilan menggunakan logika yang sama
+- **Better UX**: Pengguna melihat informasi yang akurat
 
-- Update jadwal sesuai kalender akademik
-- Hapus jadwal yang sudah lewat
+## UI/UX Improvements
+
+### Modern Filter Design
+
+- **Responsive Grid**: Layout yang responsif untuk semua ukuran layar
+- **Color-coded Badges**: Filter aktif ditampilkan dengan badge berwarna
+- **Quick Actions**: Tombol untuk aksi cepat
+- **Search Integration**: Pencarian terintegrasi dengan filter
+
+### Enhanced Form
+
+- **Dynamic Filtering**: Mata pelajaran otomatis filter berdasarkan jurusan
+- **Auto-completion**: Field otomatis terisi berdasarkan semester aktif
+- **Real-time Validation**: Validasi form secara real-time
+- **User-friendly Messages**: Pesan error dan sukses yang informatif
+
+## Performance Optimizations
+
+### Database Queries
+
+- **Eager Loading**: Menggunakan `with()` untuk mengurangi N+1 queries
+- **Indexed Filters**: Filter berdasarkan kolom yang terindeks
+- **Pagination**: Pagination untuk daftar jadwal yang besar
+
+### Caching Strategy
+
+- **Active Semester Caching**: Cache semester aktif untuk mengurangi query
+- **Filter Options Caching**: Cache opsi filter yang sering digunakan
+
+## Security Considerations
+
+### Input Validation
+
+- **Server-side Validation**: Validasi lengkap di controller
+- **Client-side Validation**: Validasi tambahan di JavaScript
+- **SQL Injection Prevention**: Menggunakan Eloquent ORM
+
+### Access Control
+
+- **Role-based Middleware**: Middleware untuk kontrol akses
+- **Active Semester Enforcement**: Hanya semester aktif yang dapat dimodifikasi
+- **Data Isolation**: Setiap role hanya dapat melihat data yang relevan
+
+## Future Enhancements
+
+### Planned Features
+
+1. **Export Functionality**: Export jadwal ke PDF/Excel
+2. **Notification System**: Notifikasi untuk jadwal ujian
+3. **Calendar View**: Tampilan kalender untuk jadwal
+4. **Bulk Import**: Import jadwal dari file Excel
+5. **Advanced Reporting**: Laporan detail jadwal ujian
+
+### Technical Improvements
+
+1. **API Endpoints**: RESTful API untuk integrasi
+2. **Real-time Updates**: WebSocket untuk update real-time
+3. **Mobile Optimization**: Optimasi untuk perangkat mobile
+4. **Advanced Search**: Full-text search dengan Elasticsearch
 
 ## Troubleshooting
 
-### 1. Error Duplikasi Jadwal
+### Common Issues
 
-- Periksa constraint unique pada database
-- Pastikan tidak ada jadwal yang sama
+1. **Filter Not Working**: Pastikan semester aktif sudah diset
+2. **Duplicate Schedules**: Periksa validasi duplikasi
+3. **Supervisor Conflicts**: Periksa jadwal pengawas
+4. **Major Validation**: Pastikan mata pelajaran sesuai jurusan
 
-### 2. Error Konflik Pengawas
+### Debug Commands
 
-- Periksa jadwal guru yang bersangkutan
-- Atur ulang pengawas jika diperlukan
+```bash
+# Check active semester
+php artisan tinker --execute="echo App\Models\Semester::where('is_active', true)->first();"
 
-### 3. Error Relasi
+# Check exam schedules
+php artisan tinker --execute="echo App\Models\ExamSchedule::count();"
 
-- Periksa data di tabel terkait
-- Pastikan foreign key valid
+# Clear cache
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+```
 
-## Kesimpulan
+## Conclusion
 
-Sistem jadwal ujian SMA telah berhasil diimplementasikan dengan fitur lengkap sesuai ketentuan yang diminta. Sistem ini mendukung:
-
-1. ✅ CRUD jadwal ujian untuk admin
-2. ✅ Tampilan jadwal untuk siswa, guru, dan wali murid
-3. ✅ Validasi untuk mencegah duplikasi dan konflik
-4. ✅ Pemisahan mapel umum dan jurusan
-5. ✅ Pengaturan pengawas per ruangan
-6. ✅ Pembatasan akses berdasarkan role
-7. ✅ Dokumentasi lengkap
-
-Sistem siap digunakan untuk mengelola jadwal ujian SMA dengan efektif dan aman.
+Sistem jadwal ujian ini telah diperbarui dengan fitur-fitur baru yang meningkatkan efisiensi dan user experience. Sistem sekarang mendukung pembuatan jadwal secara bulk, validasi yang lebih ketat, dan interface yang lebih user-friendly.

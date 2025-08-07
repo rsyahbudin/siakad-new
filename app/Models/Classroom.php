@@ -52,6 +52,22 @@ class Classroom extends Model
         return $this->hasMany(ClassroomAssignment::class);
     }
 
+    /**
+     * Get the grade string from grade_level
+     */
+    public function getGradeAttribute()
+    {
+        return $this->grade_level == 10 ? 'X' : ($this->grade_level == 11 ? 'XI' : 'XII');
+    }
+
+    /**
+     * Get the grade string from grade_level
+     */
+    public function getGradeString()
+    {
+        return $this->grade;
+    }
+
     public function classStudents()
     {
         return $this->hasMany(ClassStudent::class);
