@@ -26,4 +26,14 @@ class Subject extends Model
     {
         return $this->hasMany(Grade::class);
     }
+
+    public function subjectSettings()
+    {
+        return $this->hasMany(\App\Models\SubjectSetting::class);
+    }
+
+    public function teachers()
+    {
+        return $this->hasMany(\App\Models\Teacher::class);
+    }
 }

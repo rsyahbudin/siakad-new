@@ -16,6 +16,7 @@ use App\Models\StudentPromotion;
 use App\Services\AttendanceService;
 use Illuminate\Support\Facades\DB;
 use App\Models\Semester;
+use App\Models\AppSetting;
 
 class WaliKelasController extends Controller
 {
@@ -552,6 +553,16 @@ class WaliKelasController extends Controller
             $attendance_permit = $raport->attendance_permit;
             $attendance_absent = $raport->attendance_absent;
         }
+        // Informasi sekolah untuk header raport
+        $school = [
+            'name' => AppSetting::getValue('school_name', 'Nama Sekolah'),
+            'npsn' => AppSetting::getValue('school_npsn', ''),
+            'address' => AppSetting::getValue('school_address', ''),
+            'phone' => AppSetting::getValue('school_phone', ''),
+            'email' => AppSetting::getValue('school_email', ''),
+            'website' => AppSetting::getValue('school_website', ''),
+        ];
+
         return view('siswa.raport', compact(
             'student',
             'selectedYear',
@@ -564,7 +575,8 @@ class WaliKelasController extends Controller
             'subjectSettings',
             'attendance_sick',
             'attendance_permit',
-            'attendance_absent'
+            'attendance_absent',
+            'school'
         ));
     }
 

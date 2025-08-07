@@ -99,9 +99,18 @@
 <div class="printable-area bg-white p-8 rounded-lg shadow-lg border">
     <!-- Header Raport -->
     <div class="text-center mb-8 border-b pb-4">
-        <h1 class="text-2xl font-bold text-gray-800">LAPORAN HASIL BELAJAR SISWA</h1>
-        <h2 class="text-xl font-semibold text-gray-700">SMA NEGERI HARAPAN BANGSA</h2>
-        <p class="text-sm text-gray-500">Tahun Ajaran {{ $selectedYear->year }} - Semester {{ $selectedSemester == 1 ? 'Ganjil' : 'Genap' }}</p>
+        <div class="flex items-center justify-center gap-4 mb-2">
+            <div class="w-14 h-14 rounded-full border border-gray-300 flex items-center justify-center">
+                <span class="text-lg font-bold">LOGO</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">LAPORAN HASIL BELAJAR</h1>
+                <h2 class="text-xl font-semibold text-gray-700">{{ $school['name'] }}</h2>
+                <p class="text-xs text-gray-500">NPSN: {{ $school['npsn'] }}</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-600">Alamat: {{ $school['address'] }}</p>
+        <p class="text-sm text-gray-500">Tahun Ajaran {{ $selectedYear->year }} • Semester {{ $selectedSemester == 1 ? 'Ganjil' : 'Genap' }}</p>
     </div>
 
     <!-- Status Finalisasi Raport -->
@@ -290,7 +299,7 @@
     </div>
 
     <!-- Tanda Tangan -->
-    <div class="mt-12 flex justify-between text-center text-sm">
+    <div class="mt-12 grid grid-cols-3 gap-6 text-center text-sm">
         <div>
             <p>Mengetahui,</p>
             <p>Orang Tua/Wali</p>
@@ -298,11 +307,17 @@
             <p>(..............................)</p>
         </div>
         <div>
-            <p>Jakarta, {{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY') }}</p>
-            <p>Wali Kelas,</p>
+            <p>Wali Kelas</p>
             <br><br><br>
             <p class="font-semibold underline">{{ $waliKelas->full_name ?? '..............................' }}</p>
             <p>NIP. {{ $waliKelas->nip ?? '..............................' }}</p>
+        </div>
+        <div>
+            <p>{{ $school['address'] ? explode(',', $school['address'])[0] : '________' }}, {{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY') }}</p>
+            <p>Kepala Sekolah</p>
+            <br><br><br>
+            <p class="font-semibold underline">(..............................)</p>
+            <p>NIP. ..............................</p>
         </div>
     </div>
 

@@ -3,113 +3,96 @@
 @section('title', 'Dashboard Kepala Sekolah')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Kepala Sekolah</li>
-                    </ol>
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Dashboard Kepala Sekolah</h1>
+                <p class="text-gray-600 mt-1">Selamat datang di panel kontrol kepala sekolah</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-sm text-gray-500">
+                    <span class="font-medium">Tahun Ajaran:</span> {{ $activeYear->year ?? 'Belum diatur' }}
                 </div>
-                <h4 class="page-title">Dashboard Kepala Sekolah</h4>
             </div>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="text-muted fw-normal mt-0" title="Total Students">Total Siswa</h5>
-                            <h3 class="mt-3 mb-3">{{ number_format($totalStudents) }}</h3>
-                            <p class="mb-0 text-muted">
-                                <span class="text-success me-2">
-                                    <i class="mdi mdi-arrow-up-bold"></i> {{ $totalActiveStudents }} Aktif
-                                </span>
-                                <span class="text-warning">
-                                    {{ $totalPindahanStudents }} Pindahan
-                                </span>
-                            </p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-soft-primary rounded">
-                                <i class="mdi mdi-account-group font-20 text-primary"></i>
-                            </span>
-                        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Siswa</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ number_format($totalStudents) }}</p>
+                    <div class="flex items-center mt-1">
+                        <span class="text-xs text-green-600 font-medium">{{ $totalActiveStudents }} Aktif</span>
+                        <span class="text-xs text-orange-600 ml-2">{{ $totalPindahanStudents }} Pindahan</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="text-muted fw-normal mt-0" title="Total Teachers">Total Guru</h5>
-                            <h3 class="mt-3 mb-3">{{ number_format($totalTeachers) }}</h3>
-                            <p class="mb-0 text-muted">
-                                <span class="text-success me-2">
-                                    <i class="mdi mdi-arrow-up-bold"></i> Aktif
-                                </span>
-                            </p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-soft-success rounded">
-                                <i class="mdi mdi-teach font-20 text-success"></i>
-                            </span>
-                        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 5.477 18.246 5 16.5 5c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Guru</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ number_format($totalTeachers) }}</p>
+                    <div class="flex items-center mt-1">
+                        <span class="text-xs text-green-600 font-medium">Aktif</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="text-muted fw-normal mt-0" title="Total Classrooms">Total Kelas</h5>
-                            <h3 class="mt-3 mb-3">{{ number_format($totalClassrooms) }}</h3>
-                            <p class="mb-0 text-muted">
-                                <span class="text-info me-2">
-                                    <i class="mdi mdi-arrow-up-bold"></i> Aktif
-                                </span>
-                            </p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-soft-warning rounded">
-                                <i class="mdi mdi-school font-20 text-warning"></i>
-                            </span>
-                        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Kelas</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ number_format($totalClassrooms) }}</p>
+                    <div class="flex items-center mt-1">
+                        <span class="text-xs text-green-600 font-medium">Aktif</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="text-muted fw-normal mt-0" title="Total Reports">Raport Final</h5>
-                            <h3 class="mt-3 mb-3">{{ number_format($totalRaports) }}</h3>
-                            <p class="mb-0 text-muted">
-                                <span class="text-success me-2">
-                                    <i class="mdi mdi-arrow-up-bold"></i> Selesai
-                                </span>
-                            </p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-soft-info rounded">
-                                <i class="mdi mdi-file-document font-20 text-info"></i>
-                            </span>
-                        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Raport Final</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ number_format($totalRaports) }}</p>
+                    <div class="flex items-center mt-1">
+                        <span class="text-xs text-green-600 font-medium">Selesai</span>
                     </div>
                 </div>
             </div>
@@ -117,78 +100,116 @@
     </div>
 
     <!-- Recent Activities -->
-    <div class="row">
-        <div class="col-xl-8">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title mb-3">Nilai Terbaru</h4>
-                    <div class="table-responsive">
-                        <table class="table table-centered table-nowrap table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Siswa</th>
-                                    <th>Mata Pelajaran</th>
-                                    <th>Kelas</th>
-                                    <th>Nilai</th>
-                                    <th>Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentGrades as $grade)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm rounded-circle bg-light text-center me-2">
-                                                <span class="avatar-title text-primary font-weight-bold">
-                                                    {{ substr($grade->student->full_name ?? 'N/A', 0, 2) }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0">{{ $grade->student->full_name ?? 'N/A' }}</h6>
-                                                <small class="text-muted">{{ $grade->student->nis ?? 'N/A' }}</small>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900">Nilai Terbaru</h2>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($recentGrades as $grade)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                <span class="text-sm font-medium text-gray-700">{{ substr($grade->student->full_name ?? 'N/A', 0, 2) }}</span>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td>{{ $grade->subject->name ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge bg-light text-dark">{{ $grade->classroom->name ?? 'N/A' }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">{{ $grade->final_grade ?? 'N/A' }}</span>
-                                    </td>
-                                    <td>{{ $grade->created_at ? $grade->created_at->format('d/m/Y') : 'N/A' }}</td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center">Tidak ada data nilai terbaru</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $grade->student->full_name ?? 'N/A' }}</div>
+                                            <div class="text-sm text-gray-500">{{ $grade->student->nis ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $grade->subject->name ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $grade->classroom->name ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $grade->final_grade ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $grade->created_at ? $grade->created_at->format('d/m/Y') : 'N/A' }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <p class="text-sm">Tidak ada data nilai terbaru</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title mb-3">Raport Terbaru</h4>
-                    <div class="timeline-alt pb-0">
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900">Raport Terbaru</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
                         @forelse($recentRaports as $raport)
-                        <div class="timeline-item">
-                            <i class="mdi mdi-circle bg-info-lighten text-info timeline-icon"></i>
-                            <div class="timeline-item-info">
-                                <a href="#" class="text-info fw-bold mb-1 d-block">{{ $raport->student->full_name ?? 'N/A' }}</a>
-                                <small class="text-muted">{{ $raport->classroom->name ?? 'N/A' }} - {{ $raport->semester->name ?? 'N/A' }}</small>
-                                <p class="mb-0 pb-2">
-                                    <small class="text-muted">{{ $raport->created_at ? $raport->created_at->format('d/m/Y H:i') : 'N/A' }}</small>
-                                </p>
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900">{{ $raport->student->full_name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-500">{{ $raport->classroom->name ?? 'N/A' }} - {{ $raport->semester->name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-400">{{ $raport->created_at ? $raport->created_at->format('d/m/Y H:i') : 'N/A' }}</p>
                             </div>
                         </div>
                         @empty
-                        <div class="text-center py-3">
-                            <p class="text-muted">Tidak ada raport terbaru</p>
+                        <div class="text-center py-4">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500">Tidak ada raport terbaru</p>
                         </div>
                         @endforelse
                     </div>
@@ -198,59 +219,67 @@
     </div>
 
     <!-- Classroom Statistics -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title mb-3">Statistik per Kelas</h4>
-                    <div class="table-responsive">
-                        <table class="table table-centered table-nowrap table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Kelas</th>
-                                    <th>Jumlah Siswa</th>
-                                    <th>Status</th>
-                                    <th>Progress</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($classroomStats as $classroom)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm rounded-circle bg-light text-center me-2">
-                                                <span class="avatar-title text-warning font-weight-bold">
-                                                    {{ substr($classroom->name, 0, 2) }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0">{{ $classroom->name }}</h6>
-                                                <small class="text-muted">{{ $classroom->major->name ?? 'N/A' }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary">{{ $classroom->students_count }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">Aktif</span>
-                                    </td>
-                                    <td>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data kelas</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
                 </div>
+                <h2 class="text-lg font-semibold text-gray-900">Statistik per Kelas</h2>
             </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Siswa</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($classroomStats as $classroom)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <span class="text-sm font-medium text-gray-700">{{ substr($classroom->name, 0, 2) }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $classroom->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $classroom->major->name ?? 'N/A' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ $classroom->students_count }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Aktif
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <p class="text-sm">Tidak ada data kelas</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

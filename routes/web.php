@@ -81,10 +81,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/siswa/{siswa}', [StudentController::class, 'destroy'])->name('siswa.destroy');
     });
 
-    // Admin-only Promotion routes
+    // Admin-only routes
     Route::middleware('check.role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index');
-        Route::post('promotions/process', [PromotionController::class, 'process'])->name('promotions.process');
         Route::resource('nilai-siswa', NilaiSiswaController::class)->only(['show']);
 
         // Admin Siswa Pindahan routes
@@ -115,6 +113,7 @@ Route::middleware('auth')->group(function () {
 
         // System Settings Routes
         Route::get('system-settings', [\App\Http\Controllers\SystemSettingController::class, 'index'])->name('system-settings.index');
+        Route::post('system-settings', [\App\Http\Controllers\SystemSettingController::class, 'updateSchoolInfo'])->name('system-settings.index');
         Route::post('system-settings/toggle-ppdb', [\App\Http\Controllers\SystemSettingController::class, 'togglePPDB'])->name('system-settings.toggle-ppdb');
         Route::post('system-settings/toggle-transfer-student', [\App\Http\Controllers\SystemSettingController::class, 'toggleTransferStudent'])->name('system-settings.toggle-transfer-student');
     });
@@ -175,10 +174,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/pembagian-kelas', [ClassAssignmentController::class, 'index'])->name('pembagian.kelas');
     Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
     Route::post('/pembagian-kelas/auto-place', [ClassAssignmentController::class, 'autoPlaceStudents'])->name('pembagian.kelas.auto-place');
-    Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->name('pengaturan.kkm');
-    Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->name('pengaturan.kkm.update');
-    Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->name('pengaturan.kkm.update-failed-subjects');
-    Route::post('/pengaturan-kkm/update-semester-weights', [\App\Http\Controllers\SubjectSettingController::class, 'updateSemesterWeights'])->name('pengaturan.kkm.update-semester-weights');
+    Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->middleware('check.role:admin')->name('pengaturan.kkm');
+    Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->middleware('check.role:admin')->name('pengaturan.kkm.update');
+    Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->middleware('check.role:admin')->name('pengaturan.kkm.update-failed-subjects');
+    Route::post('/pengaturan-kkm/update-semester-weights', [\App\Http\Controllers\SubjectSettingController::class, 'updateSemesterWeights'])->middleware('check.role:admin')->name('pengaturan.kkm.update-semester-weights');
     Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen.pengguna');
     // Guru Wali Kelas
     Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.guru.dashboard');
@@ -198,8 +197,32 @@ Route::middleware('auth')->group(function () {
     Route::middleware('check.role:kepala_sekolah')->prefix('kepala-sekolah')->name('kepala.')->group(function () {
         Route::get('/dashboard', [KepalaSekolahController::class, 'dashboard'])->name('dashboard');
         Route::get('/laporan-akademik', [KepalaSekolahController::class, 'laporanAkademik'])->name('laporan.akademik');
-        Route::get('/laporan-keuangan', [KepalaSekolahController::class, 'laporanKeuangan'])->name('laporan.keuangan');
+        // Laporan Keuangan dihilangkan untuk Kepala Sekolah
         Route::get('/pengaturan-sekolah', [KepalaSekolahController::class, 'pengaturanSekolah'])->name('pengaturan.sekolah');
+
+        // Kenaikan Kelas & Kelulusan (Dipindahkan dari Admin)
+        Route::get('/kenaikan-kelas', [KepalaSekolahController::class, 'kenaikanKelas'])->name('kenaikan-kelas');
+        Route::post('/kenaikan-kelas/process', [KepalaSekolahController::class, 'processKenaikanKelas'])->name('kenaikan-kelas.process');
+
+        // Monitoring PPDB
+        Route::get('/monitoring/ppdb', [KepalaSekolahController::class, 'monitoringPPDB'])->name('monitoring.ppdb');
+
+        // Monitoring Siswa Pindahan
+        Route::get('/monitoring/siswa-pindahan', [KepalaSekolahController::class, 'monitoringSiswaPindahan'])->name('monitoring.siswa-pindahan');
+
+        // Monitoring Jadwal Ujian
+        Route::get('/monitoring/jadwal-ujian', [KepalaSekolahController::class, 'monitoringJadwalUjian'])->name('monitoring.jadwal-ujian');
+
+        // Pengaturan KKM - dipindahkan ke Admin, tidak tersedia di kepala sekolah
+
+        // Monitoring Guru
+        Route::get('/monitoring/guru', [KepalaSekolahController::class, 'monitoringGuru'])->name('monitoring.guru');
+
+        // Monitoring Kelas
+        Route::get('/monitoring/kelas', [KepalaSekolahController::class, 'monitoringKelas'])->name('monitoring.kelas');
+
+        // Monitoring Nilai
+        Route::get('/monitoring/nilai', [KepalaSekolahController::class, 'monitoringNilai'])->name('monitoring.nilai');
     });
 
     // Wali Murid Routes

@@ -72,4 +72,9 @@ class Classroom extends Model
     {
         return $this->hasMany(ClassStudent::class);
     }
+
+    public function homeroomTeacher()
+    {
+        return $this->belongsTo(Teacher::class, 'homeroom_teacher_id');
+    }
 }

@@ -13,6 +13,7 @@ use App\Models\Semester;
 use App\Models\Attendance;
 use App\Models\ClassStudent;
 use App\Services\AttendanceService;
+use App\Models\AppSetting;
 
 class SiswaRaportController extends Controller
 {
@@ -104,6 +105,16 @@ class SiswaRaportController extends Controller
             $attendance_absent = $raport->attendance_absent;
         }
 
+        // Ambil informasi sekolah dari AppSetting
+        $school = [
+            'name' => AppSetting::getValue('school_name', 'Nama Sekolah'),
+            'npsn' => AppSetting::getValue('school_npsn', ''),
+            'address' => AppSetting::getValue('school_address', ''),
+            'phone' => AppSetting::getValue('school_phone', ''),
+            'email' => AppSetting::getValue('school_email', ''),
+            'website' => AppSetting::getValue('school_website', ''),
+        ];
+
         return view('siswa.raport', compact(
             'student',
             'selectedYear',
@@ -116,7 +127,8 @@ class SiswaRaportController extends Controller
             'subjectSettings',
             'attendance_sick',
             'attendance_permit',
-            'attendance_absent'
+            'attendance_absent',
+            'school'
         ));
     }
 
