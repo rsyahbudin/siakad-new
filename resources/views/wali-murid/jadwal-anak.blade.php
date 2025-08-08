@@ -41,7 +41,7 @@
                         <p class="text-indigo-100 text-lg">{{ $student->full_name }}</p>
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div class="flex items-center gap-2 bg-white bg-opacity-10 rounded-lg px-3 py-2">
                         <svg class="w-4 h-4 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,12 +74,12 @@
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         @php
-            $totalSubjects = $schedules->count();
-            $activeDays = $schedules->groupBy('day')->count();
-            $totalHours = $schedules->sum(function($schedule) {
-                return \Carbon\Carbon::parse($schedule->time_end)->diffInHours(\Carbon\Carbon::parse($schedule->time_start));
-            });
-            $avgSubjectsPerDay = $activeDays > 0 ? round($totalSubjects / $activeDays, 1) : 0;
+        $totalSubjects = $schedules->count();
+        $activeDays = $schedules->groupBy('day')->count();
+        $totalHours = $schedules->sum(function($schedule) {
+        return \Carbon\Carbon::parse($schedule->time_end)->diffInHours(\Carbon\Carbon::parse($schedule->time_start));
+        });
+        $avgSubjectsPerDay = $activeDays > 0 ? round($totalSubjects / $activeDays, 1) : 0;
         @endphp
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
@@ -145,27 +145,27 @@
         @php
         $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $dayColors = [
-            'Senin' => ['bg' => 'bg-red-500', 'light' => 'bg-red-50', 'text' => 'text-red-700', 'border' => 'border-red-200'],
-            'Selasa' => ['bg' => 'bg-green-500', 'light' => 'bg-green-50', 'text' => 'text-green-700', 'border' => 'border-green-200'],
-            'Rabu' => ['bg' => 'bg-yellow-500', 'light' => 'bg-yellow-50', 'text' => 'text-yellow-700', 'border' => 'border-yellow-200'],
-            'Kamis' => ['bg' => 'bg-blue-500', 'light' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-200'],
-            'Jumat' => ['bg' => 'bg-purple-500', 'light' => 'bg-purple-50', 'text' => 'text-purple-700', 'border' => 'border-purple-200'],
-            'Sabtu' => ['bg' => 'bg-gray-500', 'light' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-200']
+        'Senin' => ['bg' => 'bg-red-500', 'light' => 'bg-red-50', 'text' => 'text-red-700', 'border' => 'border-red-200'],
+        'Selasa' => ['bg' => 'bg-green-500', 'light' => 'bg-green-50', 'text' => 'text-green-700', 'border' => 'border-green-200'],
+        'Rabu' => ['bg' => 'bg-yellow-500', 'light' => 'bg-yellow-50', 'text' => 'text-yellow-700', 'border' => 'border-yellow-200'],
+        'Kamis' => ['bg' => 'bg-blue-500', 'light' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-200'],
+        'Jumat' => ['bg' => 'bg-purple-500', 'light' => 'bg-purple-50', 'text' => 'text-purple-700', 'border' => 'border-purple-200'],
+        'Sabtu' => ['bg' => 'bg-gray-500', 'light' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-200']
         ];
         $dayIcons = [
-            'Senin' => '1',
-            'Selasa' => '2',
-            'Rabu' => '3',
-            'Kamis' => '4',
-            'Jumat' => '5',
-            'Sabtu' => '6'
+        'Senin' => '1',
+        'Selasa' => '2',
+        'Rabu' => '3',
+        'Kamis' => '4',
+        'Jumat' => '5',
+        'Sabtu' => '6'
         ];
         @endphp
 
         @foreach($days as $day)
         @php
         $daySchedules = $schedules->where('day', $day)->sortBy(function($schedule) {
-            return \Carbon\Carbon::parse($schedule->time_start);
+        return \Carbon\Carbon::parse($schedule->time_start);
         });
         $colors = $dayColors[$day] ?? $dayColors['Senin'];
         @endphp
@@ -186,7 +186,7 @@
                     @if($daySchedules->count() > 0)
                     <div class="text-right">
                         <div class="text-sm opacity-90">
-                            {{ \Carbon\Carbon::parse($daySchedules->first()->time_start)->format('H:i') }} - 
+                            {{ \Carbon\Carbon::parse($daySchedules->first()->time_start)->format('H:i') }} -
                             {{ \Carbon\Carbon::parse($daySchedules->last()->time_end)->format('H:i') }}
                         </div>
                     </div>
@@ -264,7 +264,7 @@
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Belum Ada Jadwal Pelajaran</h3>
             <p class="text-gray-500 max-w-md">
-                Jadwal pelajaran untuk {{ $student->full_name }} belum tersedia. 
+                Jadwal pelajaran untuk {{ $student->full_name }} belum tersedia.
                 Silakan hubungi pihak sekolah untuk informasi lebih lanjut.
             </p>
             <div class="mt-6">
@@ -282,34 +282,34 @@
 
 <!-- Add some custom styles for better mobile experience -->
 <style>
-@media (max-width: 768px) {
-    .space-y-6 > * + * {
-        margin-top: 1.5rem;
-    }
-    
-    .grid-cols-1 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-    
-    .lg\:grid-cols-2 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-    
-    .xl\:grid-cols-3 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-}
+    @media (max-width: 768px) {
+        .space-y-6>*+* {
+            margin-top: 1.5rem;
+        }
 
-@media (min-width: 1024px) {
-    .lg\:grid-cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
 
-@media (min-width: 1280px) {
-    .xl\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        .lg\:grid-cols-2 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+
+        .xl\:grid-cols-3 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
     }
-}
+
+    @media (min-width: 1024px) {
+        .lg\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .xl\:grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
 </style>
 @endsection
