@@ -14,6 +14,13 @@ class KepalaSekolah extends Model
         'phone_number',
         'address',
         'position',
+        'last_education',
+        'degree',
+        'major',
+        'university',
+        'graduation_year',
+        'birth_place',
+        'birth_date',
     ];
 
     public function user()

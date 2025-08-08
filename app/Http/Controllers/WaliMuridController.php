@@ -11,6 +11,7 @@ use App\Models\Raport;
 use App\Models\Attendance;
 use App\Models\Schedule;
 use App\Services\AttendanceService;
+use App\Models\Semester;
 
 class WaliMuridController extends Controller
 {
@@ -25,21 +26,29 @@ class WaliMuridController extends Controller
 
         $student = $waliMurid->student;
 
-        // Get student's grades
+        // Get student's grades (recent)
         $grades = Grade::where('student_id', $student->id)
             ->with(['subject', 'classroom'])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10);
 
-        // Get attendance
+        // Active semester stats
+        $activeSemester = Semester::where('is_active', true)->first();
+        $attendanceService = new AttendanceService();
+        $attendanceStats = $activeSemester
+            ? $attendanceService->getSemesterStats($student->id, $activeSemester->id)
+            : ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alpha' => 0, 'percentage' => 0, 'total_days' => 0];
+
+        // Attendance summaries (last entries)
         $attendance = Attendance::where('student_id', $student->id)
             ->with(['semester'])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(5);
 
-        return view('wali-murid.dashboard', compact('user', 'student', 'grades', 'attendance'));
+        // Simple average final grade from recent grades
+        $avgFinalGrade = round((float) (clone $grades)->getCollection()->avg('final_grade'), 1);
+
+        return view('wali-murid.dashboard', compact('user', 'student', 'grades', 'attendance', 'attendanceStats', 'activeSemester', 'avgFinalGrade'));
     }
 
     public function nilaiAnak()
@@ -57,7 +66,7 @@ class WaliMuridController extends Controller
         $grades = Grade::where('student_id', $student->id)
             ->with(['subject', 'classroom', 'semester'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
 
         return view('wali-murid.nilai-anak', compact('student', 'grades'));
     }
@@ -77,7 +86,7 @@ class WaliMuridController extends Controller
         $raports = Raport::where('student_id', $student->id)
             ->with(['classroom', 'semester'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(12);
 
         return view('wali-murid.raport-anak', compact('student', 'raports'));
     }
@@ -93,15 +102,23 @@ class WaliMuridController extends Controller
 
         $student = $waliMurid->student;
 
-        // Get student's class and schedule
-        $classStudent = $student->classStudents()->with('classroom')->first();
-        $schedules = collect();
+        // Get active semester to scope classroom assignment to the correct year
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
 
-        if ($classStudent && $classStudent->classroom) {
-            $schedules = Schedule::where('classroom_id', $classStudent->classroom->id)
-                ->with(['subject', 'teacher'])
-                ->orderBy('day_of_week')
-                ->orderBy('start_time')
+        // Get student's class via classroom assignment and load classroom relation
+        $classStudent = $student->classStudents()
+            ->when($activeSemester, fn($q) => $q->where('academic_year_id', $activeSemester->academic_year_id))
+            ->with('classroomAssignment.classroom')
+            ->first();
+
+        $schedules = collect();
+        $classroom = $classStudent?->classroomAssignment?->classroom;
+
+        if ($classroom) {
+            $schedules = Schedule::where('classroom_id', $classroom->id)
+                ->with(['subject', 'teacher', 'classroom'])
+                ->orderByRaw("FIELD(day, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu')")
+                ->orderBy('time_start')
                 ->get();
         }
 

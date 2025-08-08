@@ -112,6 +112,7 @@
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Wali Kelas</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pengawas Ujian</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Penugasan</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -185,6 +186,11 @@
                                 @endif
                             </div>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <a href="#" class="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-100 text-gray-700 text-xs font-medium cursor-default" title="Lihat detail">
+                                Detail
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
@@ -225,3 +231,4 @@
         </div>
     </div>
 </div>
+@endsection

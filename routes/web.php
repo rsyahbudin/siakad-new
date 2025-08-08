@@ -30,6 +30,7 @@ use App\Http\Controllers\WaliMuridController;
 use App\Http\Controllers\PPDBApplicationController;
 use App\Http\Controllers\TransferStudentController;
 use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\Admin\KepalaSekolahAccountController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -116,6 +117,14 @@ Route::middleware('auth')->group(function () {
         Route::post('system-settings', [\App\Http\Controllers\SystemSettingController::class, 'updateSchoolInfo'])->name('system-settings.index');
         Route::post('system-settings/toggle-ppdb', [\App\Http\Controllers\SystemSettingController::class, 'togglePPDB'])->name('system-settings.toggle-ppdb');
         Route::post('system-settings/toggle-transfer-student', [\App\Http\Controllers\SystemSettingController::class, 'toggleTransferStudent'])->name('system-settings.toggle-transfer-student');
+
+        // Kepala Sekolah Account Management (single instance)
+        Route::get('kepala-sekolah', [KepalaSekolahAccountController::class, 'index'])->name('kepsek.index');
+        Route::get('kepala-sekolah/create', [KepalaSekolahAccountController::class, 'create'])->name('kepsek.create');
+        Route::post('kepala-sekolah', [KepalaSekolahAccountController::class, 'store'])->name('kepsek.store');
+        Route::get('kepala-sekolah/{user}/edit', [KepalaSekolahAccountController::class, 'edit'])->name('kepsek.edit');
+        Route::put('kepala-sekolah/{user}', [KepalaSekolahAccountController::class, 'update'])->name('kepsek.update');
+        Route::delete('kepala-sekolah/{user}', [KepalaSekolahAccountController::class, 'destroy'])->name('kepsek.destroy');
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');
@@ -223,6 +232,11 @@ Route::middleware('auth')->group(function () {
 
         // Monitoring Nilai
         Route::get('/monitoring/nilai', [KepalaSekolahController::class, 'monitoringNilai'])->name('monitoring.nilai');
+
+        // Pengaturan Akun (Profil + Password) - 1 menu
+        Route::get('/pengaturan-akun', [KepalaSekolahController::class, 'accountSettings'])->name('pengaturan.akun');
+        Route::post('/pengaturan-akun', [KepalaSekolahController::class, 'updateAccount'])->name('pengaturan.akun.update');
+        Route::post('/pengaturan-akun/password', [KepalaSekolahController::class, 'updatePassword'])->name('pengaturan.akun.password');
     });
 
     // Wali Murid Routes
@@ -264,3 +278,4 @@ Route::get('/home', function () {
 })->name('home');
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/settings.php';

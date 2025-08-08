@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\AcademicYear;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -19,6 +20,7 @@ use App\Models\ExamSchedule;
 use App\Models\SubjectSetting;
 use Illuminate\Support\Facades\DB;
 use App\Models\Subject;
+use App\Models\KepalaSekolah;
 
 class KepalaSekolahController extends Controller
 {
@@ -447,5 +449,79 @@ class KepalaSekolahController extends Controller
         ];
 
         return view('kepala-sekolah.monitoring.nilai', compact('recentGrades', 'subjectStats', 'statistics', 'activeYear', 'activeSemester'));
+    }
+
+    /**
+     * Pengaturan Akun (Profil dan Password) - Kepala Sekolah
+     */
+    public function accountSettings()
+    {
+        $user = Auth::user();
+        $profile = $user->kepalaSekolah; // may be null if not set
+        return view('kepala-sekolah.pengaturan-akun', compact('user', 'profile'));
+    }
+
+    public function updateAccount(Request $request)
+    {
+        $user = Auth::user();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'nip' => 'required|string|size:18|unique:kepala_sekolahs,nip,' . ($user->kepalaSekolah->id ?? 'null'),
+            'full_name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'last_education' => 'nullable|string|max:100',
+            'degree' => 'nullable|string|max:100',
+            'major' => 'nullable|string|max:150',
+            'university' => 'nullable|string|max:150',
+            'graduation_year' => 'nullable|integer|min:1950|max:2100',
+            'birth_place' => 'nullable|string|max:150',
+            'birth_date' => 'nullable|date',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->save();
+
+        // sync to kepala sekolah profile if exists
+        $profile = $user->kepalaSekolah;
+        if (!$profile) {
+            $profile = new KepalaSekolah(['user_id' => $user->id]);
+        }
+        
+        $profile->nip = $validated['nip'];
+        $profile->full_name = $validated['full_name'] ?? $profile->full_name;
+        $profile->phone_number = $validated['phone_number'] ?? $profile->phone_number;
+        $profile->address = $validated['address'] ?? $profile->address;
+        $profile->position = 'Kepala Sekolah';
+        $profile->last_education = $validated['last_education'] ?? $profile->last_education;
+        $profile->degree = $validated['degree'] ?? $profile->degree;
+        $profile->major = $validated['major'] ?? $profile->major;
+        $profile->university = $validated['university'] ?? $profile->university;
+        $profile->graduation_year = $validated['graduation_year'] ?? $profile->graduation_year;
+        $profile->birth_place = $validated['birth_place'] ?? $profile->birth_place;
+        $profile->birth_date = $validated['birth_date'] ?? $profile->birth_date;
+        $profile->save();
+
+        return back()->with('success', 'Profil akun berhasil diperbarui.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return back()->with('error', 'Password saat ini tidak sesuai.');
+        }
+
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        return back()->with('success', 'Password berhasil diperbarui.');
     }
 }
