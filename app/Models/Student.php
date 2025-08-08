@@ -74,4 +74,22 @@ class Student extends Model
     {
         return $this->hasMany(WaliMurid::class);
     }
+
+    public function extracurriculars()
+    {
+        return $this->belongsToMany(Extracurricular::class, 'student_extracurriculars')
+            ->withPivot(['status', 'position', 'achievements', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
+            ->withTimestamps();
+    }
+
+    public function getActiveExtracurriculars($academicYearId = null)
+    {
+        $query = $this->extracurriculars()->wherePivot('status', 'Aktif');
+
+        if ($academicYearId) {
+            $query->wherePivot('academic_year_id', $academicYearId);
+        }
+
+        return $query->get();
+    }
 }

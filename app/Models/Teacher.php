@@ -56,6 +56,11 @@ class Teacher extends Model
         return $this->hasMany(ClassroomAssignment::class, 'homeroom_teacher_id');
     }
 
+    public function extracurriculars()
+    {
+        return $this->hasMany(Extracurricular::class);
+    }
+
     public function examSchedules()
     {
         return $this->hasMany(\App\Models\ExamSchedule::class, 'supervisor_id');

@@ -31,6 +31,9 @@ use App\Http\Controllers\PPDBApplicationController;
 use App\Http\Controllers\TransferStudentController;
 use App\Http\Controllers\ExamScheduleController;
 use App\Http\Controllers\Admin\KepalaSekolahAccountController;
+use App\Http\Controllers\ExtracurricularController;
+use App\Http\Controllers\StudentExtracurricularController;
+use App\Http\Controllers\GuruExtracurricularGradeController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -80,6 +83,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/siswa/{siswa}/edit', [StudentController::class, 'edit'])->name('siswa.edit');
         Route::put('/siswa/{siswa}', [StudentController::class, 'update'])->name('siswa.update');
         Route::delete('/siswa/{siswa}', [StudentController::class, 'destroy'])->name('siswa.destroy');
+
+        // Extracurricular management routes
+        Route::resource('extracurricular', ExtracurricularController::class);
+        Route::post('extracurricular/{extracurricular}/add-student', [ExtracurricularController::class, 'addStudent'])->name('extracurricular.add-student');
+        Route::post('extracurricular/{extracurricular}/remove-student', [ExtracurricularController::class, 'removeStudent'])->name('extracurricular.remove-student');
+        Route::put('extracurricular/{extracurricular}/update-student-status', [ExtracurricularController::class, 'updateStudentStatus'])->name('extracurricular.update-student-status');
     });
 
     // Admin-only routes
@@ -160,6 +169,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/update/{schedule}/{date}', [TeacherAttendanceController::class, 'updateAttendance'])->name('update');
     });
 
+    // Teacher Extracurricular Grade Routes
+    Route::middleware(['check.role:teacher'])->prefix('teacher/extracurricular-grade')->name('teacher.extracurricular-grade.')->group(function () {
+        Route::get('/', [GuruExtracurricularGradeController::class, 'index'])->name('index');
+        Route::middleware(['check.extracurricular.supervisor'])->group(function () {
+            Route::get('/{extracurricular}', [GuruExtracurricularGradeController::class, 'show'])->name('show');
+            Route::post('/{extracurricular}', [GuruExtracurricularGradeController::class, 'store'])->name('store');
+            Route::get('/{extracurricular}/template', [GuruExtracurricularGradeController::class, 'downloadTemplate'])->name('template');
+            Route::post('/{extracurricular}/import', [GuruExtracurricularGradeController::class, 'import'])->name('import');
+        });
+    });
+
 
     // Siswa
     Route::get('/profil-siswa', [\App\Http\Controllers\StudentController::class, 'profilSiswa'])->name('profil.siswa');
@@ -170,6 +190,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/raport-siswa', [SiswaRaportController::class, 'index'])->name('siswa.raport');
     Route::get('/raport-siswa/semua', [SiswaRaportController::class, 'allRaports'])->name('siswa.all-raports');
     Route::get('/jadwal-ujian-siswa', [ExamScheduleController::class, 'studentSchedule'])->name('siswa.exam-schedule');
+
+    // Student extracurricular routes
+    Route::get('/ekskul-siswa', [StudentExtracurricularController::class, 'index'])->name('siswa.extracurricular.index');
+    Route::get('/ekskul-siswa/{extracurricular}', [StudentExtracurricularController::class, 'show'])->name('siswa.extracurricular.show');
+    Route::post('/ekskul-siswa/{extracurricular}/enroll', [StudentExtracurricularController::class, 'enroll'])->name('siswa.extracurricular.enroll');
+    Route::post('/ekskul-siswa/{extracurricular}/leave', [StudentExtracurricularController::class, 'leave'])->name('siswa.extracurricular.leave');
     // Admin
     Route::prefix('jadwal-admin')->name('jadwal.admin.')->group(function () {
         Route::get('/', [ScheduleController::class, 'index'])->name('index');

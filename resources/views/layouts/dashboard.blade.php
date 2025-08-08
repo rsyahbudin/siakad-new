@@ -263,6 +263,12 @@
                                 </svg>
                                 <span class="text-sm">Jadwal Ujian</span>
                             </a>
+                            <a href="{{ route('extracurricular.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('extracurricular.*') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="text-sm">Ekstrakurikuler</span>
+                            </a>
                         </div>
                     </li>
 
@@ -321,7 +327,7 @@
                                 </svg>
                                 <span class="text-sm">Pengaturan Sistem</span>
                             </a>
-                            
+
                         </div>
                     </li>
 
@@ -375,6 +381,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                 </svg>
                                 <span class="text-sm">Jadwal Ujian</span>
+                            </a>
+                            <a href="{{ route('teacher.extracurricular-grade.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('teacher.extracurricular-grade.*') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="text-sm">Nilai Ekstrakurikuler</span>
                             </a>
                         </div>
                     </li>
@@ -515,6 +527,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                 </svg>
                                 <span class="text-sm">Jadwal Ujian</span>
+                            </a>
+                            <a href="{{ route('siswa.extracurricular.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('siswa.extracurricular.*') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="text-sm">Ekstrakurikuler</span>
                             </a>
                         </div>
                     </li>

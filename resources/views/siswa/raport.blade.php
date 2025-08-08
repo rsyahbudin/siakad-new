@@ -183,42 +183,82 @@
         </tbody>
     </table>
 
-    <!-- Absensi dan Catatan -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div>
-            <h3 class="text-lg font-bold mb-4">B. Kehadiran</h3>
+    <!-- Kehadiran -->
+    <div class="mt-8">
+        <h3 class="text-lg font-bold mb-2">B. Kehadiran</h3>
+        <table class="min-w-full border text-sm">
+            <thead class="bg-gray-100 font-semibold">
+                <tr>
+                    <th class="border px-4 py-2 text-center">Sakit</th>
+                    <th class="border px-4 py-2 text-center">Izin</th>
+                    <th class="border px-4 py-2 text-center">Tanpa Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border px-4 py-2 text-center font-bold">{{ $attendance_sick }} hari</td>
+                    <td class="border px-4 py-2 text-center font-bold">{{ $attendance_permit }} hari</td>
+                    <td class="border px-4 py-2 text-center font-bold">{{ $attendance_absent }} hari</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
+    <!-- Ekstrakurikuler -->
+    <div class="mt-8">
+        <h3 class="text-lg font-bold mb-2">C. Ekstrakurikuler</h3>
+        @php
+        $myExtracurriculars = $student->getActiveExtracurriculars($selectedYear->id);
+        @endphp
 
+        <table class="min-w-full border text-sm">
+            <thead class="bg-gray-100 font-semibold">
+                <tr>
+                    <th class="border px-4 py-2 text-center">No</th>
+                    <th class="border px-4 py-2 text-left">Nama Ekstrakurikuler</th>
+                    <th class="border px-4 py-2 text-center">Posisi</th>
+                    <th class="border px-4 py-2 text-center">Nilai</th>
+                    <th class="border px-4 py-2 text-left">Prestasi</th>
+                    <th class="border px-4 py-2 text-left">Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($myExtracurriculars as $index => $extracurricular)
+                <tr>
+                    <td class="border px-4 py-2 text-center">{{ $index + 1 }}</td>
+                    <td class="border px-4 py-2">{{ $extracurricular->name }}</td>
+                    <td class="border px-4 py-2 text-center">{{ $extracurricular->pivot->position }}</td>
+                    <td class="border px-4 py-2 text-center font-medium">
+                        @if($extracurricular->pivot->grade)
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                            @if($extracurricular->pivot->grade === 'Sangat Baik') bg-green-100 text-green-800
+                            @elseif($extracurricular->pivot->grade === 'Baik') bg-blue-100 text-blue-800
+                            @elseif($extracurricular->pivot->grade === 'Cukup') bg-yellow-100 text-yellow-800
+                            @elseif($extracurricular->pivot->grade === 'Kurang') bg-red-100 text-red-800
+                            @endif">
+                            {{ $extracurricular->pivot->grade }}
+                        </span>
+                        @else
+                        <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
+                    <td class="border px-4 py-2">{{ $extracurricular->pivot->achievements ?: '-' }}</td>
+                    <td class="border px-4 py-2">{{ $extracurricular->pivot->notes ?: '-' }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="border px-4 py-2 text-center text-gray-500">Belum mengikuti ekstrakurikuler apapun.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-            <!-- Attendance Details Table -->
-            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                    <h4 class="font-medium text-gray-900">Detail Ketidakhadiran</h4>
-                </div>
-                <div class="divide-y divide-gray-200">
-                    <div class="flex items-center justify-between px-4 py-3">
-                        <span class="font-medium text-gray-900">Sakit</span>
-                        <span class="font-bold text-gray-900">{{ $attendance_sick }} hari</span>
-                    </div>
-                    <div class="flex items-center justify-between px-4 py-3">
-                        <span class="font-medium text-gray-900">Izin</span>
-                        <span class="font-bold text-gray-900">{{ $attendance_permit }} hari</span>
-                    </div>
-                    <div class="flex items-center justify-between px-4 py-3">
-                        <span class="font-medium text-gray-900">Tanpa Keterangan</span>
-                        <span class="font-bold text-gray-900">{{ $attendance_absent }} hari</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div>
-            <h3 class="text-lg font-bold mb-4">C. Catatan Wali Kelas</h3>
-            <div class="bg-white rounded-lg border border-gray-200 p-4 min-h-[200px]">
-                <div class="flex-1">
-                    <p class="text-gray-700 leading-relaxed">{{ $raport->homeroom_teacher_notes ?? 'Tidak ada catatan dari wali kelas.' }}</p>
-                </div>
-            </div>
+    <!-- Catatan Wali Kelas -->
+    <div class="mt-8">
+        <h3 class="text-lg font-bold mb-2">D. Catatan Wali Kelas</h3>
+        <div class="bg-white rounded-lg border border-gray-200 p-4 min-h-[100px]">
+            <p class="text-gray-700 leading-relaxed">{{ $raport->homeroom_teacher_notes ?? 'Tidak ada catatan dari wali kelas.' }}</p>
         </div>
     </div>
 
