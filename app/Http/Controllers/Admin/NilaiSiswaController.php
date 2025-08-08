@@ -37,6 +37,7 @@ class NilaiSiswaController extends Controller
                 'tugas' => $nilai->assignment_grade ?? null,
                 'uts' => $nilai->uts_grade ?? null,
                 'uas' => $nilai->uas_grade ?? null,
+                'attitude_grade' => $nilai->attitude_grade ?? null,
             ];
         }
         // Ambil kelas aktif siswa pada tahun ajaran aktif

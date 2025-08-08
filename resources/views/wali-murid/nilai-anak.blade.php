@@ -29,6 +29,7 @@
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tugas</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">UTS</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">UAS</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai Sikap</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Akhir</th>
                     </tr>
                 </thead>
@@ -41,11 +42,24 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">{{ $grade->assignment_grade ?? 'N/A' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">{{ $grade->uts_grade ?? 'N/A' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">{{ $grade->uas_grade ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                            @if($grade->attitude_grade)
+                            <span class="px-2 py-1 rounded text-xs font-semibold
+                                    @if($grade->attitude_grade === 'Baik') bg-green-100 text-green-800
+                                    @elseif($grade->attitude_grade === 'Cukup') bg-yellow-100 text-yellow-800
+                                    @else bg-red-100 text-red-800
+                                    @endif">
+                                {{ $grade->attitude_grade }}
+                            </span>
+                            @else
+                            <span class="text-gray-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-semibold">{{ $grade->final_grade ?? 'N/A' }}</td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">Tidak ada data nilai</td>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">Tidak ada data nilai</td>
                     </tr>
                     @endforelse
                 </tbody>

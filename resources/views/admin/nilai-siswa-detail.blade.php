@@ -24,6 +24,7 @@ $tahunAjaranIds = array_keys($rekap);
                     <th class="py-2 px-4 text-center">Tugas</th>
                     <th class="py-2 px-4 text-center">UTS</th>
                     <th class="py-2 px-4 text-center">UAS</th>
+                    <th class="py-2 px-4 text-center">Nilai Sikap</th>
                     <th class="py-2 px-4 text-center">Nilai</th>
                     <th class="py-2 px-4 text-center">Status</th>
                 </tr>
@@ -35,6 +36,19 @@ $tahunAjaranIds = array_keys($rekap);
                     <td class="py-2 px-4 text-center">{{ $nilai['tugas'] !== null ? number_format($nilai['tugas'],2) : '-' }}</td>
                     <td class="py-2 px-4 text-center">{{ $nilai['uts'] !== null ? number_format($nilai['uts'],2) : '-' }}</td>
                     <td class="py-2 px-4 text-center">{{ $nilai['uas'] !== null ? number_format($nilai['uas'],2) : '-' }}</td>
+                    <td class="py-2 px-4 text-center">
+                        @if($nilai['attitude_grade'])
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                                @if($nilai['attitude_grade'] === 'Baik') bg-green-100 text-green-800
+                                @elseif($nilai['attitude_grade'] === 'Cukup') bg-yellow-100 text-yellow-800
+                                @else bg-red-100 text-red-800
+                                @endif">
+                            {{ $nilai['attitude_grade'] }}
+                        </span>
+                        @else
+                        <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
                     <td class="py-2 px-4 text-center">{{ $nilai['final_grade'] !== null ? number_format($nilai['final_grade'],2) : '-' }}</td>
                     <td class="py-2 px-4 text-center">
                         @if(is_numeric($nilai['kkm']))

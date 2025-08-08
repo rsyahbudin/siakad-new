@@ -15,6 +15,7 @@
                     <th class="py-2 px-4 border">Tugas</th>
                     <th class="py-2 px-4 border">UTS</th>
                     <th class="py-2 px-4 border">UAS</th>
+                    <th class="py-2 px-4 border">Nilai Sikap</th>
                     <th class="py-2 px-4 border">Nilai Akhir</th>
                 </tr>
             </thead>
@@ -26,6 +27,19 @@
                     <td class="py-2 px-4 border text-center">{{ $grade->assignment_grade ?? '-' }}</td>
                     <td class="py-2 px-4 border text-center">{{ $grade->uts_grade ?? '-' }}</td>
                     <td class="py-2 px-4 border text-center">{{ $grade->uas_grade ?? '-' }}</td>
+                    <td class="py-2 px-4 border text-center">
+                        @if($grade->attitude_grade)
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                                @if($grade->attitude_grade === 'Baik') bg-green-100 text-green-800
+                                @elseif($grade->attitude_grade === 'Cukup') bg-yellow-100 text-yellow-800
+                                @else bg-red-100 text-red-800
+                                @endif">
+                            {{ $grade->attitude_grade }}
+                        </span>
+                        @else
+                        <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
                     @php
                     $nilaiAkhir = null;
                     if (!is_null($grade->final_grade)) {
@@ -42,7 +56,7 @@
                 @endforeach
                 @else
                 <tr>
-                    <td class="py-2 px-4 border text-center text-gray-400" colspan="5">Belum ada data nilai.</td>
+                    <td class="py-2 px-4 border text-center text-gray-400" colspan="6">Belum ada data nilai.</td>
                 </tr>
                 @endif
             </tbody>

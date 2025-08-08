@@ -14,6 +14,7 @@ use App\Models\Attendance;
 use App\Models\ClassStudent;
 use App\Services\AttendanceService;
 use App\Models\AppSetting;
+use App\Models\KepalaSekolah;
 
 class SiswaRaportController extends Controller
 {
@@ -115,6 +116,9 @@ class SiswaRaportController extends Controller
             'website' => AppSetting::getValue('school_website', ''),
         ];
 
+        // Ambil data kepala sekolah
+        $kepalaSekolah = KepalaSekolah::first();
+
         return view('siswa.raport', compact(
             'student',
             'selectedYear',
@@ -128,7 +132,8 @@ class SiswaRaportController extends Controller
             'attendance_sick',
             'attendance_permit',
             'attendance_absent',
-            'school'
+            'school',
+            'kepalaSekolah'
         ));
     }
 

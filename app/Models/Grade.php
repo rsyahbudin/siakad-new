@@ -28,6 +28,7 @@ class Grade extends Model
         'assignment_grade',
         'uts_grade',
         'uas_grade',
+        'attitude_grade',
         'final_grade',
         'is_passed',
         'source',

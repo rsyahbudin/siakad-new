@@ -69,6 +69,7 @@
                         <th class="py-2 px-4 text-center">Nilai Tugas</th>
                         <th class="py-2 px-4 text-center">Nilai UTS</th>
                         <th class="py-2 px-4 text-center">Nilai UAS</th>
+                        <th class="py-2 px-4 text-center">Nilai Sikap</th>
                         <th class="py-2 px-4 text-center">Nilai Akhir</th>
                         <th class="py-2 px-4 text-center">Status</th>
                     </tr>
@@ -81,6 +82,14 @@
                         <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][tugas]" value="{{ $grades[$siswa->id]->assignment_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
                         <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uts]" value="{{ $grades[$siswa->id]->uts_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
                         <td class="py-2 px-4"><input type="number" name="nilai[{{ $siswa->id }}][uas]" value="{{ $grades[$siswa->id]->uas_grade ?? '' }}" class="border rounded px-2 py-1 w-20 text-center" {{ $isFinalized ? 'disabled' : '' }}></td>
+                        <td class="py-2 px-4">
+                            <select name="nilai[{{ $siswa->id }}][sikap]" class="border rounded px-2 py-1 w-32 text-center" {{ $isFinalized ? 'disabled' : '' }}>
+                                <option value="">- Pilih -</option>
+                                <option value="Baik" {{ ($grades[$siswa->id]->attitude_grade ?? '') === 'Baik' ? 'selected' : '' }}>Baik</option>
+                                <option value="Cukup" {{ ($grades[$siswa->id]->attitude_grade ?? '') === 'Cukup' ? 'selected' : '' }}>Cukup</option>
+                                <option value="Kurang Baik" {{ ($grades[$siswa->id]->attitude_grade ?? '') === 'Kurang Baik' ? 'selected' : '' }}>Kurang Baik</option>
+                            </select>
+                        </td>
                         @php
                         $nilaiAkhir = null;
                         $status = null;

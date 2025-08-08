@@ -17,6 +17,7 @@ use App\Services\AttendanceService;
 use Illuminate\Support\Facades\DB;
 use App\Models\Semester;
 use App\Models\AppSetting;
+use App\Models\KepalaSekolah;
 
 class WaliKelasController extends Controller
 {
@@ -229,7 +230,8 @@ class WaliKelasController extends Controller
                 'ganjil' => $nilaiGanjil,
                 'genap' => $nilaiGenap,
                 'yearly' => $yearly,
-                'kkm' => $ganjil?->getKKM() ?? $genap?->getKKM()
+                'kkm' => $ganjil?->getKKM() ?? $genap?->getKKM(),
+                'attitude_grade' => $ganjil?->attitude_grade ?? $genap?->attitude_grade
             ];
 
             // Tentukan status berdasarkan nilai akhir tahun
@@ -563,6 +565,9 @@ class WaliKelasController extends Controller
             'website' => AppSetting::getValue('school_website', ''),
         ];
 
+        // Ambil data kepala sekolah
+        $kepalaSekolah = KepalaSekolah::first();
+
         return view('siswa.raport', compact(
             'student',
             'selectedYear',
@@ -576,7 +581,8 @@ class WaliKelasController extends Controller
             'attendance_sick',
             'attendance_permit',
             'attendance_absent',
-            'school'
+            'school',
+            'kepalaSekolah'
         ));
     }
 
@@ -856,6 +862,7 @@ class WaliKelasController extends Controller
                 'tugas' => $nilai->assignment_grade ?? null,
                 'uts' => $nilai->uts_grade ?? null,
                 'uas' => $nilai->uas_grade ?? null,
+                'attitude_grade' => $nilai->attitude_grade ?? null,
             ];
         }
         $tahunAjaranIds = array_keys($rekap);

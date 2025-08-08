@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-3xl font-bold text-gray-800">Impor Nilai Siswa</h2>
-            <p class="text-sm text-gray-500 mt-1">Unggah file Excel untuk mengimpor nilai tugas, UTS, dan UAS.</p>
+            <p class="text-sm text-gray-500 mt-1">Unggah file Excel untuk mengimpor nilai tugas, UTS, UAS, dan nilai sikap.</p>
         </div>
         <a href="{{ route('nilai.input') }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,38 @@
             </form>
 
             <div class="mt-8 pt-6 border-t border-gray-200">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">3. Unduh Template</h3>
+                <h3 class="text-lg font-medium leading-6 text-gray-900">3. Format File Excel</h3>
+                <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-700 mb-3">File Excel harus memiliki kolom dengan urutan sebagai berikut:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="font-medium">Kolom A:</p>
+                            <p class="text-gray-600">NIS (Nomor Induk Siswa)</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Kolom B:</p>
+                            <p class="text-gray-600">Nama Siswa</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Kolom C:</p>
+                            <p class="text-gray-600">Nilai Tugas (angka)</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Kolom D:</p>
+                            <p class="text-gray-600">Nilai UTS (angka)</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Kolom E:</p>
+                            <p class="text-gray-600">Nilai UAS (angka)</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Kolom F:</p>
+                            <p class="text-gray-600">Nilai Sikap (Baik/Cukup/Kurang Baik)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mt-6">4. Unduh Template</h3>
                 <p class="mt-1 text-sm text-gray-600">Gunakan form di bawah ini untuk mengunduh template yang sudah terisi nilai siswa yang ada.</p>
                 <form action="{{ route('nilai.import.template') }}" method="GET" class="mt-4">
                     <input type="hidden" name="assignment_id" value="{{ $selectedAssignment }}">

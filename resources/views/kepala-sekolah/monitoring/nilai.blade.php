@@ -100,51 +100,23 @@
     <!-- Grade Distribution Chart -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex items-center gap-3 mb-6">
-            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </div>
-            <h2 class="text-lg font-semibold text-gray-900">Distribusi Nilai per Mata Pelajaran</h2>
+            <h2 class="text-lg font-semibold text-gray-900">Distribusi Nilai</h2>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($subjectStats as $subject)
-            <div class="bg-gray-50 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-medium text-gray-900">{{ $subject->subject_name }}</h3>
-                    <span class="text-xs text-gray-500">{{ $subject->major_name ?? 'Umum' }}</span>
-                </div>
-
-                <div class="space-y-2">
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Rata-rata:</span>
-                        <span class="font-medium">{{ number_format($subject->average_grade, 1) }}</span>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Tertinggi:</span>
-                        <span class="font-medium text-green-600">{{ $subject->highest_grade }}</span>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Terendah:</span>
-                        <span class="font-medium text-red-600">{{ $subject->lowest_grade }}</span>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Lulus KKM:</span>
-                        <span class="font-medium text-green-600">{{ $subject->passed_count }}/{{ $subject->total_count }}</span>
-                    </div>
-                </div>
-
-                <!-- Progress bar for KKM pass rate -->
-                <div class="mt-3">
-                    <div class="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>KKM Pass Rate</span>
-                        <span>{{ number_format(($subject->passed_count / $subject->total_count) * 100, 1) }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-green-600 h-2 rounded-full" style="width: {{ ($subject->passed_count / $subject->total_count) * 100 }}%"></div>
-                    </div>
-                </div>
+        <div class="h-64 flex items-end justify-center space-x-2">
+            @foreach($gradeDistribution as $range => $count)
+            @php
+            $percentage = $statistics['total_grades'] > 0 ? ($count / $statistics['total_grades']) * 100 : 0;
+            $height = $percentage > 0 ? max(20, $percentage * 2) : 0;
+            @endphp
+            <div class="flex flex-col items-center">
+                <div class="w-8 bg-blue-500 rounded-t" style="height: {{ $height }}px;"></div>
+                <div class="text-xs text-gray-600 mt-1">{{ $count }}</div>
+                <div class="text-xs text-gray-500">{{ $range }}</div>
             </div>
             @endforeach
         </div>
@@ -171,6 +143,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai Sikap</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">KKM</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guru</th>
@@ -193,6 +166,19 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="text-sm font-medium text-gray-900">{{ $grade->final_grade }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            @if($grade->attitude_grade)
+                            <span class="px-2 py-1 rounded text-xs font-semibold
+                                    @if($grade->attitude_grade === 'Baik') bg-green-100 text-green-800
+                                    @elseif($grade->attitude_grade === 'Cukup') bg-yellow-100 text-yellow-800
+                                    @else bg-red-100 text-red-800
+                                    @endif">
+                                {{ $grade->attitude_grade }}
+                            </span>
+                            @else
+                            <span class="text-gray-400">-</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="text-sm text-gray-500">{{ $grade->subject->subjectSettings->first()->kkm ?? 75 }}</div>
@@ -225,7 +211,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                             <div class="flex flex-col items-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>

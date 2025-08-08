@@ -118,6 +118,7 @@
                                     <th class="py-2 px-3 text-center border">Nilai Ganjil</th>
                                     <th class="py-2 px-3 text-center border">Nilai Genap</th>
                                     <th class="py-2 px-3 text-center border">Nilai Akhir Tahun</th>
+                                    <th class="py-2 px-3 text-center border">Nilai Sikap</th>
                                     <th class="py-2 px-3 text-center border">KKM</th>
                                     <th class="py-2 px-3 text-center border">Status</th>
                                 </tr>
@@ -143,6 +144,19 @@
                                     <td class="py-2 px-3 text-center border">{{ $detail['genap'] !== null ? number_format($detail['genap'], 2) : '-' }}</td>
                                     <td class="py-2 px-3 text-center border font-bold {{ $detail['yearly'] !== null ? 'bg-yellow-50' : '' }}">
                                         {{ $detail['yearly'] !== null ? number_format($detail['yearly'], 2) : '-' }}
+                                    </td>
+                                    <td class="py-2 px-3 text-center border">
+                                        @if($detail['attitude_grade'])
+                                        <span class="px-2 py-1 rounded text-xs font-semibold
+                                                @if($detail['attitude_grade'] === 'Baik') bg-green-100 text-green-800
+                                                @elseif($detail['attitude_grade'] === 'Cukup') bg-yellow-100 text-yellow-800
+                                                @else bg-red-100 text-red-800
+                                                @endif">
+                                            {{ $detail['attitude_grade'] }}
+                                        </span>
+                                        @else
+                                        <span class="text-gray-400">-</span>
+                                        @endif
                                     </td>
                                     <td class="py-2 px-3 text-center border">{{ $detail['kkm'] !== null ? $detail['kkm'] : '-' }}</td>
                                     <td class="py-2 px-3 text-center border {{ $statusClass }}">{{ $status }}</td>

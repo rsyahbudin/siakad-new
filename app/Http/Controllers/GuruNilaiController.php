@@ -109,6 +109,7 @@ class GuruNilaiController extends Controller
                 'assignment_grade' => isset($nilai['tugas']) ? ($nilai['tugas'] === null || $nilai['tugas'] === '' ? 0 : $nilai['tugas']) : 0,
                 'uts_grade' => isset($nilai['uts']) ? ($nilai['uts'] === null || $nilai['uts'] === '' ? 0 : $nilai['uts']) : 0,
                 'uas_grade' => isset($nilai['uas']) ? ($nilai['uas'] === null || $nilai['uas'] === '' ? 0 : $nilai['uas']) : 0,
+                'attitude_grade' => isset($nilai['sikap']) ? ($nilai['sikap'] === null || $nilai['sikap'] === '' ? null : $nilai['sikap']) : null,
             ]);
             $grade->calculateFinalGrade();
         }
@@ -187,6 +188,7 @@ class GuruNilaiController extends Controller
             $assignment_grade = $row[2] ?? 0;
             $uts_grade = $row[3] ?? 0;
             $uas_grade = $row[4] ?? 0;
+            $attitude_grade = $row[5] ?? null;
 
             if (empty($nis)) continue;
 
@@ -220,6 +222,7 @@ class GuruNilaiController extends Controller
                         'assignment_grade' => $assignment_grade === null || $assignment_grade === '' ? 0 : $assignment_grade,
                         'uts_grade' => $uts_grade === null || $uts_grade === '' ? 0 : $uts_grade,
                         'uas_grade' => $uas_grade === null || $uas_grade === '' ? 0 : $uas_grade,
+                        'attitude_grade' => $attitude_grade === null || $attitude_grade === '' ? null : $attitude_grade,
                     ]
                 );
                 $grade->calculateFinalGrade();
@@ -272,6 +275,7 @@ class GuruNilaiController extends Controller
         $sheet->setCellValue('C1', 'Nilai Tugas');
         $sheet->setCellValue('D1', 'Nilai UTS');
         $sheet->setCellValue('E1', 'Nilai UAS');
+        $sheet->setCellValue('F1', 'Nilai Sikap');
 
         $rowNum = 2;
         if ($assignment->classStudents) {
@@ -286,6 +290,7 @@ class GuruNilaiController extends Controller
                         $sheet->setCellValue('C' . $rowNum, $grade->assignment_grade);
                         $sheet->setCellValue('D' . $rowNum, $grade->uts_grade);
                         $sheet->setCellValue('E' . $rowNum, $grade->uas_grade);
+                        $sheet->setCellValue('F' . $rowNum, $grade->attitude_grade);
                     }
 
                     $rowNum++;
@@ -293,7 +298,7 @@ class GuruNilaiController extends Controller
             }
         }
 
-        foreach (range('A', 'E') as $col) {
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
