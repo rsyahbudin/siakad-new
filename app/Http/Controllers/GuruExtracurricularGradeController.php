@@ -78,13 +78,9 @@ class GuruExtracurricularGradeController extends Controller
 
         $request->validate([
             'grades' => 'required|array',
-            'grades.*' => 'nullable|in:Sangat Baik,Baik,Cukup,Kurang',
+            'grades.*' => 'nullable|in:A,B,C,D',
             'notes' => 'nullable|array',
             'notes.*' => 'nullable|string|max:500',
-            'achievements' => 'nullable|array',
-            'achievements.*' => 'nullable|string|max:500',
-            'positions' => 'required|array',
-            'positions.*' => 'required|in:Anggota,Ketua,Wakil Ketua,Sekretaris,Bendahara',
         ]);
 
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -109,8 +105,6 @@ class GuruExtracurricularGradeController extends Controller
                     $updateData = [
                         'grade' => $grade ?: null,
                         'notes' => $request->notes[$studentId] ?? null,
-                        'achievements' => $request->achievements[$studentId] ?? null,
-                        'position' => $request->positions[$studentId] ?? 'Anggota',
                     ];
 
                     $extracurricular->students()->updateExistingPivot($studentId, $updateData, $activeYear->id);
@@ -157,10 +151,8 @@ class GuruExtracurricularGradeController extends Controller
         $sheet->setCellValue('A1', 'No');
         $sheet->setCellValue('B1', 'NIS');
         $sheet->setCellValue('C1', 'Nama Siswa');
-        $sheet->setCellValue('D1', 'Posisi');
-        $sheet->setCellValue('E1', 'Nilai Ekstrakurikuler');
-        $sheet->setCellValue('F1', 'Prestasi');
-        $sheet->setCellValue('G1', 'Catatan');
+        $sheet->setCellValue('D1', 'Nilai Ekstrakurikuler');
+        $sheet->setCellValue('E1', 'Catatan');
 
         // Add data
         $row = 2;
@@ -168,15 +160,13 @@ class GuruExtracurricularGradeController extends Controller
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, $student->nis);
             $sheet->setCellValue('C' . $row, $student->full_name);
-            $sheet->setCellValue('D' . $row, $student->pivot->position ?? 'Anggota');
-            $sheet->setCellValue('E' . $row, $student->pivot->grade ?? '');
-            $sheet->setCellValue('F' . $row, $student->pivot->achievements ?? '');
-            $sheet->setCellValue('G' . $row, $student->pivot->notes ?? '');
+            $sheet->setCellValue('D' . $row, $student->pivot->grade ?? '');
+            $sheet->setCellValue('E' . $row, $student->pivot->notes ?? '');
             $row++;
         }
 
         // Auto-size columns
-        foreach (range('A', 'G') as $column) {
+        foreach (range('A', 'E') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -224,10 +214,8 @@ class GuruExtracurricularGradeController extends Controller
                 if (empty($row[0])) continue; // Skip empty rows
 
                 $nis = $row[1];
-                $position = $row[3] ?? 'Anggota';
-                $grade = $row[4] ?? null;
-                $achievements = $row[5] ?? null;
-                $notes = $row[6] ?? null;
+                $grade = $row[3] ?? null;
+                $notes = $row[4] ?? null;
 
                 if (empty($nis)) continue;
 
@@ -252,16 +240,8 @@ class GuruExtracurricularGradeController extends Controller
                     continue;
                 }
 
-                // Validate position
-                $validPositions = ['Anggota', 'Ketua', 'Wakil Ketua', 'Sekretaris', 'Bendahara'];
-                if (!in_array($position, $validPositions)) {
-                    $errors[] = "Baris " . ($index + 2) . ": Posisi '{$position}' tidak valid. Posisi yang valid: " . implode(', ', $validPositions);
-                    $errorCount++;
-                    continue;
-                }
-
                 // Validate grade
-                $validGrades = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'];
+                $validGrades = ['A', 'B', 'C', 'D'];
                 if ($grade && !in_array($grade, $validGrades)) {
                     $errors[] = "Baris " . ($index + 2) . ": Nilai '{$grade}' tidak valid. Nilai yang valid: " . implode(', ', $validGrades);
                     $errorCount++;
@@ -271,8 +251,6 @@ class GuruExtracurricularGradeController extends Controller
                 try {
                     $extracurricular->students()->updateExistingPivot($student->id, [
                         'grade' => $grade ?: null,
-                        'position' => $position,
-                        'achievements' => $achievements ?: null,
                         'notes' => $notes ?: null,
                     ], $activeYear->id);
                     $successCount++;

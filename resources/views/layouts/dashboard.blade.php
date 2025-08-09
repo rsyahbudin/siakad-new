@@ -787,7 +787,7 @@
         <main class="flex-1 flex flex-col min-h-screen">
 
             <!-- Enhanced Content Area -->
-            <div class="flex-1 p-8 bg-gradient-to-br from-gray-50/50 via-white to-blue-50/30 overflow-auto">
+            <div class="flex-1 p-2 bg-gradient-to-br from-gray-50/50 via-white to-blue-50/30 overflow-auto">
                 <div class="max-w-7xl mx-auto">
                     @yield('content')
                 </div>

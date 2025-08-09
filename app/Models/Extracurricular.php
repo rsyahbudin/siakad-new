@@ -37,14 +37,14 @@ class Extracurricular extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_extracurriculars')
-            ->withPivot(['status', 'position', 'achievements', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
+            ->withPivot(['status', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
             ->withTimestamps();
     }
 
     public function academicYears()
     {
         return $this->belongsToMany(AcademicYear::class, 'student_extracurriculars')
-            ->withPivot(['student_id', 'status', 'position', 'achievements', 'notes', 'join_date', 'leave_date'])
+            ->withPivot(['student_id', 'status', 'notes', 'grade', 'join_date', 'leave_date'])
             ->withTimestamps();
     }
 

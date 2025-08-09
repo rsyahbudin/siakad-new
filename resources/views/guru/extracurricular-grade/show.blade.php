@@ -84,7 +84,7 @@
                     </button>
                 </form>
                 <p class="text-xs text-gray-600 mt-2">
-                    Format: Kolom A (No), Kolom B (NIS), Kolom C (Nama Siswa), Kolom D (Posisi), Kolom E (Nilai), Kolom F (Prestasi), Kolom G (Catatan)
+                    Format: Kolom A (No), Kolom B (NIS), Kolom C (Nama Siswa), Kolom D (Nilai A-D), Kolom E (Catatan)
                 </p>
             </div>
 
@@ -98,9 +98,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">No</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">NIS</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Nama Siswa</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Posisi</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Nilai</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Prestasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Catatan</th>
                             </tr>
                         </thead>
@@ -111,30 +109,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->nis }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $student->full_name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <select name="positions[{{ $student->id }}]"
-                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="Anggota" {{ ($student->pivot->position ?? '') === 'Anggota' ? 'selected' : '' }}>Anggota</option>
-                                        <option value="Ketua" {{ ($student->pivot->position ?? '') === 'Ketua' ? 'selected' : '' }}>Ketua</option>
-                                        <option value="Wakil Ketua" {{ ($student->pivot->position ?? '') === 'Wakil Ketua' ? 'selected' : '' }}>Wakil Ketua</option>
-                                        <option value="Sekretaris" {{ ($student->pivot->position ?? '') === 'Sekretaris' ? 'selected' : '' }}>Sekretaris</option>
-                                        <option value="Bendahara" {{ ($student->pivot->position ?? '') === 'Bendahara' ? 'selected' : '' }}>Bendahara</option>
-                                    </select>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
                                     <select name="grades[{{ $student->id }}]"
                                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">- Pilih Nilai -</option>
-                                        <option value="Sangat Baik" {{ ($student->pivot->grade ?? '') === 'Sangat Baik' ? 'selected' : '' }}>Sangat Baik</option>
-                                        <option value="Baik" {{ ($student->pivot->grade ?? '') === 'Baik' ? 'selected' : '' }}>Baik</option>
-                                        <option value="Cukup" {{ ($student->pivot->grade ?? '') === 'Cukup' ? 'selected' : '' }}>Cukup</option>
-                                        <option value="Kurang" {{ ($student->pivot->grade ?? '') === 'Kurang' ? 'selected' : '' }}>Kurang</option>
+                                        <option value="A" {{ ($student->pivot->grade ?? '') === 'A' ? 'selected' : '' }}>A</option>
+                                        <option value="B" {{ ($student->pivot->grade ?? '') === 'B' ? 'selected' : '' }}>B</option>
+                                        <option value="C" {{ ($student->pivot->grade ?? '') === 'C' ? 'selected' : '' }}>C</option>
+                                        <option value="D" {{ ($student->pivot->grade ?? '') === 'D' ? 'selected' : '' }}>D</option>
                                     </select>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <input type="text" name="achievements[{{ $student->id }}]"
-                                        value="{{ $student->pivot->achievements ?? '' }}"
-                                        placeholder="Prestasi yang diraih"
-                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <textarea name="notes[{{ $student->id }}]"

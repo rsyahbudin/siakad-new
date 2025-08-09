@@ -87,7 +87,8 @@ Route::middleware('auth')->group(function () {
         // Extracurricular management routes
         Route::resource('extracurricular', ExtracurricularController::class);
         Route::post('extracurricular/{extracurricular}/add-student', [ExtracurricularController::class, 'addStudent'])->name('extracurricular.add-student');
-        Route::post('extracurricular/{extracurricular}/remove-student', [ExtracurricularController::class, 'removeStudent'])->name('extracurricular.remove-student');
+        Route::delete('extracurricular/{extracurricular}/remove-student/{student}', [ExtracurricularController::class, 'removeStudent'])->name('extracurricular.remove-student');
+        Route::put('extracurricular/{extracurricular}/update-student/{student}', [ExtracurricularController::class, 'updateStudent'])->name('extracurricular.update-student');
         Route::put('extracurricular/{extracurricular}/update-student-status', [ExtracurricularController::class, 'updateStudentStatus'])->name('extracurricular.update-student-status');
     });
 

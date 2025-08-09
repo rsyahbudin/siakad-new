@@ -78,7 +78,7 @@ class Student extends Model
     public function extracurriculars()
     {
         return $this->belongsToMany(Extracurricular::class, 'student_extracurriculars')
-            ->withPivot(['status', 'position', 'achievements', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
+            ->withPivot(['status', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
             ->withTimestamps();
     }
 

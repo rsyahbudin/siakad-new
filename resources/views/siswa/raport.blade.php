@@ -216,9 +216,7 @@
                 <tr>
                     <th class="border px-4 py-2 text-center">No</th>
                     <th class="border px-4 py-2 text-left">Nama Ekstrakurikuler</th>
-                    <th class="border px-4 py-2 text-center">Posisi</th>
                     <th class="border px-4 py-2 text-center">Nilai</th>
-                    <th class="border px-4 py-2 text-left">Prestasi</th>
                     <th class="border px-4 py-2 text-left">Catatan</th>
                 </tr>
             </thead>
@@ -227,14 +225,13 @@
                 <tr>
                     <td class="border px-4 py-2 text-center">{{ $index + 1 }}</td>
                     <td class="border px-4 py-2">{{ $extracurricular->name }}</td>
-                    <td class="border px-4 py-2 text-center">{{ $extracurricular->pivot->position }}</td>
                     <td class="border px-4 py-2 text-center font-medium">
                         @if($extracurricular->pivot->grade)
                         <span class="px-2 py-1 rounded text-xs font-semibold
-                            @if($extracurricular->pivot->grade === 'Sangat Baik') bg-green-100 text-green-800
-                            @elseif($extracurricular->pivot->grade === 'Baik') bg-blue-100 text-blue-800
-                            @elseif($extracurricular->pivot->grade === 'Cukup') bg-yellow-100 text-yellow-800
-                            @elseif($extracurricular->pivot->grade === 'Kurang') bg-red-100 text-red-800
+                            @if($extracurricular->pivot->grade === 'A') bg-green-100 text-green-800
+                            @elseif($extracurricular->pivot->grade === 'B') bg-blue-100 text-blue-800
+                            @elseif($extracurricular->pivot->grade === 'C') bg-yellow-100 text-yellow-800
+                            @elseif($extracurricular->pivot->grade === 'D') bg-red-100 text-red-800
                             @endif">
                             {{ $extracurricular->pivot->grade }}
                         </span>
@@ -242,12 +239,11 @@
                         <span class="text-gray-400">-</span>
                         @endif
                     </td>
-                    <td class="border px-4 py-2">{{ $extracurricular->pivot->achievements ?: '-' }}</td>
                     <td class="border px-4 py-2">{{ $extracurricular->pivot->notes ?: '-' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="border px-4 py-2 text-center text-gray-500">Belum mengikuti ekstrakurikuler apapun.</td>
+                    <td colspan="4" class="border px-4 py-2 text-center text-gray-500">Belum mengikuti ekstrakurikuler apapun.</td>
                 </tr>
                 @endforelse
             </tbody>

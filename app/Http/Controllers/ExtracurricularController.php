@@ -62,7 +62,21 @@ class ExtracurricularController extends Controller
             ->wherePivot('status', '!=', 'Aktif')
             ->get();
 
-        return view('admin.extracurricular.show', compact('extracurricular', 'activeStudents', 'inactiveStudents'));
+        // Get current academic year
+        $activeYear = AcademicYear::where('is_active', true)->first();
+
+        // Get students who are not already in this extracurricular for current academic year
+        $enrolledStudentIds = $extracurricular->students()
+            ->wherePivot('academic_year_id', $activeYear->id)
+            ->wherePivot('status', 'Aktif')
+            ->pluck('students.id');
+
+        $availableStudents = Student::whereNotIn('id', $enrolledStudentIds)
+            ->where('status', 'Aktif')
+            ->orderBy('full_name')
+            ->get();
+
+        return view('admin.extracurricular.show', compact('extracurricular', 'activeStudents', 'inactiveStudents', 'availableStudents'));
     }
 
     public function edit(Extracurricular $extracurricular)
@@ -130,7 +144,6 @@ class ExtracurricularController extends Controller
 
         $extracurricular->students()->attach($request->student_id, [
             'academic_year_id' => $request->academic_year_id,
-            'position' => $request->position,
             'notes' => $request->notes,
             'join_date' => now(),
             'status' => 'Aktif',
@@ -139,21 +152,35 @@ class ExtracurricularController extends Controller
         return back()->with('success', 'Siswa berhasil ditambahkan ke ekstrakurikuler.');
     }
 
-    public function removeStudent(Request $request, Extracurricular $extracurricular)
+    public function removeStudent(Extracurricular $extracurricular, Student $student)
     {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-        ]);
+        // Get current academic year
+        $activeYear = AcademicYear::where('is_active', true)->first();
 
-        $extracurricular->students()->wherePivot('student_id', $request->student_id)
-            ->wherePivot('academic_year_id', $request->academic_year_id)
-            ->updateExistingPivot($request->student_id, [
-                'status' => 'Tidak Aktif',
-                'leave_date' => now(),
-            ]);
+        // Update student status to inactive
+        $extracurricular->students()->updateExistingPivot($student->id, [
+            'status' => 'Tidak Aktif',
+            'leave_date' => now(),
+        ], $activeYear->id);
 
         return back()->with('success', 'Siswa berhasil dikeluarkan dari ekstrakurikuler.');
+    }
+
+    public function updateStudent(Request $request, Extracurricular $extracurricular, Student $student)
+    {
+        $request->validate([
+            'status' => 'required|in:Aktif,Tidak Aktif,Lulus',
+        ]);
+
+        // Get current academic year
+        $activeYear = AcademicYear::where('is_active', true)->first();
+
+        // Update the student's status in the extracurricular
+        $extracurricular->students()->updateExistingPivot($student->id, [
+            'status' => $request->status,
+        ], $activeYear->id);
+
+        return back()->with('success', 'Data siswa berhasil diperbarui.');
     }
 
     public function updateStudentStatus(Request $request, Extracurricular $extracurricular)
@@ -162,8 +189,6 @@ class ExtracurricularController extends Controller
             'student_id' => 'required|exists:students,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'status' => 'required|in:Aktif,Tidak Aktif,Lulus',
-            'position' => 'required|in:Anggota,Ketua,Wakil Ketua,Sekretaris,Bendahara',
-            'achievements' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
@@ -171,8 +196,6 @@ class ExtracurricularController extends Controller
             ->wherePivot('academic_year_id', $request->academic_year_id)
             ->updateExistingPivot($request->student_id, [
                 'status' => $request->status,
-                'position' => $request->position,
-                'achievements' => $request->achievements,
                 'notes' => $request->notes,
             ]);
 
