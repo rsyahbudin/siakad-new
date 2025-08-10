@@ -42,24 +42,24 @@ class UserSeeder extends Seeder
         }
 
         // Create Sample Students
-        $students = [
-            [
-                'name' => 'Ahmad Rizki',
-                'email' => 'ahmad@siakad.test',
-                'password' => Hash::make('student123'),
-                'role' => User::ROLE_STUDENT,
-            ],
-            [
-                'name' => 'Dewi Putri',
-                'email' => 'dewi@siakad.test',
-                'password' => Hash::make('student123'),
-                'role' => User::ROLE_STUDENT,
-            ],
-        ];
+        // $students = [
+        //     [
+        //         'name' => 'Ahmad Rizki',
+        //         'email' => 'ahmad@siakad.test',
+        //         'password' => Hash::make('student123'),
+        //         'role' => User::ROLE_STUDENT,
+        //     ],
+        //     [
+        //         'name' => 'Dewi Putri',
+        //         'email' => 'dewi@siakad.test',
+        //         'password' => Hash::make('student123'),
+        //         'role' => User::ROLE_STUDENT,
+        //     ],
+        // ];
 
-        foreach ($students as $student) {
-            User::create($student);
-        }
+        // foreach ($students as $student) {
+        //     User::create($student);
+        // }
 
         // Create Sample Kepala Sekolah
         $kepalaSekolah = [
