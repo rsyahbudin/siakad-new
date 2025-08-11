@@ -105,6 +105,14 @@ class PPDBApplication extends Model
     }
 
     /**
+     * Get the student record if this application was approved
+     */
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'ppdb_application_id');
+    }
+
+    /**
      * Get entry path label
      */
     public function getEntryPathLabelAttribute()

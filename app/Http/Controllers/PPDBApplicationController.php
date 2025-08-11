@@ -408,6 +408,7 @@ class PPDBApplicationController extends Controller
             // Create student record
             $student = Student::create([
                 'user_id' => $studentUser->id,
+                'ppdb_application_id' => $application->id, // Link ke PPDB application
                 'nis' => NISGeneratorService::generateNIS(),
                 'nisn' => $application->nisn,
                 'full_name' => substr($application->full_name, 0, 100), // Batasi panjang nama

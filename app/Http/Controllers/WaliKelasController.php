@@ -21,6 +21,51 @@ use App\Models\KepalaSekolah;
 
 class WaliKelasController extends Controller
 {
+    public function dashboard()
+    {
+        $user = Auth::user();
+        $teacher = $user->teacher;
+        $activeSemester = Semester::where('is_active', true)->first();
+        $activeYear = $activeSemester?->academicYear;
+        $assignment = ClassroomAssignment::where('homeroom_teacher_id', $teacher->id)
+            ->where('academic_year_id', $activeSemester?->academic_year_id)
+            ->first();
+        $kelas = $assignment?->classroom;
+
+        // Get wali kelas statistics
+        $waliStats = [
+            'class_name' => $kelas?->name ?? 'Tidak ada kelas',
+            'total_students' => $assignment ? $assignment->classStudents()->count() : 0,
+            'male_students' => $assignment ? $assignment->classStudents()->whereHas('student', function ($q) {
+                $q->where('gender', 'L');
+            })->count() : 0,
+            'female_students' => $assignment ? $assignment->classStudents()->whereHas('student', function ($q) {
+                $q->where('gender', 'P');
+            })->count() : 0,
+            'attendance_completed' => $assignment ? Attendance::where('classroom_assignment_id', $assignment->id)
+                ->where('semester_id', $activeSemester?->id)
+                ->where('is_locked', true)
+                ->count() : 0,
+            'attendance_pending' => $assignment ? Attendance::where('classroom_assignment_id', $assignment->id)
+                ->where('semester_id', $activeSemester?->id)
+                ->where('is_locked', false)
+                ->count() : 0,
+            'recent_grades' => $assignment ? Grade::where('classroom_id', $kelas->id)
+                ->with(['student', 'subject'])
+                ->latest()
+                ->limit(5)
+                ->get() : collect(),
+            'recent_attendances' => $assignment ? Attendance::where('classroom_assignment_id', $assignment->id)
+                ->where('semester_id', $activeSemester?->id)
+                ->with(['student', 'semester'])
+                ->latest()
+                ->limit(5)
+                ->get() : collect(),
+        ];
+
+        return view('guru.wali-dashboard', compact('waliStats', 'activeSemester', 'activeYear'));
+    }
+
     public function leger(Request $request)
     {
         $user = Auth::user();

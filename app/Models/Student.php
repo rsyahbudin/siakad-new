@@ -16,6 +16,7 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
+        'ppdb_application_id',
         'nis',
         'nisn',
         'full_name',
@@ -26,6 +27,7 @@ class Student extends Model
         'address',
         'phone_number',
         'status',
+        'major_interest',
     ];
 
     protected $casts = [
@@ -78,6 +80,11 @@ class Student extends Model
         return $this->belongsToMany(Extracurricular::class, 'student_extracurriculars')
             ->withPivot(['status', 'notes', 'grade', 'join_date', 'leave_date', 'academic_year_id'])
             ->withTimestamps();
+    }
+
+    public function ppdbApplication()
+    {
+        return $this->belongsTo(PPDBApplication::class, 'ppdb_application_id');
     }
 
     public function getActiveExtracurriculars($academicYearId = null)

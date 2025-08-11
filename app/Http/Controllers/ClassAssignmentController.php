@@ -33,7 +33,7 @@ class ClassAssignmentController extends Controller
         $query = Student::where('status', 'Aktif')
             ->with(['user', 'classStudents' => function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear->id);
-            }, 'classStudents.classroomAssignment.classroom']);
+            }, 'classStudents.classroomAssignment.classroom', 'ppdbApplication']);
 
         // Filter by search
         if ($request->filled('q')) {
@@ -66,6 +66,14 @@ class ClassAssignmentController extends Controller
                     $c->where('academic_year_id', $activeYear->id);
                 });
             }
+        }
+
+        // Filter by minat jurusan (dari PPDB)
+        if ($request->filled('major_filter')) {
+            $major = $request->major_filter;
+            $query->whereHas('ppdbApplication', function ($p) use ($major) {
+                $p->where('desired_major', $major);
+            });
         }
 
         $students = $query->orderBy('full_name')->paginate(20)->withQueryString();
@@ -141,60 +149,100 @@ class ClassAssignmentController extends Controller
         }
     }
 
-    // Auto-place students based on their major/grade
-    public function autoPlaceStudents(Request $request)
+    // Bulk actions for class assignment
+    public function bulkAction(Request $request)
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
 
         if (!$activeYear) {
-            return back()->withErrors(['error' => 'Tidak ada tahun ajaran aktif.']);
+            return response()->json(['success' => false, 'message' => 'Tidak ada tahun ajaran aktif.']);
+        }
+
+        $action = $request->input('action');
+        $studentIds = $request->input('student_ids', []);
+        $targetClassId = $request->input('target_class_id');
+
+        if (empty($studentIds)) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada siswa yang dipilih.']);
         }
 
         try {
             DB::beginTransaction();
 
-            // Get active students without class placement
-            $unplacedStudents = Student::where('status', 'Aktif')
-                ->whereDoesntHave('classStudents', function ($q) use ($activeYear) {
-                    $q->where('academic_year_id', $activeYear->id);
-                })->get();
-
             $successCount = 0;
             $errorCount = 0;
 
-            foreach ($unplacedStudents as $student) {
-                // Try to place based on existing data or default to X IPA
-                $targetGrade = 'X';
-                $targetMajor = 'IPA';
-
-                // Check if student has any existing class data
-                if ($student->classrooms->isNotEmpty()) {
-                    $lastClass = $student->classrooms->last();
-                    $targetGrade = $lastClass->grade;
-                    $targetMajor = $lastClass->major->name;
+            if ($action === 'move') {
+                if (empty($targetClassId)) {
+                    return response()->json(['success' => false, 'message' => 'Kelas tujuan tidak dipilih.']);
                 }
 
-                $placementSuccess = ClassPlacementService::placeTransferStudent($student, $targetGrade, $targetMajor);
+                // Verify target class exists and belongs to active year
+                $targetAssignment = ClassroomAssignment::where('id', $targetClassId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->first();
 
-                if ($placementSuccess) {
-                    $successCount++;
-                } else {
-                    $errorCount++;
+                if (!$targetAssignment) {
+                    return response()->json(['success' => false, 'message' => 'Kelas tujuan tidak valid.']);
                 }
+
+                foreach ($studentIds as $studentId) {
+                    $student = Student::where('status', 'Aktif')->find($studentId);
+                    if ($student) {
+                        // Remove existing assignment
+                        ClassStudent::where('student_id', $studentId)
+                            ->where('academic_year_id', $activeYear->id)
+                            ->delete();
+
+                        // Create new assignment
+                        ClassStudent::create([
+                            'classroom_assignment_id' => $targetClassId,
+                            'academic_year_id' => $activeYear->id,
+                            'student_id' => $studentId,
+                        ]);
+
+                        $successCount++;
+                        Log::info("Student {$student->full_name} moved to class via bulk action");
+                    } else {
+                        $errorCount++;
+                    }
+                }
+
+                $message = "Berhasil memindahkan {$successCount} siswa ke kelas yang dipilih.";
+                if ($errorCount > 0) {
+                    $message .= " {$errorCount} siswa gagal dipindahkan.";
+                }
+            } elseif ($action === 'remove') {
+                foreach ($studentIds as $studentId) {
+                    $student = Student::where('status', 'Aktif')->find($studentId);
+                    if ($student) {
+                        // Remove from all classes in active year
+                        ClassStudent::where('student_id', $studentId)
+                            ->where('academic_year_id', $activeYear->id)
+                            ->delete();
+
+                        $successCount++;
+                        Log::info("Student {$student->full_name} removed from class via bulk action");
+                    } else {
+                        $errorCount++;
+                    }
+                }
+
+                $message = "Berhasil menghapus {$successCount} siswa dari kelas mereka.";
+                if ($errorCount > 0) {
+                    $message .= " {$errorCount} siswa gagal dihapus.";
+                }
+            } else {
+                return response()->json(['success' => false, 'message' => 'Aksi tidak valid.']);
             }
 
             DB::commit();
 
-            $message = "Auto-placement selesai. {$successCount} siswa berhasil ditempatkan otomatis.";
-            if ($errorCount > 0) {
-                $message .= " {$errorCount} siswa gagal ditempatkan.";
-            }
-
-            return redirect()->route('pembagian.kelas')->with('success', $message);
+            return response()->json(['success' => true, 'message' => $message]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to auto-place students: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Terjadi kesalahan saat auto-placement.']);
+            Log::error('Failed to execute bulk action: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menjalankan aksi bulk.']);
         }
     }
 

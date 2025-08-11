@@ -209,14 +209,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/penugasan-guru', [PenugasanGuruController::class, 'index'])->name('penugasan.guru');
     Route::get('/pembagian-kelas', [ClassAssignmentController::class, 'index'])->name('pembagian.kelas');
     Route::post('/pembagian-kelas', [ClassAssignmentController::class, 'store'])->name('pembagian.kelas.store');
-    Route::post('/pembagian-kelas/auto-place', [ClassAssignmentController::class, 'autoPlaceStudents'])->name('pembagian.kelas.auto-place');
+    Route::post('/pembagian-kelas/bulk-action', [ClassAssignmentController::class, 'bulkAction'])->name('pembagian.kelas.bulk-action');
     Route::get('/pengaturan-kkm', [SubjectSettingController::class, 'index'])->middleware('check.role:admin')->name('pengaturan.kkm');
     Route::post('/pengaturan-kkm', [SubjectSettingController::class, 'update'])->middleware('check.role:admin')->name('pengaturan.kkm.update');
     Route::post('/pengaturan-kkm/update-failed-subjects', [\App\Http\Controllers\SubjectSettingController::class, 'updateFailedSubjects'])->middleware('check.role:admin')->name('pengaturan.kkm.update-failed-subjects');
     Route::post('/pengaturan-kkm/update-semester-weights', [\App\Http\Controllers\SubjectSettingController::class, 'updateSemesterWeights'])->middleware('check.role:admin')->name('pengaturan.kkm.update-semester-weights');
-    Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen.pengguna');
+
     // Guru Wali Kelas
-    Route::view('/wali/dashboard', 'guru.wali-dashboard')->name('wali.guru.dashboard');
+    Route::get('/wali/dashboard', [WaliKelasController::class, 'dashboard'])->name('wali.guru.dashboard')->middleware('is.homeroom.teacher');
     Route::get('/wali/kelas', [\App\Http\Controllers\WaliKelasController::class, 'kelas'])->name('wali.kelas');
     Route::get('/wali/leger', [\App\Http\Controllers\WaliKelasController::class, 'leger'])->name('wali.leger');
     Route::get('/wali/finalisasi', [WaliKelasController::class, 'finalisasi'])->name('wali.finalisasi');

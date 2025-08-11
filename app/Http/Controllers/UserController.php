@@ -21,13 +21,4 @@ class UserController extends Controller
         $user->save();
         return back()->with('success', 'Password berhasil direset ke password123.');
     }
-
-    /**
-     * Tampilkan tabel semua user untuk manajemen pengguna
-     */
-    public function index()
-    {
-        $users = \App\Models\User::orderBy('name')->get();
-        return view('admin.manajemen-pengguna', compact('users'));
-    }
 }

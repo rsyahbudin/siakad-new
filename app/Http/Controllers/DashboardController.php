@@ -3,6 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Classroom;
+use App\Models\PPDBApplication;
+use App\Models\TransferStudent;
+use App\Models\Schedule;
+use App\Models\Grade;
 
 class DashboardController extends Controller
 {
@@ -10,9 +17,54 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         if ($user->isAdmin()) {
-            return view('dashboard.admin');
+            // Get statistics for admin dashboard
+            $stats = [
+                'total_students' => Student::where('status', 'Aktif')->count(),
+                'total_teachers' => Teacher::count(),
+                'total_classrooms' => Classroom::count(),
+                'total_schedules' => Schedule::count(),
+                'ppdb_pending' => PPDBApplication::where('status', 'pending')->count(),
+                'ppdb_approved' => PPDBApplication::where('status', 'lulus')->count(),
+                'transfer_pending' => TransferStudent::where('status', 'pending')->count(),
+                'transfer_approved' => TransferStudent::where('status', 'approved')->count(),
+                'recent_grades' => Grade::with(['student', 'subject', 'classroom'])
+                    ->latest()
+                    ->limit(5)
+                    ->get(),
+                'recent_ppdb' => PPDBApplication::latest()
+                    ->limit(5)
+                    ->get(),
+            ];
+            return view('dashboard.admin', compact('stats'));
         } elseif ($user->isTeacher()) {
-            return view('dashboard.guru');
+            // Get teacher-specific data
+            $teacher = $user->teacher;
+            if (!$teacher) {
+                abort(403, 'Data guru tidak ditemukan.');
+            }
+
+            $teacherStats = [
+                'total_schedules' => Schedule::where('teacher_id', $teacher->id)->count(),
+                'total_students' => Schedule::where('teacher_id', $teacher->id)
+                    ->with('classroom.students')
+                    ->get()
+                    ->sum(function ($schedule) {
+                        return $schedule->classroom->students->count();
+                    }),
+                'today_schedules' => Schedule::with(['subject', 'classroom'])
+                    ->where('teacher_id', $teacher->id)
+                    ->where('day', now()->isoFormat('dddd'))
+                    ->orderBy('time_start')
+                    ->get(),
+                'recent_grades' => Grade::whereHas('subject.schedules', function ($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                })
+                    ->with(['student', 'subject'])
+                    ->latest()
+                    ->limit(5)
+                    ->get(),
+            ];
+            return view('dashboard.guru', compact('teacherStats'));
         } elseif ($user->isStudent()) {
             $student = $user->student;
             $classroom = $student->classrooms()->latest('id')->first();

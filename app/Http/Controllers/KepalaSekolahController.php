@@ -235,6 +235,16 @@ class KepalaSekolahController extends Controller
             $promotedCount = 0;
             $retainedCount = 0;
 
+            // Pastikan siswa yang lulus tidak memiliki assignment kelas di tahun ajaran baru
+            $graduatedStudents = $promotions->where('final_decision', 'Lulus')->pluck('student_id');
+            if ($graduatedStudents->count() > 0) {
+                \App\Models\ClassStudent::whereIn('student_id', $graduatedStudents)
+                    ->where('academic_year_id', $nextYear->id)
+                    ->delete();
+            }
+
+
+
             foreach ($promotions as $promotion) {
                 if ($promotion->final_decision === 'Naik Kelas') {
                     // Cari kelas tingkat berikutnya
@@ -291,6 +301,9 @@ class KepalaSekolahController extends Controller
                 } elseif ($promotion->final_decision === 'Lulus') {
                     // Tandai siswa sebagai lulus
                     $promotion->student->update(['status' => 'Lulus']);
+
+                    // Pastikan siswa yang lulus TIDAK dimasukkan ke kelas manapun
+                    // Siswa lulus tidak akan memiliki assignment kelas di tahun ajaran baru
                     $graduatedCount++;
                 } elseif ($promotion->final_decision === 'Tidak Naik Kelas' || $promotion->final_decision === 'Tidak Lulus') {
                     // Siswa tetap di kelas yang sama
