@@ -200,7 +200,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-900">{{ $raport->student->full_name ?? 'N/A' }}</p>
-                                <p class="text-sm text-gray-500">{{ $raport->classroom->name ?? 'N/A' }} - {{ $raport->semester->name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-500">{{ $raport->classroom->name ?? 'N/A' }} - {{ $raport->semester == 1 ? 'Ganjil' : 'Genap' }}</p>
                                 <p class="text-xs text-gray-400">{{ $raport->created_at ? $raport->created_at->format('d/m/Y H:i') : 'N/A' }}</p>
                             </div>
                         </div>

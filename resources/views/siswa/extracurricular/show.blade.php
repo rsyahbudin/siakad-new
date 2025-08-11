@@ -45,7 +45,7 @@
                         </div>
                         @if($enrollment)
                         <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {{ $enrollment->pivot->position }}
+                            Anggota
                         </span>
                         @endif
                     </div>
@@ -124,7 +124,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm text-gray-600">Posisi</p>
-                                <p class="font-semibold text-gray-900">{{ $enrollment->pivot->position }}</p>
+                                <p class="font-semibold text-gray-900">Anggota</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Status</p>
@@ -188,7 +188,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="font-medium text-gray-900">{{ $student->user->name }}</p>
-                                <p class="text-sm text-gray-600">{{ $student->pivot->position }}</p>
+                                <p class="text-sm text-gray-600">Anggota</p>
                             </div>
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                 {{ $student->pivot->status }}

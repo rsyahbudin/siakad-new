@@ -33,7 +33,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($raports as $raport)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $raport->semester->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $raport->semester == 1 ? 'Ganjil' : 'Genap' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $raport->classroom->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($raport->is_finalized)

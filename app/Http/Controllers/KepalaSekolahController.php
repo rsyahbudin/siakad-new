@@ -51,7 +51,7 @@ class KepalaSekolahController extends Controller
             ->get();
 
         // Get recent raports
-        $recentRaports = Raport::with(['student', 'classroom', 'semester'])
+        $recentRaports = Raport::with(['student', 'classroom', 'academicYear'])
             ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -218,18 +218,26 @@ class KepalaSekolahController extends Controller
             $activeSemester = Semester::where('is_active', true)->firstOrFail();
             $currentYear = $activeSemester->academicYear;
 
+            // Buat tahun ajaran baru
             $nextYearName = (explode('/', $currentYear->year)[0] + 1) . '/' . (explode('/', $currentYear->year)[1] + 1);
             $nextYear = AcademicYear::firstOrCreate(['year' => $nextYearName]);
 
+            // Buat semester untuk tahun ajaran baru
             Semester::firstOrCreate(['academic_year_id' => $nextYear->id, 'name' => 'Ganjil']);
             Semester::firstOrCreate(['academic_year_id' => $nextYear->id, 'name' => 'Genap']);
 
+            // Ambil semua keputusan kenaikan kelas
             $promotions = StudentPromotion::with('student', 'fromClassroom')
                 ->where('promotion_year_id', $currentYear->id)->get();
 
+            $processedCount = 0;
+            $graduatedCount = 0;
+            $promotedCount = 0;
+            $retainedCount = 0;
+
             foreach ($promotions as $promotion) {
                 if ($promotion->final_decision === 'Naik Kelas') {
-                    // Find next grade classroom
+                    // Cari kelas tingkat berikutnya
                     $currentGrade = $promotion->fromClassroom->grade_level;
                     $nextGrade = $currentGrade + 1;
 
@@ -239,22 +247,81 @@ class KepalaSekolahController extends Controller
                             ->first();
 
                         if ($nextClassroom) {
-                            // Move student to next grade
-                            $promotion->student->classStudents()->create([
+                            // Cari atau buat classroom assignment untuk kelas berikutnya
+                            $nextAssignment = ClassroomAssignment::firstOrCreate([
                                 'classroom_id' => $nextClassroom->id,
                                 'academic_year_id' => $nextYear->id
                             ]);
+
+                            // Pindahkan siswa ke kelas tingkat berikutnya
+                            $promotion->student->classStudents()->create([
+                                'classroom_id' => $nextClassroom->id,
+                                'classroom_assignment_id' => $nextAssignment->id,
+                                'academic_year_id' => $nextYear->id
+                            ]);
+                            $promotedCount++;
+                        } else {
+                            // Jika tidak ada kelas tingkat berikutnya, tetap di kelas yang sama
+                            $currentAssignment = ClassroomAssignment::firstOrCreate([
+                                'classroom_id' => $promotion->fromClassroom->id,
+                                'academic_year_id' => $nextYear->id
+                            ]);
+
+                            $promotion->student->classStudents()->create([
+                                'classroom_id' => $promotion->fromClassroom->id,
+                                'classroom_assignment_id' => $currentAssignment->id,
+                                'academic_year_id' => $nextYear->id
+                            ]);
+                            $retainedCount++;
                         }
+                    } else {
+                        // Jika sudah kelas XII, tetap di kelas yang sama
+                        $currentAssignment = ClassroomAssignment::firstOrCreate([
+                            'classroom_id' => $promotion->fromClassroom->id,
+                            'academic_year_id' => $nextYear->id
+                        ]);
+
+                        $promotion->student->classStudents()->create([
+                            'classroom_id' => $promotion->fromClassroom->id,
+                            'classroom_assignment_id' => $currentAssignment->id,
+                            'academic_year_id' => $nextYear->id
+                        ]);
+                        $retainedCount++;
                     }
                 } elseif ($promotion->final_decision === 'Lulus') {
-                    // Mark student as graduated
+                    // Tandai siswa sebagai lulus
                     $promotion->student->update(['status' => 'Lulus']);
+                    $graduatedCount++;
+                } elseif ($promotion->final_decision === 'Tidak Naik Kelas' || $promotion->final_decision === 'Tidak Lulus') {
+                    // Siswa tetap di kelas yang sama
+                    $currentAssignment = ClassroomAssignment::firstOrCreate([
+                        'classroom_id' => $promotion->fromClassroom->id,
+                        'academic_year_id' => $nextYear->id
+                    ]);
+
+                    $promotion->student->classStudents()->create([
+                        'classroom_id' => $promotion->fromClassroom->id,
+                        'classroom_assignment_id' => $currentAssignment->id,
+                        'academic_year_id' => $nextYear->id
+                    ]);
+                    $retainedCount++;
                 }
-                // For 'Tidak Naik Kelas' or 'Tidak Lulus', student stays in same class
+
+                $processedCount++;
             }
 
+            // Aktifkan tahun ajaran baru (otomatis menonaktifkan yang lain)
+            $nextYear->setAsActive();
+
             DB::commit();
-            return redirect()->route('kepala.kenaikan-kelas')->with('success', 'Proses kenaikan kelas dan kelulusan berhasil diselesaikan.');
+
+            $message = "Proses kenaikan kelas berhasil diselesaikan. ";
+            $message .= "Total diproses: {$processedCount} siswa. ";
+            $message .= "Naik kelas: {$promotedCount} siswa. ";
+            $message .= "Lulus: {$graduatedCount} siswa. ";
+            $message .= "Tinggal kelas: {$retainedCount} siswa.";
+
+            return redirect()->route('kepala.kenaikan-kelas')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->route('kepala.kenaikan-kelas')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -266,15 +333,14 @@ class KepalaSekolahController extends Controller
      */
     public function monitoringPPDB()
     {
-        $applications = PPDBApplication::with(['student'])
-            ->orderBy('created_at', 'desc')
+        $applications = PPDBApplication::orderBy('created_at', 'desc')
             ->paginate(20);
 
         $statistics = [
             'total' => PPDBApplication::count(),
-            'pending' => PPDBApplication::where('status', 'Pending')->count(),
-            'approved' => PPDBApplication::where('status', 'Approved')->count(),
-            'rejected' => PPDBApplication::where('status', 'Rejected')->count(),
+            'pending' => PPDBApplication::where('status', 'pending')->count(),
+            'approved' => PPDBApplication::where('status', 'lulus')->count(),
+            'rejected' => PPDBApplication::where('status', 'ditolak')->count(),
         ];
 
         return view('kepala-sekolah.monitoring.ppdb', compact('applications', 'statistics'));
@@ -285,15 +351,14 @@ class KepalaSekolahController extends Controller
      */
     public function monitoringSiswaPindahan()
     {
-        $transfers = TransferStudent::with(['student'])
-            ->orderBy('created_at', 'desc')
+        $transfers = TransferStudent::orderBy('created_at', 'desc')
             ->paginate(20);
 
         $statistics = [
             'total' => TransferStudent::count(),
-            'pending' => TransferStudent::where('status', 'Pending')->count(),
-            'approved' => TransferStudent::where('status', 'Approved')->count(),
-            'rejected' => TransferStudent::where('status', 'Rejected')->count(),
+            'pending' => TransferStudent::where('status', 'pending')->count(),
+            'approved' => TransferStudent::where('status', 'approved')->count(),
+            'rejected' => TransferStudent::where('status', 'rejected')->count(),
         ];
 
         return view('kepala-sekolah.monitoring.siswa-pindahan', compact('transfers', 'statistics'));
@@ -435,6 +500,25 @@ class KepalaSekolahController extends Controller
                 ];
             });
 
+        // Calculate grade distribution
+        $gradeDistribution = [
+            '90-100' => Grade::where('academic_year_id', $activeYear->id ?? 0)
+                ->where('semester_id', $activeSemester->id ?? 0)
+                ->whereBetween('final_grade', [90, 100])->count(),
+            '80-89' => Grade::where('academic_year_id', $activeYear->id ?? 0)
+                ->where('semester_id', $activeSemester->id ?? 0)
+                ->whereBetween('final_grade', [80, 89])->count(),
+            '70-79' => Grade::where('academic_year_id', $activeYear->id ?? 0)
+                ->where('semester_id', $activeSemester->id ?? 0)
+                ->whereBetween('final_grade', [70, 79])->count(),
+            '60-69' => Grade::where('academic_year_id', $activeYear->id ?? 0)
+                ->where('semester_id', $activeSemester->id ?? 0)
+                ->whereBetween('final_grade', [60, 69])->count(),
+            '0-59' => Grade::where('academic_year_id', $activeYear->id ?? 0)
+                ->where('semester_id', $activeSemester->id ?? 0)
+                ->whereBetween('final_grade', [0, 59])->count(),
+        ];
+
         $statistics = [
             'total_grades' => Grade::where('academic_year_id', $activeYear->id ?? 0)
                 ->where('semester_id', $activeSemester->id ?? 0)->count(),
@@ -448,7 +532,7 @@ class KepalaSekolahController extends Controller
                 ->where('final_grade', '<', 75)->count(),
         ];
 
-        return view('kepala-sekolah.monitoring.nilai', compact('recentGrades', 'subjectStats', 'statistics', 'activeYear', 'activeSemester'));
+        return view('kepala-sekolah.monitoring.nilai', compact('recentGrades', 'subjectStats', 'statistics', 'gradeDistribution', 'activeYear', 'activeSemester'));
     }
 
     /**
@@ -489,7 +573,7 @@ class KepalaSekolahController extends Controller
         if (!$profile) {
             $profile = new KepalaSekolah(['user_id' => $user->id]);
         }
-        
+
         $profile->nip = $validated['nip'];
         $profile->full_name = $validated['full_name'] ?? $profile->full_name;
         $profile->phone_number = $validated['phone_number'] ?? $profile->phone_number;

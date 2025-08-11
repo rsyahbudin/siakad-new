@@ -19,6 +19,7 @@ class ClassAssignmentController extends Controller
     public function index(Request $request)
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
 
         if (!$activeYear) {
             return back()->withErrors(['error' => 'Tidak ada tahun ajaran aktif.']);
@@ -28,9 +29,11 @@ class ClassAssignmentController extends Controller
             ->where('academic_year_id', $activeYear->id)
             ->get();
 
-        $query = Student::with(['user', 'classStudents' => function ($q) use ($activeYear) {
-            $q->where('academic_year_id', $activeYear->id);
-        }, 'classrooms']);
+        // Query siswa yang aktif (bukan lulus atau pindah)
+        $query = Student::where('status', 'Aktif')
+            ->with(['user', 'classStudents' => function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            }, 'classStudents.classroomAssignment.classroom']);
 
         // Filter by search
         if ($request->filled('q')) {
@@ -74,6 +77,7 @@ class ClassAssignmentController extends Controller
             'students',
             'classroomAssignments',
             'activeYear',
+            'activeSemester',
             'placementStats'
         ));
     }
@@ -101,7 +105,7 @@ class ClassAssignmentController extends Controller
                     continue; // Skip if no assignment selected
                 }
 
-                $student = Student::find($studentId);
+                $student = Student::where('status', 'Aktif')->find($studentId);
                 if ($student && in_array($assignmentId, $assignmentIds)) {
                     // Hapus penempatan lama di tahun ajaran aktif
                     ClassStudent::where('student_id', $studentId)
@@ -149,10 +153,11 @@ class ClassAssignmentController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get students without class placement
-            $unplacedStudents = Student::whereDoesntHave('classStudents', function ($q) use ($activeYear) {
-                $q->where('academic_year_id', $activeYear->id);
-            })->get();
+            // Get active students without class placement
+            $unplacedStudents = Student::where('status', 'Aktif')
+                ->whereDoesntHave('classStudents', function ($q) use ($activeYear) {
+                    $q->where('academic_year_id', $activeYear->id);
+                })->get();
 
             $successCount = 0;
             $errorCount = 0;
@@ -196,10 +201,12 @@ class ClassAssignmentController extends Controller
     // Get placement statistics
     private function getPlacementStatistics($activeYear)
     {
-        $totalStudents = Student::count();
-        $placedStudents = Student::whereHas('classStudents', function ($q) use ($activeYear) {
-            $q->where('academic_year_id', $activeYear->id);
-        })->count();
+        // Hanya hitung siswa yang aktif
+        $totalStudents = Student::where('status', 'Aktif')->count();
+        $placedStudents = Student::where('status', 'Aktif')
+            ->whereHas('classStudents', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            })->count();
         $unplacedStudents = $totalStudents - $placedStudents;
 
         // Get class statistics using classroom assignments

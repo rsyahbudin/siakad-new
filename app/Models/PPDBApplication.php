@@ -158,13 +158,13 @@ class PPDBApplication extends Model
     {
         switch ($this->entry_path) {
             case self::ENTRY_PATH_TES:
-                return $this->test_score >= 70;
+                return $this->test_score && $this->test_score >= 70;
 
             case self::ENTRY_PATH_PRESTASI:
-                return $this->average_raport_score >= 85;
+                return $this->average_raport_score && $this->average_raport_score >= 85;
 
             case self::ENTRY_PATH_AFIRMASI:
-                return true; // Only document completeness check
+                return $this->hasAllRequiredDocuments(); // Check document completeness
 
             default:
                 return false;
@@ -177,9 +177,9 @@ class PPDBApplication extends Model
     public function getRequiredDocuments()
     {
         $baseDocuments = [
-            'raport_file' => 'Rapor Semester 1-5',
-            'photo_file' => 'Pas Foto 3x4',
-            'family_card_file' => 'Fotokopi Kartu Keluarga',
+            'raport' => 'Rapor Semester 1-5',
+            'photo' => 'Pas Foto 3x4',
+            'family_card' => 'Fotokopi Kartu Keluarga',
         ];
 
         switch ($this->entry_path) {
@@ -188,12 +188,12 @@ class PPDBApplication extends Model
 
             case self::ENTRY_PATH_PRESTASI:
                 return array_merge($baseDocuments, [
-                    'achievement_certificate_file' => 'Piagam Prestasi (Min. Tingkat Kabupaten)',
+                    'achievement_certificate' => 'Piagam Prestasi (Min. Tingkat Kabupaten)',
                 ]);
 
             case self::ENTRY_PATH_AFIRMASI:
                 return array_merge($baseDocuments, [
-                    'financial_document_file' => 'Surat Keterangan Tidak Mampu/KIP/PKH',
+                    'financial_document' => 'Surat Keterangan Tidak Mampu/KIP/PKH',
                 ]);
 
             default:
@@ -209,12 +209,29 @@ class PPDBApplication extends Model
         $requiredDocuments = array_keys($this->getRequiredDocuments());
 
         foreach ($requiredDocuments as $document) {
-            if (empty($this->$document)) {
+            $fileField = $document . '_file';
+            if (empty($this->$fileField)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Check if test score is required and provided
+     */
+    public function hasTestScore()
+    {
+        return $this->entry_path === self::ENTRY_PATH_TES && $this->test_score !== null;
+    }
+
+    /**
+     * Check if average raport score is required and provided
+     */
+    public function hasAverageRaportScore()
+    {
+        return $this->entry_path === self::ENTRY_PATH_PRESTASI && $this->average_raport_score !== null;
     }
 
     /**

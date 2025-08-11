@@ -52,12 +52,12 @@
         </div>
         <div class="mb-4">
             <label class="block mb-1 font-semibold">Nama Orang Tua</label>
-            <input type="text" name="parent_name" value="{{ old('parent_name', $siswa->parent_name) }}" class="w-full border rounded px-3 py-2 @error('parent_name') border-red-500 @enderror">
+            <input type="text" name="parent_name" value="{{ old('parent_name', $siswa->waliMurids->first()?->full_name) }}" class="w-full border rounded px-3 py-2 @error('parent_name') border-red-500 @enderror">
             @error('parent_name')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="mb-4">
             <label class="block mb-1 font-semibold">No HP Orang Tua</label>
-            <input type="text" name="parent_phone" value="{{ old('parent_phone', $siswa->parent_phone) }}" class="w-full border rounded px-3 py-2 @error('parent_phone') border-red-500 @enderror">
+            <input type="text" name="parent_phone" value="{{ old('parent_phone', $siswa->waliMurids->first()?->phone_number) }}" class="w-full border rounded px-3 py-2 @error('parent_phone') border-red-500 @enderror">
             @error('parent_phone')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="mb-4">

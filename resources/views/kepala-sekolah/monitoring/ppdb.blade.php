@@ -118,35 +118,35 @@
                     @forelse($applications as $application)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $application->registration_number }}</div>
+                            <div class="text-sm font-medium text-gray-900">{{ $application->application_number }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $application->student_name }}</div>
+                            <div class="text-sm text-gray-900">{{ $application->full_name }}</div>
                             <div class="text-sm text-gray-500">{{ $application->parent_name }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $application->major->name ?? 'Belum Dipilih' }}</div>
+                            <div class="text-sm text-gray-900">{{ $application->desired_major_label }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $application->created_at->format('d/m/Y') }}</div>
                             <div class="text-sm text-gray-500">{{ $application->created_at->format('H:i') }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($application->status === 'Pending')
+                            @if($application->status === 'pending')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 Menunggu
                             </span>
-                            @elseif($application->status === 'Approved')
+                            @elseif($application->status === 'lulus')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
                                 Diterima
                             </span>
-                            @elseif($application->status === 'Rejected')
+                            @elseif($application->status === 'ditolak')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

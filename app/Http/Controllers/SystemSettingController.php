@@ -28,14 +28,14 @@ class SystemSettingController extends Controller
     public function togglePPDB()
     {
         $current = (bool) AppSetting::getValue('system_ppdb_enabled', true);
-        AppSetting::setValue('system_ppdb_enabled', !$current);
+        AppSetting::setValue('system_ppdb_enabled', !$current, 'Status Aktifasi Sistem PPDB');
         return back()->with('success', 'Status sistem PPDB diperbarui.');
     }
 
     public function toggleTransferStudent()
     {
         $current = (bool) AppSetting::getValue('system_transfer_enabled', true);
-        AppSetting::setValue('system_transfer_enabled', !$current);
+        AppSetting::setValue('system_transfer_enabled', !$current, 'Status Aktifasi Sistem Siswa Pindahan');
         return back()->with('success', 'Status sistem Siswa Pindahan diperbarui.');
     }
 
@@ -50,8 +50,19 @@ class SystemSettingController extends Controller
             'school_website' => 'nullable|string|max:255',
         ]);
 
+        // Mapping untuk description yang lebih spesifik
+        $descriptions = [
+            'school_name' => 'Nama Sekolah',
+            'school_npsn' => 'Nomor Pokok Sekolah Nasional (NPSN)',
+            'school_address' => 'Alamat Sekolah',
+            'school_phone' => 'Nomor Telepon Sekolah',
+            'school_email' => 'Email Sekolah',
+            'school_website' => 'Website Sekolah',
+        ];
+
         foreach ($validated as $key => $value) {
-            AppSetting::setValue($key, $value);
+            $description = $descriptions[$key] ?? ucwords(str_replace('_', ' ', $key));
+            AppSetting::setValue($key, $value, $description);
         }
 
         return back()->with('success', 'Informasi sekolah berhasil disimpan.');

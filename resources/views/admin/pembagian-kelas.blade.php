@@ -4,7 +4,7 @@
 
 <div class="mb-6">
     <h2 class="text-2xl font-bold mb-2">Pembagian Kelas</h2>
-    <p class="text-gray-600">Tahun Ajaran {{ $activeYear->year ?? '-' }} Semester {{ $activeYear->semester ?? '-' }}</p>
+    <p class="text-gray-600">Tahun Ajaran {{ $activeYear->year ?? '-' }} Semester {{ $activeSemester->name ?? '-' }}</p>
 </div>
 
 @if(session('success'))
@@ -184,9 +184,9 @@
                         <div class="text-sm text-gray-500">{{ $siswa->user->email ?? '-' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        @if($siswa->classrooms->isNotEmpty())
+                        @if($siswa->classStudents->isNotEmpty())
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {{ $siswa->classrooms->first()->name }}
+                            {{ $siswa->classStudents->first()->classroomAssignment->classroom->name }}
                         </span>
                         @else
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">

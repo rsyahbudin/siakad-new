@@ -84,7 +84,7 @@ class WaliMuridController extends Controller
 
         // Get student's raports
         $raports = Raport::where('student_id', $student->id)
-            ->with(['classroom', 'semester'])
+            ->with(['classroom', 'academicYear'])
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 

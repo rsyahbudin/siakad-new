@@ -35,8 +35,8 @@
                         <td class="py-3 px-4">{{ $student->student->birth_place }}, {{ \Carbon\Carbon::parse($student->student->birth_date)->isoFormat('D MMMM Y') }}</td>
                         <td class="py-3 px-4">{{ $student->student->phone_number }}</td>
                         <td class="py-3 px-4">{{ $student->student->religion }}</td>
-                        <td class="py-3 px-4">{{ $student->student->parent_name }}</td>
-                        <td class="py-3 px-4">{{ $student->student->parent_phone }}</td>
+                        <td class="py-3 px-4">{{ $student->student->waliMurids->first()?->full_name ?? 'Tidak diisi' }}</td>
+                        <td class="py-3 px-4">{{ $student->student->waliMurids->first()?->phone_number ?? 'Tidak diisi' }}</td>
                         <td class="py-3 px-4 text-center">
                             <a href="{{ route('wali.raport.show', $student->student->id) }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">Lihat Raport</a>
                         </td>

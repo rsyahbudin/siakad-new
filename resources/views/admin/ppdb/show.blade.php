@@ -223,12 +223,12 @@
                             @endphp
                             <div class="flex gap-2">
                                 @if($isImage)
-                                <button onclick="previewImage('{{ route('admin.ppdb.download', ['application' => $application, 'documentType' => $field]) }}', '{{ $label }}')"
+                                <button onclick="previewImage('{{ route('admin.ppdb.download', ['application' => $application->id, 'documentType' => $field]) }}', '{{ $label }}')"
                                     class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
                                     Preview
                                 </button>
                                 @endif
-                                <a href="{{ route('admin.ppdb.download', ['application' => $application, 'documentType' => $field]) }}"
+                                <a href="{{ route('admin.ppdb.download', ['application' => $application->id, 'documentType' => $field]) }}"
                                     class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
                                     Download
                                 </a>
@@ -279,6 +279,8 @@
                     <h3 class="text-lg font-semibold text-gray-900">Update Status</h3>
                     @if($application->entry_path === 'tes' && !$application->test_score)
                     <p class="text-sm text-amber-600 mt-1">⚠️ Input nilai tes terlebih dahulu untuk jalur tes</p>
+                    @elseif($application->entry_path === 'prestasi' && !$application->average_raport_score)
+                    <p class="text-sm text-amber-600 mt-1">⚠️ Input rata-rata nilai rapor terlebih dahulu untuk jalur prestasi</p>
                     @endif
                 </div>
                 <div class="p-6">
@@ -302,9 +304,19 @@
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $application->notes }}</textarea>
                         </div>
 
+                        @if($application->entry_path === 'tes' && !$application->test_score)
+                        <button type="button" disabled class="w-full bg-gray-400 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed">
+                            ⚠️ Input Nilai Tes Terlebih Dahulu
+                        </button>
+                        @elseif($application->entry_path === 'prestasi' && !$application->average_raport_score)
+                        <button type="button" disabled class="w-full bg-gray-400 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed">
+                            ⚠️ Input Rata-rata Nilai Rapor Terlebih Dahulu
+                        </button>
+                        @else
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             Update Status
                         </button>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -320,6 +332,9 @@
                         <div>
                             <h4 class="font-medium text-gray-900">Nilai Tes Minimal 70</h4>
                             <p class="text-sm text-gray-600">{{ $application->test_score ?? 'Belum diinput' }}</p>
+                            @if(!$application->test_score)
+                            <p class="text-xs text-amber-600 mt-1">⚠️ Nilai tes harus diinput sebelum dapat mengubah status</p>
+                            @endif
                         </div>
                         @if($application->test_score && $application->test_score >= 70)
                         <span class="text-green-600">✓</span>
@@ -334,6 +349,9 @@
                         <div>
                             <h4 class="font-medium text-gray-900">Rata-rata Nilai Rapor Minimal 85</h4>
                             <p class="text-sm text-gray-600">{{ $application->average_raport_score ?? 'Belum diinput' }}</p>
+                            @if(!$application->average_raport_score)
+                            <p class="text-xs text-amber-600 mt-1">⚠️ Rata-rata nilai rapor harus diinput sebelum dapat mengubah status</p>
+                            @endif
                         </div>
                         @if($application->average_raport_score && $application->average_raport_score >= 85)
                         <span class="text-green-600">✓</span>

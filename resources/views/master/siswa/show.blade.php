@@ -166,7 +166,7 @@
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Nama Orang Tua</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $siswa->parent_name ?: 'Tidak diisi' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $siswa->waliMurids->first()?->full_name ?: 'Tidak diisi' }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Telepon Orang Tua</dt>

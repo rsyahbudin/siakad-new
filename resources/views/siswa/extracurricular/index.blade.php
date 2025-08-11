@@ -39,7 +39,7 @@
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-lg font-semibold text-gray-900">{{ $extracurricular->name }}</h3>
                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {{ $extracurricular->pivot->position }}
+                        Anggota
                     </span>
                 </div>
 

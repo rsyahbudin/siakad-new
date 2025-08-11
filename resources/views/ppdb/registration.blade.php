@@ -20,7 +20,7 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">Terjadi kesalahan</h3>
+                    <h3 class="text-sm font-medium text-red-800">Mohon perbaiki kesalahan berikut:</h3>
                     <div class="mt-2 text-sm text-red-700">
                         <ul class="list-disc pl-5 space-y-1">
                             @foreach ($errors->all() as $error)
@@ -127,8 +127,16 @@
                         </div>
                         <div>
                             <label for="religion" class="block text-sm font-medium text-gray-700 mb-2">Agama</label>
-                            <input type="text" id="religion" name="religion" value="{{ old('religion') }}" required
+                            <select id="religion" name="religion" required
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Pilih Agama</option>
+                                <option value="Islam" {{ old('religion') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                                <option value="Kristen" {{ old('religion') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                                <option value="Katolik" {{ old('religion') == 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                                <option value="Hindu" {{ old('religion') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                                <option value="Buddha" {{ old('religion') == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                                <option value="Konghucu" {{ old('religion') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                            </select>
                         </div>
                         <div>
                             <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon</label>
@@ -200,32 +208,42 @@
                         <div>
                             <label for="raport_file" class="block text-sm font-medium text-gray-700 mb-2">Rapor Semester 1-5 *</label>
                             <input type="file" id="raport_file" name="raport_file" accept=".pdf,.jpg,.jpeg,.png" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="validateFile(this, 2)">
                             <p class="text-sm text-gray-600 mt-1">Format: PDF, JPG, JPEG, PNG (Max 2MB)</p>
+                            <div id="raport_file_error" class="text-red-500 text-sm mt-1 hidden"></div>
                         </div>
                         <div>
                             <label for="photo_file" class="block text-sm font-medium text-gray-700 mb-2">Pas Foto 3x4 *</label>
                             <input type="file" id="photo_file" name="photo_file" accept=".jpg,.jpeg,.png" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="validateFile(this, 1)">
                             <p class="text-sm text-gray-600 mt-1">Format: JPG, JPEG, PNG (Max 1MB)</p>
+                            <div id="photo_file_error" class="text-red-500 text-sm mt-1 hidden"></div>
                         </div>
                         <div>
                             <label for="family_card_file" class="block text-sm font-medium text-gray-700 mb-2">Fotokopi Kartu Keluarga *</label>
                             <input type="file" id="family_card_file" name="family_card_file" accept=".pdf,.jpg,.jpeg,.png" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="validateFile(this, 2)">
                             <p class="text-sm text-gray-600 mt-1">Format: PDF, JPG, JPEG, PNG (Max 2MB)</p>
+                            <div id="family_card_file_error" class="text-red-500 text-sm mt-1 hidden"></div>
                         </div>
                         <div id="achievement_certificate_section" class="hidden">
                             <label for="achievement_certificate_file" class="block text-sm font-medium text-gray-700 mb-2">Piagam Prestasi (Min. Tingkat Kabupaten) *</label>
                             <input type="file" id="achievement_certificate_file" name="achievement_certificate_file" accept=".pdf,.jpg,.jpeg,.png"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="validateFile(this, 2)">
                             <p class="text-sm text-gray-600 mt-1">Format: PDF, JPG, JPEG, PNG (Max 2MB)</p>
+                            <div id="achievement_certificate_file_error" class="text-red-500 text-sm mt-1 hidden"></div>
                         </div>
                         <div id="financial_document_section" class="hidden">
                             <label for="financial_document_file" class="block text-sm font-medium text-gray-700 mb-2">Surat Keterangan Tidak Mampu/KIP/PKH *</label>
                             <input type="file" id="financial_document_file" name="financial_document_file" accept=".pdf,.jpg,.jpeg,.png"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="validateFile(this, 2)">
                             <p class="text-sm text-gray-600 mt-1">Format: PDF, JPG, JPEG, PNG (Max 2MB)</p>
+                            <div id="financial_document_file_error" class="text-red-500 text-sm mt-1 hidden"></div>
                         </div>
                     </div>
                 </div>
@@ -268,39 +286,383 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
         const entryPathInputs = document.querySelectorAll('input[name="entry_path"]');
         const raportScoreSection = document.getElementById('raport_score_section');
         const achievementSection = document.getElementById('achievement_certificate_section');
         const financialSection = document.getElementById('financial_document_section');
         const achievementInput = document.getElementById('achievement_certificate_file');
         const financialInput = document.getElementById('financial_document_file');
+        const averageScoreInput = document.getElementById('average_raport_score');
 
         function updateFormFields() {
-            const selectedPath = document.querySelector('input[name="entry_path"]:checked')?.value;
+            try {
+                const selectedPath = document.querySelector('input[name="entry_path"]:checked')?.value;
 
-            // Reset all sections
-            raportScoreSection.classList.add('hidden');
-            achievementSection.classList.add('hidden');
-            financialSection.classList.add('hidden');
-            achievementInput.removeAttribute('required');
-            financialInput.removeAttribute('required');
+                // Reset all sections
+                if (raportScoreSection) raportScoreSection.classList.add('hidden');
+                if (achievementSection) achievementSection.classList.add('hidden');
+                if (financialSection) financialSection.classList.add('hidden');
+                if (achievementInput) achievementInput.removeAttribute('required');
+                if (financialInput) financialInput.removeAttribute('required');
+                if (averageScoreInput) averageScoreInput.removeAttribute('required');
 
-            if (selectedPath === 'prestasi') {
-                raportScoreSection.classList.remove('hidden');
-                achievementSection.classList.remove('hidden');
-                achievementInput.setAttribute('required', 'required');
-            } else if (selectedPath === 'afirmasi') {
-                financialSection.classList.remove('hidden');
-                financialInput.setAttribute('required', 'required');
+                if (selectedPath === 'prestasi') {
+                    if (raportScoreSection) raportScoreSection.classList.remove('hidden');
+                    if (achievementSection) achievementSection.classList.remove('hidden');
+                    if (achievementInput) achievementInput.setAttribute('required', 'required');
+                    if (averageScoreInput) {
+                        averageScoreInput.setAttribute('required', 'required');
+                        averageScoreInput.setAttribute('min', '85');
+                        averageScoreInput.setAttribute('max', '100');
+                    }
+                } else if (selectedPath === 'afirmasi') {
+                    if (financialSection) financialSection.classList.remove('hidden');
+                    if (financialInput) financialInput.setAttribute('required', 'required');
+                }
+            } catch (error) {
+                console.error('Error in updateFormFields:', error);
             }
         }
 
-        entryPathInputs.forEach(input => {
-            input.addEventListener('change', updateFormFields);
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            // Disable submit button to prevent double submission
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Mendaftar...';
+            }
+
+            try {
+                let isValid = true;
+                const errors = [];
+
+                // Check required fields
+                const requiredFields = form.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('border-red-500');
+                        const fieldName = field.getAttribute('name');
+                        const label = document.querySelector(`label[for="${fieldName}"]`)?.textContent || fieldName;
+                        errors.push(`${label} wajib diisi`);
+                    } else {
+                        field.classList.remove('border-red-500');
+                    }
+                });
+
+                // Check NISN format
+                const nisnInput = document.getElementById('nisn');
+                if (nisnInput && nisnInput.value && !/^\d{10}$/.test(nisnInput.value)) {
+                    isValid = false;
+                    nisnInput.classList.add('border-red-500');
+                    errors.push('NISN harus tepat 10 digit angka');
+                }
+
+                // Check email format
+                const emailInput = document.getElementById('email');
+                const parentEmailInput = document.getElementById('parent_email');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (emailInput && emailInput.value && !emailRegex.test(emailInput.value)) {
+                    isValid = false;
+                    emailInput.classList.add('border-red-500');
+                    errors.push('Format email tidak valid');
+                }
+
+                if (parentEmailInput && parentEmailInput.value && !emailRegex.test(parentEmailInput.value)) {
+                    isValid = false;
+                    parentEmailInput.classList.add('border-red-500');
+                    errors.push('Format email orang tua tidak valid');
+                }
+
+                // Check phone number length
+                const phoneInput = document.getElementById('phone_number');
+                const parentPhoneInput = document.getElementById('parent_phone');
+
+                if (phoneInput && phoneInput.value && phoneInput.value.length < 10) {
+                    isValid = false;
+                    phoneInput.classList.add('border-red-500');
+                    errors.push('Nomor telepon minimal 10 karakter');
+                }
+
+                if (parentPhoneInput && parentPhoneInput.value && parentPhoneInput.value.length < 10) {
+                    isValid = false;
+                    parentPhoneInput.classList.add('border-red-500');
+                    errors.push('Nomor telepon orang tua minimal 10 karakter');
+                }
+
+                // Check file sizes
+                const fileInputs = form.querySelectorAll('input[type="file"]');
+                fileInputs.forEach(input => {
+                    if (input.files.length > 0) {
+                        const file = input.files[0];
+                        const maxSize = input.name.includes('photo') ? 1024 * 1024 : 2 * 1024 * 1024; // 1MB or 2MB
+
+                        if (file.size > maxSize) {
+                            isValid = false;
+                            input.classList.add('border-red-500');
+                            const maxSizeMB = maxSize / (1024 * 1024);
+                            errors.push(`File ${input.name} terlalu besar. Maksimal ${maxSizeMB}MB`);
+                        }
+                    }
+                });
+
+                // Check jalur prestasi requirements
+                const selectedPath = document.querySelector('input[name="entry_path"]:checked')?.value;
+                const averageScoreInput = document.getElementById('average_raport_score');
+                if (selectedPath === 'prestasi' && averageScoreInput) {
+                    if (averageScoreInput.value && (parseFloat(averageScoreInput.value) < 85 || parseFloat(averageScoreInput.value) > 100)) {
+                        isValid = false;
+                        averageScoreInput.classList.add('border-red-500');
+                        errors.push('Rata-rata nilai rapor minimal 85 untuk jalur prestasi');
+                    }
+                }
+
+                // Check birth date
+                const birthDateInput = document.getElementById('birth_date');
+                if (birthDateInput && birthDateInput.value) {
+                    const birthDate = new Date(birthDateInput.value);
+                    const today = new Date();
+                    if (birthDate >= today) {
+                        isValid = false;
+                        birthDateInput.classList.add('border-red-500');
+                        errors.push('Tanggal lahir tidak boleh di masa depan');
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+
+                    // Re-enable submit button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Daftar Sekarang';
+                    }
+
+                    // Show error message
+                    let errorHtml = `
+                        <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">Mohon perbaiki kesalahan berikut:</h3>
+                                    <div class="mt-2 text-sm text-red-700">
+                                        <ul class="list-disc pl-5 space-y-1">
+                    `;
+
+                    errors.forEach(error => {
+                        errorHtml += `<li>${error}</li>`;
+                    });
+
+                    errorHtml += `
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Remove existing error message
+                    const existingError = document.querySelector('.bg-red-50');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+
+                    // Insert new error message
+                    const header = document.querySelector('.text-center.mb-8');
+                    if (header) {
+                        header.insertAdjacentHTML('afterend', errorHtml);
+
+                        // Scroll to error message
+                        const errorElement = document.querySelector('.bg-red-50');
+                        if (errorElement) {
+                            errorElement.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Form validation error:', error);
+                // Re-enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Daftar Sekarang';
+                }
+                // Allow form submission if validation fails
+            }
         });
 
+        entryPathInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                try {
+                    updateFormFields();
+                } catch (error) {
+                    console.error('Error in entry path change:', error);
+                }
+            });
+        });
+
+        // Real-time validation
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                try {
+                    validateField(this);
+                } catch (error) {
+                    console.error('Validation error:', error);
+                }
+            });
+
+            input.addEventListener('input', function() {
+                try {
+                    if (this.classList.contains('border-red-500')) {
+                        validateField(this);
+                    }
+                } catch (error) {
+                    console.error('Validation error:', error);
+                }
+            });
+        });
+
+        function validateField(field) {
+            try {
+                const value = field.value.trim();
+                const fieldName = field.getAttribute('name');
+
+                // Remove existing error styling
+                field.classList.remove('border-red-500');
+
+                // Remove existing error message
+                const existingError = field.parentNode.querySelector('.field-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Validate based on field type
+                let isValid = true;
+                let errorMessage = '';
+
+                if (field.hasAttribute('required') && !value) {
+                    isValid = false;
+                    errorMessage = 'Field ini wajib diisi';
+                } else if (value) {
+                    switch (fieldName) {
+                        case 'nisn':
+                            if (!/^\d{10}$/.test(value)) {
+                                isValid = false;
+                                errorMessage = 'NISN harus tepat 10 digit angka';
+                            }
+                            break;
+                        case 'email':
+                        case 'parent_email':
+                            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                                isValid = false;
+                                errorMessage = 'Format email tidak valid';
+                            }
+                            break;
+                        case 'phone_number':
+                        case 'parent_phone':
+                            if (value.length < 10) {
+                                isValid = false;
+                                errorMessage = 'Minimal 10 karakter';
+                            }
+                            break;
+                        case 'full_name':
+                        case 'parent_name':
+                        case 'birth_place':
+                            if (value.length < 2) {
+                                isValid = false;
+                                errorMessage = 'Minimal 2 karakter';
+                            }
+                            break;
+                        case 'average_raport_score':
+                            const score = parseFloat(value);
+                            if (isNaN(score) || score < 0 || score > 100) {
+                                isValid = false;
+                                errorMessage = 'Nilai harus antara 0-100';
+                            } else {
+                                const selectedPath = document.querySelector('input[name="entry_path"]:checked')?.value;
+                                if (selectedPath === 'prestasi' && score < 85) {
+                                    isValid = false;
+                                    errorMessage = 'Minimal 85 untuk jalur prestasi';
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                if (!isValid) {
+                    field.classList.add('border-red-500');
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'field-error text-red-500 text-sm mt-1';
+                    errorDiv.textContent = errorMessage;
+                    if (field.parentNode) {
+                        field.parentNode.appendChild(errorDiv);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in validateField:', error);
+            }
+        }
+
+        // File validation function
+        window.validateFile = function(input, maxSizeMB) {
+            try {
+                const file = input.files[0];
+                const errorDiv = document.getElementById(input.name + '_error');
+                const maxSize = maxSizeMB * 1024 * 1024; // Convert to bytes
+
+                // Reset error
+                input.classList.remove('border-red-500');
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+
+                if (file) {
+                    // Check file size
+                    if (file.size > maxSize) {
+                        input.classList.add('border-red-500');
+                        if (errorDiv) {
+                            errorDiv.textContent = `File terlalu besar. Maksimal ${maxSizeMB}MB`;
+                            errorDiv.classList.remove('hidden');
+                        }
+                        return false;
+                    }
+
+                    // Check file type
+                    const allowedTypes = input.accept.split(',').map(type => type.trim());
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+                    if (!allowedTypes.includes(fileExtension)) {
+                        input.classList.add('border-red-500');
+                        if (errorDiv) {
+                            errorDiv.textContent = `Format file tidak didukung. Gunakan: ${allowedTypes.join(', ')}`;
+                            errorDiv.classList.remove('hidden');
+                        }
+                        return false;
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error in validateFile:', error);
+                return true; // Allow file if validation fails
+            }
+        };
+
         // Initialize form state
-        updateFormFields();
+        try {
+            updateFormFields();
+        } catch (error) {
+            console.error('Error initializing form:', error);
+        }
     });
 </script>
 @endsection

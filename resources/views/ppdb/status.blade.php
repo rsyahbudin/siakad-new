@@ -99,16 +99,20 @@
                     $requiredDocuments = $application->getRequiredDocuments();
                     @endphp
                     @foreach($requiredDocuments as $field => $label)
+                    @php
+                    $fileField = $field . '_file';
+                    $filePath = $application->$fileField;
+                    @endphp
                     <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div>
                             <h4 class="font-medium text-gray-900">{{ $label }}</h4>
-                            @if($application->$field)
+                            @if($filePath)
                             <p class="text-sm text-green-600">✓ Dokumen telah diupload</p>
                             @else
                             <p class="text-sm text-red-600">✗ Dokumen belum diupload</p>
                             @endif
                         </div>
-                        @if($application->$field)
+                        @if($filePath)
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Tersedia
                         </span>
@@ -211,14 +215,132 @@
             </div>
         </div>
 
+        <!-- Status Specific Information -->
+        @if($application->status === 'lulus')
+        <!-- Success Information for Approved Applications -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-green-900 mb-2">🎉 Selamat! Pendaftaran Anda Diterima</h3>
+                    <p class="text-green-800 mb-4">Akun SIAKAD Anda telah dibuat otomatis. Silakan login menggunakan informasi berikut:</p>
+
+                    <div class="bg-white rounded-lg p-4 border border-green-200 mb-4">
+                        <h4 class="font-medium text-green-900 mb-3">📋 Informasi Login SIAKAD:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-medium text-gray-900 mb-2">👨‍🎓 Akun Siswa:</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div><span class="font-medium">Email:</span> <span class="text-blue-600">{{ $application->email }}</span></div>
+                                    <div><span class="font-medium">Password:</span> <code class="bg-gray-100 px-2 py-1 rounded">siswa123</code></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-gray-900 mb-2">👨‍👩‍👧‍👦 Akun Wali Murid:</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div><span class="font-medium">Email:</span> <span class="text-blue-600">{{ $application->parent_email ?? 'Tidak diisi' }}</span></div>
+                                    <div><span class="font-medium">Password:</span> <code class="bg-gray-100 px-2 py-1 rounded">wali123</code></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-medium text-yellow-900 mb-2">⚠️ Penting:</h4>
+                        <ul class="text-sm text-yellow-800 space-y-1">
+                            <li>• Ganti password Anda setelah login pertama kali</li>
+                            <li>• Simpan informasi login dengan aman</li>
+                            <li>• Jika lupa password, hubungi admin sekolah</li>
+                            <li>• Akun akan aktif setelah tahun ajaran baru dimulai</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @elseif($application->status === 'ditolak')
+        <!-- Rejection Information -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-red-900 mb-2">😔 Mohon Maaf, Pendaftaran Anda Tidak Diterima</h3>
+                    <p class="text-red-800 mb-4">Setelah melakukan penilaian menyeluruh terhadap pendaftaran Anda, kami terpaksa harus menolak pendaftaran ini.</p>
+
+                    @if($application->notes)
+                    <div class="bg-white rounded-lg p-4 border border-red-200 mb-4">
+                        <h4 class="font-medium text-red-900 mb-2">📝 Catatan Admin:</h4>
+                        <p class="text-gray-800">{{ $application->notes }}</p>
+                    </div>
+                    @endif
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-medium text-blue-900 mb-2">💡 Saran untuk Pendaftaran Selanjutnya:</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Pastikan semua dokumen lengkap dan valid</li>
+                            <li>• Perbaiki nilai akademik jika diperlukan</li>
+                            <li>• Ikuti persyaratan jalur pendaftaran dengan teliti</li>
+                            <li>• Daftar kembali pada periode PPDB berikutnya</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @else
+        <!-- Pending Status Information -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-yellow-900 mb-2">⏳ Pendaftaran Sedang Diproses</h3>
+                    <p class="text-yellow-800 mb-4">Pendaftaran Anda sedang dalam tahap penilaian oleh tim admin. Mohon tunggu beberapa saat untuk hasilnya.</p>
+
+                    <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                        <h4 class="font-medium text-yellow-900 mb-2">📋 Yang Sedang Dinilai:</h4>
+                        <ul class="text-sm text-yellow-800 space-y-1">
+                            <li>• Kelengkapan dokumen pendaftaran</li>
+                            <li>• Validitas data yang diinput</li>
+                            <li>• Persyaratan jalur pendaftaran</li>
+                            <li>• Nilai akademik (jika diperlukan)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
+            @if($application->status === 'lulus')
+            <a href="{{ route('login') }}" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium text-center transition-colors">
+                🚀 Login ke SIAKAD
+            </a>
+            @else
             <a href="{{ route('ppdb.status-check') }}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-center transition-colors">
                 Cek Status Lain
             </a>
+            @endif
+
+            @if($application->status === 'ditolak')
+            <a href="{{ route('ppdb.register') }}" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium text-center transition-colors">
+                Daftar PPDB Lagi
+            </a>
+            @else
             <a href="{{ route('ppdb.register') }}" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium text-center transition-colors">
                 Daftar PPDB
             </a>
+            @endif
         </div>
     </div>
 </div>

@@ -140,11 +140,21 @@ class StudentController extends Controller
             'birth_date' => $request->birth_date,
             'religion' => $request->religion,
             'address' => $request->address,
-            'parent_name' => $request->parent_name,
-            'parent_phone' => $request->parent_phone,
             'phone_number' => $request->phone,
             'status' => $request->status,
         ]);
+
+        // Create wali_murid record if parent data is provided
+        if ($request->parent_name) {
+            \App\Models\WaliMurid::create([
+                'user_id' => $user->id, // Use student's user_id as parent user_id
+                'full_name' => $request->parent_name,
+                'phone_number' => $request->parent_phone,
+                'address' => $request->address,
+                'relationship' => 'Orang Tua',
+                'student_id' => $student->id,
+            ]);
+        }
         ClassStudent::create([
             'classroom_assignment_id' => $request->assignment_id,
             'academic_year_id' => $activeYearId,
@@ -210,6 +220,8 @@ class StudentController extends Controller
             'birth_place' => 'required|string',
             'birth_date' => 'required|date',
             'religion' => 'required|string',
+            'parent_name' => 'nullable|string|max:100',
+            'parent_phone' => 'nullable|string|max:20',
         ], [
             'nis.required' => 'NIS wajib diisi.',
             'nis.unique' => 'NIS sudah digunakan.',
@@ -235,11 +247,31 @@ class StudentController extends Controller
             'birth_date' => $request->birth_date,
             'religion' => $request->religion,
             'address' => $request->address,
-            'parent_name' => $request->parent_name,
-            'parent_phone' => $request->parent_phone,
             'phone_number' => $request->phone,
             'status' => $request->status,
         ]);
+
+        // Update or create wali_murid record if parent data is provided
+        if ($request->parent_name) {
+            $waliMurid = \App\Models\WaliMurid::where('student_id', $siswa->id)->first();
+
+            if ($waliMurid) {
+                $waliMurid->update([
+                    'full_name' => $request->parent_name,
+                    'phone_number' => $request->parent_phone,
+                    'address' => $request->address,
+                ]);
+            } else {
+                \App\Models\WaliMurid::create([
+                    'user_id' => $siswa->user_id,
+                    'full_name' => $request->parent_name,
+                    'phone_number' => $request->parent_phone,
+                    'address' => $request->address,
+                    'relationship' => 'Orang Tua',
+                    'student_id' => $siswa->id,
+                ]);
+            }
+        }
         // Hapus penempatan lama di tahun ajaran aktif
         ClassStudent::where('student_id', $siswa->id)
             ->where('academic_year_id', $activeYearId)

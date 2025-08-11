@@ -24,8 +24,6 @@ class Student extends Model
         'birth_date',
         'religion',
         'address',
-        'parent_name',
-        'parent_phone',
         'phone_number',
         'status',
     ];

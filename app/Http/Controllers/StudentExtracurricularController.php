@@ -110,7 +110,6 @@ class StudentExtracurricularController extends Controller
         // Enroll student
         $extracurricular->students()->attach($student->id, [
             'academic_year_id' => $activeYear->id,
-            'position' => 'Anggota',
             'status' => 'Aktif',
             'join_date' => now(),
         ]);

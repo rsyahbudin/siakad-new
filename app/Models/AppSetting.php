@@ -20,6 +20,11 @@ class AppSetting extends Model
 
     public static function setValue(string $key, $value, $description = null)
     {
+        // Jika description tidak diberikan, gunakan key sebagai description
+        if ($description === null) {
+            $description = ucwords(str_replace('_', ' ', $key));
+        }
+
         return static::updateOrCreate(
             ['key' => $key],
             ['value' => $value, 'description' => $description]

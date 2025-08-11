@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ppdb_registrations', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('app_settings', function (Blueprint $table) {
+            $table->text('description')->nullable()->change();
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ppdb_registrations');
+        Schema::table('app_settings', function (Blueprint $table) {
+            $table->text('description')->nullable(false)->change();
+        });
     }
 };

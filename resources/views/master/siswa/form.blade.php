@@ -196,7 +196,7 @@
 
                     <div>
                         <label for="parent_name" class="block text-sm font-medium text-gray-700 mb-1">Nama Orang Tua</label>
-                        <input type="text" name="parent_name" id="parent_name" value="{{ old('parent_name', $siswa->parent_name ?? '') }}"
+                        <input type="text" name="parent_name" id="parent_name" value="{{ old('parent_name', $siswa->waliMurids->first()?->full_name ?? '') }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('parent_name') border-red-500 @enderror"
                             placeholder="Contoh: Budi Santoso">
                         @error('parent_name')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
@@ -204,7 +204,7 @@
 
                     <div>
                         <label for="parent_phone" class="block text-sm font-medium text-gray-700 mb-1">No HP Orang Tua</label>
-                        <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone', $siswa->parent_phone ?? '') }}"
+                        <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone', $siswa->waliMurids->first()?->phone_number ?? '') }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('parent_phone') border-red-500 @enderror"
                             placeholder="Contoh: 08123456789">
                         @error('parent_phone')<div class="text-red-500 text-sm mt-1">{{ $message }}</div>@enderror
