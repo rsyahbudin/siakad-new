@@ -40,7 +40,16 @@ class GuruNilaiController extends Controller
         $isFinalized = false;
         if ($selectedAssignment && $selectedSubject) {
             $assignment = ClassroomAssignment::find($selectedAssignment);
-            $students = $assignment->classStudents()->with('student.user')->get()->pluck('student');
+
+            // Get students with proper pagination
+            $studentsQuery = $assignment->classStudents()->with('student.user');
+
+            // Use paginate instead of get for proper pagination
+            $students = $studentsQuery->paginate(20);
+            $students = $students->map(function ($classStudent) {
+                return $classStudent->student;
+            });
+
             $grades = Grade::where('classroom_assignment_id', $selectedAssignment)
                 ->where('subject_id', $selectedSubject)
                 ->where('semester_id', $activeSemester?->id)

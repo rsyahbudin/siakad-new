@@ -303,7 +303,14 @@ class StudentController extends Controller
     public function profilSiswa()
     {
         $user = Auth::user();
-        $siswa = $user->student->load('waliMurids');
+        $siswa = $user->student;
+
+        // Check if user has student data
+        if (!$siswa) {
+            return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
+        }
+
+        $siswa->load('waliMurids');
         return view('siswa.profil', compact('siswa'));
     }
 
@@ -314,6 +321,12 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $siswa = $user->student;
+
+        // Check if user has student data
+        if (!$siswa) {
+            return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
+        }
+
         $request->validate([
             'full_name' => 'required|string|max:100',
             'gender' => 'required|in:L,P',
@@ -325,6 +338,7 @@ class StudentController extends Controller
             'parent_phone' => 'nullable|string',
             'phone_number' => 'nullable|string',
         ]);
+
         $siswa->update($request->only([
             'full_name',
             'gender',
@@ -336,6 +350,7 @@ class StudentController extends Controller
             'parent_phone',
             'phone_number'
         ]));
+
         return redirect()->route('profil.siswa')->with('success', 'Profil berhasil diperbarui.');
     }
 
@@ -364,8 +379,15 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $student = $user->student;
+
+        // Check if user has student data
+        if (!$student) {
+            return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
+        }
+
         $classroom = $student->classrooms()->latest('id')->first();
         $weeklySchedules = [];
+
         if ($classroom) {
             $allSchedules = \App\Models\Schedule::with(['subject', 'teacher'])
                 ->where('classroom_id', $classroom->id)
@@ -377,6 +399,7 @@ class StudentController extends Controller
                 $weeklySchedules[$day] = $allSchedules->where('day', $day)->values();
             }
         }
+
         return view('siswa.jadwal', compact('weeklySchedules'));
     }
 
@@ -387,9 +410,16 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $student = $user->student;
+
+        // Check if user has student data
+        if (!$student) {
+            return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
+        }
+
         $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
         $grades = collect();
         $subjectSettings = [];
+
         if ($activeYear) {
             $grades = \App\Models\Grade::with('subject')
                 ->where('student_id', $student->id)
@@ -399,6 +429,7 @@ class StudentController extends Controller
                 ->get()
                 ->keyBy('subject_id');
         }
+
         return view('siswa.nilai', compact('grades', 'subjectSettings'));
     }
 
