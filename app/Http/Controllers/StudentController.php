@@ -310,7 +310,7 @@ class StudentController extends Controller
             return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $siswa->load('waliMurids');
+        $siswa->load('waliMurids.user');
         return view('siswa.profil', compact('siswa'));
     }
 
@@ -334,8 +334,6 @@ class StudentController extends Controller
             'birth_date' => 'required|date',
             'religion' => 'required|string',
             'address' => 'nullable|string',
-            'parent_name' => 'nullable|string',
-            'parent_phone' => 'nullable|string',
             'phone_number' => 'nullable|string',
         ]);
 
@@ -346,8 +344,6 @@ class StudentController extends Controller
             'birth_date',
             'religion',
             'address',
-            'parent_name',
-            'parent_phone',
             'phone_number'
         ]));
 
@@ -385,22 +381,36 @@ class StudentController extends Controller
             return redirect()->back()->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $classroom = $student->classrooms()->latest('id')->first();
-        $weeklySchedules = [];
+        // Get active semester and academic year
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+        $activeYearId = $activeSemester?->academic_year_id;
 
-        if ($classroom) {
+        // Get student's current class for active academic year
+        $classStudent = $student->classStudents()
+            ->where('academic_year_id', $activeYearId)
+            ->with('classroomAssignment.classroom')
+            ->first();
+
+        $weeklySchedules = [];
+        $classroom = null;
+
+        if ($classStudent && $classStudent->classroomAssignment && $classStudent->classroomAssignment->classroom) {
+            $classroom = $classStudent->classroomAssignment->classroom;
+
+            // Get schedules for the current classroom assignment (which is tied to active academic year)
             $allSchedules = \App\Models\Schedule::with(['subject', 'teacher'])
-                ->where('classroom_id', $classroom->id)
+                ->where('classroom_assignment_id', $classStudent->classroomAssignment->id)
                 ->orderBy('day')
                 ->orderBy('time_start')
                 ->get();
+
             $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             foreach ($days as $day) {
                 $weeklySchedules[$day] = $allSchedules->where('day', $day)->values();
             }
         }
 
-        return view('siswa.jadwal', compact('weeklySchedules'));
+        return view('siswa.jadwal', compact('weeklySchedules', 'activeSemester'));
     }
 
     /**
@@ -417,20 +427,50 @@ class StudentController extends Controller
         }
 
         $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
-        $grades = collect();
+        $activeSemester = \App\Models\Semester::where('is_active', true)->first();
+
+        $gradesGanjil = collect();
+        $gradesGenap = collect();
         $subjectSettings = [];
 
         if ($activeYear) {
-            $grades = \App\Models\Grade::with('subject')
-                ->where('student_id', $student->id)
-                ->where('academic_year_id', $activeYear->id)
-                ->get();
+            // Get all semesters for active academic year
+            $semesters = \App\Models\Semester::where('academic_year_id', $activeYear->id)->get();
+
+            // Separate grades by semester
+            foreach ($semesters as $semester) {
+                $semesterGrades = \App\Models\Grade::with(['subject'])
+                    ->where('student_id', $student->id)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->where('semester_id', $semester->id)
+                    ->get();
+
+                // Load teacher data for each grade based on active semester
+                foreach ($semesterGrades as $grade) {
+                    $schedule = \App\Models\Schedule::with('teacher')
+                        ->where('subject_id', $grade->subject_id)
+                        ->where('classroom_id', $grade->classroom_id)
+                        ->whereHas('classroomAssignment', function ($query) use ($activeYear, $activeSemester) {
+                            $query->where('academic_year_id', $activeYear->id);
+                        })
+                        ->first();
+
+                    $grade->scheduleTeacher = $schedule;
+                }
+
+                if ($semester->name === 'Ganjil') {
+                    $gradesGanjil = $semesterGrades;
+                } elseif ($semester->name === 'Genap') {
+                    $gradesGenap = $semesterGrades;
+                }
+            }
+
             $subjectSettings = \App\Models\SubjectSetting::where('academic_year_id', $activeYear->id)
                 ->get()
                 ->keyBy('subject_id');
         }
 
-        return view('siswa.nilai', compact('grades', 'subjectSettings'));
+        return view('siswa.nilai', compact('gradesGanjil', 'gradesGenap', 'subjectSettings', 'activeSemester'));
     }
 
     /**

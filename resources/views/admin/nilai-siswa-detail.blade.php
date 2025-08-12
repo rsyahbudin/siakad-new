@@ -45,7 +45,7 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Detail Nilai Siswa</h1>
             <p class="text-gray-600">Rekap lengkap nilai akademik siswa per tahun ajaran dan semester</p>
         </div>
-        
+
     </div>
 </div>
 

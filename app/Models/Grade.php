@@ -72,6 +72,25 @@ class Grade extends Model
         return $this->belongsTo(Semester::class);
     }
 
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    public function scheduleTeacher()
+    {
+        return $this->hasOne(Schedule::class, 'subject_id', 'subject_id')
+            ->where('classroom_id', $this->classroom_id)
+            ->where('classroom_assignment_id', function ($query) {
+                $query->select('id')
+                    ->from('classroom_assignments')
+                    ->where('classroom_id', $this->classroom_id)
+                    ->where('academic_year_id', $this->academic_year_id)
+                    ->first();
+            })
+            ->with('teacher');
+    }
+
     /**
      * Calculate final grade based on weights from subject settings
      */
