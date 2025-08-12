@@ -89,60 +89,127 @@
 </style>
 
 @section('content')
-<div class="flex justify-between items-center mb-6 no-print">
-    <h2 class="text-2xl font-bold">Raport Digital</h2>
-    <div class="flex items-center gap-4">
-        <a href="{{ route('siswa.all-raports') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
-            Lihat Semua Raport
-        </a>
-        @if($raport && $raport->is_finalized)
-        <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2">
-            Cetak Raport
-        </button>
-        @else
-        <button class="bg-gray-300 text-gray-500 px-4 py-2 rounded flex items-center gap-2 cursor-not-allowed" title="Raport belum final, tidak bisa diunduh" disabled>
-            Cetak Raport
-        </button>
-        @endif
+<!-- Header Section -->
+<div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-xl shadow-lg p-6 mb-8 no-print">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white mb-2">📊 Raport Digital Siswa</h1>
+            <p class="text-blue-100">Lihat dan kelola laporan hasil belajar dengan mudah</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- <a href="{{ route('siswa.all-raports') }}" 
+               class="bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-lg hover:bg-white/20 transition-all duration-300 flex items-center gap-2 border border-white/20 shadow-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Riwayat Raport
+            </a> -->
+            @if($raport && $raport->is_finalized)
+            <button onclick="window.print()" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Cetak Raport
+            </button>
+            @else
+            <button class="bg-gray-300 text-gray-500 px-5 py-2.5 rounded-lg flex items-center gap-2 cursor-not-allowed opacity-60" 
+                    title="Raport belum final, tidak bisa dicetak" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Raport Terkunci
+            </button>
+            @endif
+        </div>
     </div>
 </div>
 
-<!-- Filter Tahun Ajaran dan Semester -->
-<div class="bg-white rounded-lg shadow p-6 mb-6 no-print">
-    <h3 class="text-lg font-semibold mb-4">Pilih Tahun Ajaran dan Semester</h3>
-    <form method="GET" action="{{ route('siswa.raport') }}" class="flex items-center gap-4">
-        <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
-            <select name="academic_year_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                @foreach($academicYears as $year)
-                <option value="{{ $year->id }}" {{ $selectedYear->id == $year->id ? 'selected' : '' }}>
-                    {{ $year->year }}
-                </option>
-                @endforeach
-            </select>
+<!-- Filter Section -->
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 mb-8 no-print overflow-hidden">
+    <!-- Header Filter -->
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Filter Raport</h3>
+                <p class="text-sm text-gray-600">Pilih tahun ajaran dan semester yang ingin ditampilkan</p>
+            </div>
         </div>
-        <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-            <select name="semester" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="1" {{ $selectedSemester == 1 ? 'selected' : '' }}>Ganjil</option>
-                <option value="2" {{ $selectedSemester == 2 ? 'selected' : '' }}>Genap</option>
-            </select>
+    </div>
+    
+    <!-- Form Filter -->
+    <div class="p-6">
+        <form method="GET" action="{{ route('siswa.raport') }}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <!-- Tahun Ajaran -->
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Tahun Ajaran
+                </label>
+                <select name="academic_year_id" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                    @foreach($academicYears as $year)
+                    <option value="{{ $year->id }}" {{ $selectedYear->id == $year->id ? 'selected' : '' }}>
+                        📅 {{ $year->year }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <!-- Semester -->
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    Semester
+                </label>
+                <select name="semester" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                    <option value="1" {{ $selectedSemester == 1 ? 'selected' : '' }}>🌱 Semester Ganjil</option>
+                    <option value="2" {{ $selectedSemester == 2 ? 'selected' : '' }}>🌸 Semester Genap</option>
+                </select>
+            </div>
+            
+            <!-- Button -->
+            <div>
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Tampilkan Raport
+                </button>
+            </div>
+        </form>
+        
+        <!-- Info Current Selection -->
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="flex items-center gap-2 text-sm text-blue-800">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <strong>Sedang menampilkan:</strong> 
+                Tahun Ajaran <span class="font-semibold">{{ $selectedYear->year }}</span> - 
+                Semester <span class="font-semibold">{{ $selectedSemester == 1 ? 'Ganjil' : 'Genap' }}</span>
+            </div>
         </div>
-        <div class="flex items-end">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
-                Tampilkan
-            </button>
-        </div>
-    </form>
+    </div>
 </div>
 
 <div class="printable-area bg-white print-table" style="max-width: 210mm; margin: 0 auto; padding: 20mm;">
     <!-- Header Raport -->
     <div class="text-center mb-8" style="border-bottom: 3px double #000; padding-bottom: 15px;">
         <div class="flex items-center justify-center gap-6 mb-3">
-            <div style="width: 80px; height: 80px; border: 2px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
-                <span style="font-size: 12px; font-weight: bold; color: #666;">LOGO</span>
-            </div>
+            
             <div class="text-center">
                 <h1 style="font-size: 18px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 1px;">LAPORAN HASIL BELAJAR SISWA</h1>
                 <h2 style="font-size: 16px; font-weight: bold; margin: 5px 0; text-transform: uppercase;">{{ $school['name'] }}</h2>
@@ -201,7 +268,7 @@
                     <th rowspan="2" style="width: 200px; vertical-align: middle;">MATA PELAJARAN</th>
                     <th rowspan="2" style="width: 50px; vertical-align: middle;">KKM</th>
                     <th colspan="2" style="text-align: center;">NILAI</th>
-                    <th rowspan="2" style="width: 80px; vertical-align: middle;">PREDIKAT</th>
+                    <th rowspan="2" style="width: 80px; vertical-align: middle;">KETERANGAN</th>
                 </tr>
                 <tr>
                     <th style="width: 60px;">ANGKA</th>
@@ -213,7 +280,7 @@
                 @php
                 $setting = $subjectSettings->get($grade->subject_id);
                 $nilaiAkhir = null;
-                $predikat = '-';
+                $keterangan = '-';
                 
                 if ($setting) {
                     if (!is_null($grade->final_grade)) {
@@ -224,12 +291,8 @@
                                      $grade->uas_grade * $setting->uas_weight) / 100;
                     }
                     
-                    // Menentukan predikat berdasarkan nilai
-                    if ($nilaiAkhir >= 90) $predikat = 'A';
-                    elseif ($nilaiAkhir >= 80) $predikat = 'B';
-                    elseif ($nilaiAkhir >= 70) $predikat = 'C';
-                    elseif ($nilaiAkhir >= 60) $predikat = 'D';
-                    else $predikat = 'E';
+                    // Menentukan keterangan berdasarkan KKM
+                    $keterangan = $nilaiAkhir >= $setting->kkm ? 'TUNTAS' : 'BELUM TUNTAS';
                 }
                 @endphp
                 <tr>
@@ -246,8 +309,8 @@
                         <span style="color: #999;">-</span>
                         @endif
                     </td>
-                    <td class="text-center" style="font-weight: bold; font-size: 14px;">
-                        {{ $predikat }}
+                    <td class="text-center" style="font-weight: bold; font-size: 12px;">
+                        {{ $keterangan }}
                     </td>
                 </tr>
                 @empty
@@ -260,8 +323,6 @@
             </tbody>
         </table>
     </div>
-
-    
 
     <!-- Tabel Ekstrakurikuler -->
     <div class="mb-6">
@@ -350,6 +411,8 @@
             </div>
         </div>
     </div>
+
+    
 
     <!-- Tanda Tangan -->
     <div class="signature-section">
