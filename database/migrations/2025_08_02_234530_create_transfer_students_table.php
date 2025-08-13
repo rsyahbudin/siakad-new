@@ -59,6 +59,7 @@ return new class extends Migration
             $table->json('original_grades')->nullable(); // Nilai asli dari sekolah asal
             $table->json('converted_grades')->nullable(); // Nilai hasil konversi admin
             $table->text('conversion_notes')->nullable(); // Catatan konversi
+            $table->enum('grade_scale', ['0-100', '0-4', 'A-F', 'Predikat'])->default('0-100'); // Skala nilai sekolah asal
 
             // Status and Processing
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');

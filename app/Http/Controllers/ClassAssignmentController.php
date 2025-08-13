@@ -12,6 +12,7 @@ use App\Services\ClassPlacementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\TransferStudent; // Added this import
 
 class ClassAssignmentController extends Controller
 {
@@ -29,8 +30,8 @@ class ClassAssignmentController extends Controller
             ->where('academic_year_id', $activeYear->id)
             ->get();
 
-        // Query siswa yang aktif (bukan lulus atau pindah)
-        $query = Student::where('status', 'Aktif')
+        // Query siswa yang aktif dan pindahan (bukan lulus atau keluar)
+        $query = Student::whereIn('status', ['Aktif', 'Pindahan'])
             ->with(['user', 'classStudents' => function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear->id);
             }, 'classStudents.classroomAssignment.classroom', 'ppdbApplication']);
@@ -68,15 +69,38 @@ class ClassAssignmentController extends Controller
             }
         }
 
-        // Filter by minat jurusan (dari PPDB)
+        // Filter by minat jurusan (dari PPDB atau major_interest untuk transfer)
         if ($request->filled('major_filter')) {
             $major = $request->major_filter;
-            $query->whereHas('ppdbApplication', function ($p) use ($major) {
-                $p->where('desired_major', $major);
+            $query->where(function ($q) use ($major) {
+                $q->whereHas('ppdbApplication', function ($p) use ($major) {
+                    $p->where('desired_major', $major);
+                })->orWhere('major_interest', $major);
             });
         }
 
+        // Filter by status siswa (Aktif/Pindahan)
+        if ($request->filled('student_status_filter')) {
+            $query->where('status', $request->student_status_filter);
+        }
+
+        // Preload transfer student data for students with status 'Pindahan'
         $students = $query->orderBy('full_name')->paginate(20)->withQueryString();
+
+        // Load transfer data for students with status 'Pindahan'
+        $transferNisns = $students->where('status', 'Pindahan')->pluck('nisn')->toArray();
+        $transferData = collect();
+        if (!empty($transferNisns)) {
+            $transferData = TransferStudent::whereIn('nisn', $transferNisns)->get()->keyBy('nisn');
+        }
+
+        // Attach transfer data to students
+        $students->getCollection()->transform(function ($student) use ($transferData) {
+            if ($student->status === 'Pindahan') {
+                $student->transfer_data = $transferData->get($student->nisn);
+            }
+            return $student;
+        });
 
         // Get class placement statistics
         $placementStats = $this->getPlacementStatistics($activeYear);
@@ -99,11 +123,33 @@ class ClassAssignmentController extends Controller
             return back()->withErrors(['error' => 'Tidak ada tahun ajaran aktif.']);
         }
 
+        $request->validate([
+            'assignments' => 'required|array',
+            'assignments.*' => 'nullable|exists:classroom_assignments,id'
+        ]);
+
         $assignmentIds = ClassroomAssignment::where('academic_year_id', $activeYear->id)->pluck('id')->toArray();
         $data = $request->input('assignments', []);
 
+        // Validate that all assignment IDs are valid for current academic year
+        $invalidAssignments = array_filter($data, function ($assignmentId) use ($assignmentIds) {
+            return !empty($assignmentId) && !in_array($assignmentId, $assignmentIds);
+        });
+
+        if (!empty($invalidAssignments)) {
+            return back()->withErrors(['error' => 'Beberapa ID kelas tidak valid untuk tahun ajaran aktif.']);
+        }
+
+        // Debug: Log the data being processed
+        Log::info('Class assignment data received:', [
+            'total_assignments' => count($data),
+            'valid_assignment_ids' => $assignmentIds,
+            'data' => $data
+        ]);
+
         $successCount = 0;
         $errorCount = 0;
+        $errors = [];
 
         try {
             DB::beginTransaction();
@@ -113,8 +159,22 @@ class ClassAssignmentController extends Controller
                     continue; // Skip if no assignment selected
                 }
 
-                $student = Student::where('status', 'Aktif')->find($studentId);
+                // Debug: Log each student being processed
+                Log::info("Processing student assignment:", [
+                    'student_id' => $studentId,
+                    'assignment_id' => $assignmentId
+                ]);
+
+                $student = Student::whereIn('status', ['Aktif', 'Pindahan'])->find($studentId);
                 if ($student && in_array($assignmentId, $assignmentIds)) {
+                    // Debug: Log successful assignment
+                    Log::info("Student found and assignment valid:", [
+                        'student_id' => $studentId,
+                        'student_name' => $student->full_name,
+                        'student_status' => $student->status,
+                        'assignment_id' => $assignmentId
+                    ]);
+
                     // Hapus penempatan lama di tahun ajaran aktif
                     ClassStudent::where('student_id', $studentId)
                         ->where('academic_year_id', $activeYear->id)
@@ -128,9 +188,18 @@ class ClassAssignmentController extends Controller
                     ]);
 
                     $successCount++;
-                    Log::info("Student {$student->full_name} assigned to class via manual assignment");
+                    Log::info("Student {$student->full_name} (Status: {$student->status}) assigned to class via manual assignment");
                 } else {
                     $errorCount++;
+                    if ($student) {
+                        $errorMsg = "Gagal menempatkan {$student->full_name} (Status: {$student->status}) - Kelas tidak valid";
+                        $errors[] = $errorMsg;
+                        Log::warning("Failed to assign student {$student->full_name} (Status: {$student->status}) - Invalid assignment ID: {$assignmentId}");
+                    } else {
+                        $errorMsg = "Siswa dengan ID {$studentId} tidak ditemukan atau status tidak valid";
+                        $errors[] = $errorMsg;
+                        Log::warning("Failed to assign student ID {$studentId} - Student not found or invalid status");
+                    }
                 }
             }
 
@@ -139,13 +208,22 @@ class ClassAssignmentController extends Controller
             $message = "Pembagian kelas berhasil disimpan. {$successCount} siswa berhasil ditempatkan.";
             if ($errorCount > 0) {
                 $message .= " {$errorCount} siswa gagal ditempatkan.";
+                return redirect()->route('pembagian.kelas')
+                    ->with('success', $message)
+                    ->with('errors', $errors);
             }
 
             return redirect()->route('pembagian.kelas')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to assign students to classes: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan pembagian kelas.']);
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            // Return more detailed error for debugging
+            return back()->withErrors([
+                'error' => 'Terjadi kesalahan saat menyimpan pembagian kelas: ' . $e->getMessage(),
+                'debug' => 'File: ' . $e->getFile() . ' Line: ' . $e->getLine()
+            ]);
         }
     }
 
@@ -187,7 +265,7 @@ class ClassAssignmentController extends Controller
                 }
 
                 foreach ($studentIds as $studentId) {
-                    $student = Student::where('status', 'Aktif')->find($studentId);
+                    $student = Student::whereIn('status', ['Aktif', 'Pindahan'])->find($studentId);
                     if ($student) {
                         // Remove existing assignment
                         ClassStudent::where('student_id', $studentId)
@@ -214,7 +292,7 @@ class ClassAssignmentController extends Controller
                 }
             } elseif ($action === 'remove') {
                 foreach ($studentIds as $studentId) {
-                    $student = Student::where('status', 'Aktif')->find($studentId);
+                    $student = Student::whereIn('status', ['Aktif', 'Pindahan'])->find($studentId);
                     if ($student) {
                         // Remove from all classes in active year
                         ClassStudent::where('student_id', $studentId)
@@ -249,9 +327,12 @@ class ClassAssignmentController extends Controller
     // Get placement statistics
     private function getPlacementStatistics($activeYear)
     {
-        // Hanya hitung siswa yang aktif
-        $totalStudents = Student::where('status', 'Aktif')->count();
-        $placedStudents = Student::where('status', 'Aktif')
+        // Hitung siswa yang aktif dan pindahan
+        $totalStudents = Student::whereIn('status', ['Aktif', 'Pindahan'])->count();
+        $activeStudents = Student::where('status', 'Aktif')->count();
+        $transferStudents = Student::where('status', 'Pindahan')->count();
+
+        $placedStudents = Student::whereIn('status', ['Aktif', 'Pindahan'])
             ->whereHas('classStudents', function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear->id);
             })->count();
@@ -276,6 +357,8 @@ class ClassAssignmentController extends Controller
 
         return [
             'total_students' => $totalStudents,
+            'active_students' => $activeStudents,
+            'transfer_students' => $transferStudents,
             'placed_students' => $placedStudents,
             'unplaced_students' => $unplacedStudents,
             'placement_percentage' => $totalStudents > 0 ? round(($placedStudents / $totalStudents) * 100, 1) : 0,

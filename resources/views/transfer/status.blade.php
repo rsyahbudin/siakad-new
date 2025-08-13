@@ -141,7 +141,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tujuan Kelas & Jurusan</label>
-                        <p class="text-gray-900">{{ $transferStudent->target_grade }} {{ $transferStudent->target_major }}</p>
+                        <p class="text-gray-900">{{ $transferStudent->desired_grade }} {{ $transferStudent->desired_major }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Pindah</label>

@@ -72,13 +72,13 @@ class UserSeeder extends Seeder
         User::create($kepalaSekolah);
 
         // Create Sample Wali Murid
-        $waliMurid = [
-            'name' => 'Siti Aminah',
-            'email' => 'wali@siakad.test',
-            'password' => Hash::make('wali123'),
-            'role' => User::ROLE_WALI_MURID,
-        ];
+        // $waliMurid = [
+        //     'name' => 'Siti Aminah',
+        //     'email' => 'wali@siakad.test',
+        //     'password' => Hash::make('wali123'),
+        //     'role' => User::ROLE_WALI_MURID,
+        // ];
 
-        User::create($waliMurid);
+        // User::create($waliMurid);
     }
 }

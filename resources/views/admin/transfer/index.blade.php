@@ -147,85 +147,68 @@
             <table class="w-full">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Siswa
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Sekolah Asal
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pindahan
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Konversi
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tanggal
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Aksi
-                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Registrasi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Konversi Nilai</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Daftar</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($transferStudents as $student)
+                    @forelse($transferStudents as $transferStudent)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div>
-                                <div class="text-sm font-medium text-gray-900">{{ $student->full_name }}</div>
-                                <div class="text-sm text-gray-500">{{ $student->registration_number }}</div>
-                                <div class="text-sm text-gray-500">NISN: {{ $student->nisn }}</div>
-                                <div class="text-sm text-gray-500">{{ $student->email }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ $transferStudent->full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ $transferStudent->email }}</div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $student->previous_school_name }}</div>
-                            <div class="text-sm text-gray-500">{{ $student->previous_grade }} {{ $student->previous_major }}</div>
+                            <div class="text-sm text-gray-900">{{ $transferStudent->registration_number }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $student->target_grade }} {{ $student->target_major }}</div>
-                            <div class="text-sm text-gray-500">{{ $student->previous_academic_year }}</div>
+                            <div class="text-sm text-gray-900">{{ $transferStudent->desired_grade }} {{ $transferStudent->desired_major }}</div>
+                            <div class="text-sm text-gray-500">{{ $transferStudent->previous_grade }} {{ $transferStudent->previous_major }} → {{ $transferStudent->desired_grade }} {{ $transferStudent->desired_major }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $student->status_badge_class }}">
-                                {{ $student->status_label }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $transferStudent->status_badge_class }}">
+                                {{ $transferStudent->status_label }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($student->hasGradeConversion())
+                            @if($transferStudent->hasGradeConversion())
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Selesai
+                                ✓ Sudah dikonversi
                             </span>
                             @else
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Belum
+                                ⚠ Belum dikonversi
                             </span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $student->submitted_at->format('d/m/Y') }}
+                            {{ $transferStudent->submitted_at->format('d/m/Y H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.transfer.show', $student) }}"
-                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                Detail
-                            </a>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('admin.transfer.show', $transferStudent) }}"
+                                    class="text-blue-600 hover:text-blue-900">Detail</a>
+                                @if(!$transferStudent->hasGradeConversion())
+                                <a href="{{ route('admin.transfer.grade-conversion', $transferStudent) }}"
+                                    class="text-green-600 hover:text-green-900">Konversi</a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            Tidak ada data siswa pindahan
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

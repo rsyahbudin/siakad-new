@@ -43,6 +43,7 @@ class TransferStudent extends Model
         'original_grades',
         'converted_grades',
         'conversion_notes',
+        'grade_scale', // Skala nilai sekolah asal (0-100, 0-4, A-F, dll)
         'status',
         'notes',
         'processed_by',
@@ -73,6 +74,12 @@ class TransferStudent extends Model
     const MAJOR_BAHASA = 'Bahasa';
     const MAJOR_LAINNYA = 'Lainnya';
 
+    // Grade Scale Constants
+    const SCALE_0_100 = '0-100';
+    const SCALE_0_4 = '0-4';
+    const SCALE_A_F = 'A-F';
+    const SCALE_PREDIKAT = 'Predikat';
+
     const STATUS = [
         self::STATUS_PENDING => 'Menunggu',
         self::STATUS_APPROVED => 'Disetujui',
@@ -95,6 +102,13 @@ class TransferStudent extends Model
         self::MAJOR_IPS => 'IPS',
         self::MAJOR_BAHASA => 'Bahasa',
         self::MAJOR_LAINNYA => 'Lainnya',
+    ];
+
+    const GRADE_SCALES = [
+        self::SCALE_0_100 => 'Skala 0-100',
+        self::SCALE_0_4 => 'Skala 0-4',
+        self::SCALE_A_F => 'Skala A-F',
+        self::SCALE_PREDIKAT => 'Predikat (Sangat Baik/Baik/Cukup/Kurang)',
     ];
 
     /**
@@ -172,6 +186,11 @@ class TransferStudent extends Model
         return self::MAJORS[$this->desired_major] ?? $this->desired_major;
     }
 
+    public function getGradeScaleLabelAttribute()
+    {
+        return self::GRADE_SCALES[$this->grade_scale] ?? $this->grade_scale;
+    }
+
     /**
      * Helper methods
      */
@@ -213,7 +232,115 @@ class TransferStudent extends Model
 
     public function isEligibleForApproval()
     {
-        return $this->hasAllRequiredDocuments();
+        return $this->hasAllRequiredDocuments() && $this->hasGradeConversion();
+    }
+
+    /**
+     * Convert grade from original scale to 0-100 scale
+     */
+    public function convertGradeTo100($originalGrade, $scale = null)
+    {
+        $scale = $scale ?? $this->grade_scale ?? self::SCALE_0_100;
+
+        // Handle empty or null values
+        if (empty($originalGrade)) {
+            return 0;
+        }
+
+        switch ($scale) {
+            case self::SCALE_0_100:
+                return (float) $originalGrade;
+
+            case self::SCALE_0_4:
+                // Convert 0-4 to 0-100
+                $grade = (float) $originalGrade;
+                if ($grade < 0 || $grade > 4) {
+                    return 0; // Invalid grade
+                }
+                return round($grade * 25, 2);
+
+            case self::SCALE_A_F:
+                // Convert A-F to 0-100 (consistent with dropdown display)
+                $gradeMap = [
+                    'A' => 90,
+                    'A-' => 85,
+                    'A+' => 95,
+                    'B' => 80,
+                    'B-' => 75,
+                    'B+' => 85,
+                    'C' => 60,
+                    'C-' => 55,
+                    'C+' => 65,
+                    'D' => 60,
+                    'D-' => 55,
+                    'D+' => 65,
+                    'E' => 50,
+                    'F' => 0
+                ];
+                $grade = strtoupper(trim($originalGrade));
+                return $gradeMap[$grade] ?? 0;
+
+            case self::SCALE_PREDIKAT:
+                // Convert Predikat to 0-100
+                $predikatMap = [
+                    'Sangat Baik' => 90,
+                    'Baik' => 80,
+                    'Cukup' => 70,
+                    'Kurang' => 60,
+                    'Sangat Kurang' => 50
+                ];
+                $predikat = trim($originalGrade);
+                return $predikatMap[$predikat] ?? 0;
+
+            default:
+                return (float) $originalGrade;
+        }
+    }
+
+    /**
+     * Auto convert all grades from original scale to 0-100
+     */
+    public function autoConvertGrades()
+    {
+        if (empty($this->original_grades) || empty($this->grade_scale)) {
+            return false;
+        }
+
+        $convertedGrades = [];
+        foreach ($this->original_grades as $subject => $grade) {
+            $convertedGrades[$subject] = $this->convertGradeTo100($grade);
+        }
+
+        $this->update([
+            'converted_grades' => $convertedGrades,
+            'conversion_notes' => 'Konversi otomatis dari skala ' . self::GRADE_SCALES[$this->grade_scale] . ' ke skala 0-100'
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Get average grade from converted grades
+     */
+    public function getAverageGrade()
+    {
+        if (empty($this->converted_grades)) {
+            return 0;
+        }
+
+        $total = array_sum($this->converted_grades);
+        $count = count($this->converted_grades);
+
+        return $count > 0 ? round($total / $count, 2) : 0;
+    }
+
+    /**
+     * Check if student meets minimum grade requirement
+     */
+    public function meetsMinimumGradeRequirement($minimumAverage = 70)
+    {
+        $average = $this->getAverageGrade();
+        return $average >= $minimumAverage;
     }
 
     /**

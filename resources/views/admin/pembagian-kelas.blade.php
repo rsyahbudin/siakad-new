@@ -5,6 +5,10 @@
 <div class="mb-6">
     <h2 class="text-2xl font-bold mb-2">Pembagian Kelas</h2>
     <p class="text-gray-600">Tahun Ajaran {{ $activeYear->year ?? '-' }} Semester {{ $activeSemester->name ?? '-' }}</p>
+    <p class="text-sm text-gray-500 mt-1">
+        Menampilkan siswa dengan status <span class="font-medium text-green-600">Aktif</span> dan
+        <span class="font-medium text-blue-600">Pindahan</span> untuk penempatan kelas.
+    </p>
 </div>
 
 @if(session('success'))
@@ -16,11 +20,27 @@
 @if(session('error'))
 <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
     {{ session('error') }}
+    @if(session('debug'))
+    <div class="mt-2 text-xs">
+        <strong>Debug:</strong> {{ session('debug') }}
+    </div>
+    @endif
+</div>
+@endif
+
+@if(session('errors'))
+<div class="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+    <h4 class="font-semibold mb-2">Beberapa siswa gagal ditempatkan:</h4>
+    <ul class="list-disc list-inside space-y-1">
+        @foreach(session('errors') as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
 </div>
 @endif
 
 <!-- Statistics Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
     <div class="bg-white p-4 rounded-lg shadow border">
         <div class="flex items-center">
             <div class="p-2 bg-blue-100 rounded-lg">
@@ -43,8 +63,22 @@
                 </svg>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Sudah Ditempatkan</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $placementStats['placed_students'] }}</p>
+                <p class="text-sm font-medium text-gray-600">Siswa Aktif</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $placementStats['active_students'] ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow border">
+        <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Siswa Pindahan</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $placementStats['transfer_students'] ?? 0 }}</p>
             </div>
         </div>
     </div>
@@ -73,6 +107,31 @@
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-600">Progress</p>
                 <p class="text-2xl font-bold text-gray-900">{{ $placementStats['placement_percentage'] }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow border">
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Siswa yang Sudah Ditempatkan</h4>
+        <div class="flex items-center justify-between">
+            <span class="text-2xl font-bold text-green-600">{{ $placementStats['placed_students'] }}</span>
+            <span class="text-sm text-gray-500">dari {{ $placementStats['total_students'] }} siswa</span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow border">
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Distribusi Status</h4>
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Aktif:</span>
+                <span class="text-sm font-medium">{{ $placementStats['active_students'] ?? 0 }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Pindahan:</span>
+                <span class="text-sm font-medium">{{ $placementStats['transfer_students'] ?? 0 }}</span>
             </div>
         </div>
     </div>
@@ -147,7 +206,7 @@
 
 <!-- Search and Filter Form -->
 <div id="searchForm" class="mb-6 bg-white p-4 rounded-lg shadow border">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Cari Siswa</label>
             <input type="text" name="q" value="{{ request('q') }}" placeholder="Nama/NIS..."
@@ -172,6 +231,15 @@
                 <option value="">Semua Status</option>
                 <option value="placed" {{ request('status_filter') == 'placed' ? 'selected' : '' }}>Sudah Ditempatkan</option>
                 <option value="not_placed" {{ request('status_filter') == 'not_placed' ? 'selected' : '' }}>Belum Ditempatkan</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status Siswa</label>
+            <select name="student_status_filter" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Semua Status Siswa</option>
+                <option value="Aktif" {{ request('student_status_filter') == 'Aktif' ? 'selected' : '' }}>Siswa Aktif</option>
+                <option value="Pindahan" {{ request('student_status_filter') == 'Pindahan' ? 'selected' : '' }}>Siswa Pindahan</option>
             </select>
         </div>
 
@@ -210,6 +278,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIS</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Siswa</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Minat Jurusan</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas Saat Ini</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pilih Kelas Baru</th>
@@ -226,15 +295,51 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $siswa->full_name ?? $siswa->user->name ?? '-' }}</div>
                         <div class="text-sm text-gray-500">{{ $siswa->user->email ?? '-' }}</div>
+                        @if($siswa->status === 'Pindahan' && isset($siswa->transfer_data))
+                        <div class="text-xs text-blue-600 mt-1">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Asal: {{ $siswa->transfer_data->previous_school_name ?? 'Tidak diketahui' }}
+                        </div>
+                        @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        @if($siswa->ppdbApplication && $siswa->ppdbApplication->desired_major)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                            @if($siswa->ppdbApplication->desired_major == 'IPA') bg-blue-100 text-blue-800
-                            @elseif($siswa->ppdbApplication->desired_major == 'IPS') bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ $siswa->ppdbApplication->desired_major }}
+                        @if($siswa->status === 'Aktif')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Aktif
                         </span>
+                        @elseif($siswa->status === 'Pindahan')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            Pindahan
+                        </span>
+                        @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {{ $siswa->status }}
+                        </span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @php
+                        $majorInterest = $siswa->getMajorInterest();
+                        $majorSource = $siswa->getMajorInterestSource();
+                        @endphp
+                        @if($majorInterest)
+                        <div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                @if($majorInterest == 'IPA') bg-blue-100 text-blue-800
+                                @elseif($majorInterest == 'IPS') bg-green-100 text-green-800
+                                @else bg-gray-100 text-gray-800 @endif">
+                                {{ $majorInterest }}
+                            </span>
+                            <div class="text-xs text-gray-500 mt-1">Dari {{ $majorSource }}</div>
+                        </div>
                         @else
                         <span class="text-sm text-gray-500">-</span>
                         @endif
@@ -264,7 +369,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                         Tidak ada data siswa yang ditemukan.
                     </td>
                 </tr>
@@ -301,6 +406,43 @@
             if (window.innerWidth < 768) {
                 searchForm.classList.add('hidden');
             }
+        }
+
+        // Debug form submission
+        const assignmentForm = document.querySelector('form[action*="pembagian-kelas"]');
+        if (assignmentForm) {
+            assignmentForm.addEventListener('submit', function(e) {
+                console.log('Form submitted');
+
+                // Log form data
+                const formData = new FormData(this);
+                console.log('Form data:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+
+                // Check if any assignments are selected
+                let hasAssignments = false;
+                let assignmentCount = 0;
+                for (let [key, value] of formData.entries()) {
+                    if (key.startsWith('assignments[') && value !== '') {
+                        hasAssignments = true;
+                        assignmentCount++;
+                        console.log('Found assignment:', key, '=', value);
+                    }
+                }
+
+                console.log('Total assignments found:', assignmentCount);
+                console.log('Has assignments:', hasAssignments);
+
+                if (!hasAssignments) {
+                    e.preventDefault();
+                    alert('Pilih setidaknya satu kelas untuk siswa!');
+                    return false;
+                }
+
+                console.log('Form validation passed, submitting...');
+            });
         }
     });
 

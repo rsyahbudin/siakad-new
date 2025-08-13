@@ -55,6 +55,7 @@ class TransferStudentController extends Controller
             'transfer_reason' => 'required|string',
             'desired_grade' => 'required|in:X,XI,XII',
             'desired_major' => 'required|in:IPA,IPS',
+            'grade_scale' => 'required|in:0-100,0-4,A-F,Predikat',
             'raport_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'photo_file' => 'required|file|mimes:jpg,jpeg,png|max:1024',
             'family_card_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
@@ -104,6 +105,7 @@ class TransferStudentController extends Controller
                 'transfer_reason' => $request->transfer_reason,
                 'desired_grade' => $request->desired_grade,
                 'desired_major' => $request->desired_major,
+                'grade_scale' => $request->grade_scale,
                 'raport_file' => $raportFile,
                 'photo_file' => $photoFile,
                 'family_card_file' => $familyCardFile,
@@ -201,7 +203,7 @@ class TransferStudentController extends Controller
      */
     public function adminShow(TransferStudent $transferStudent)
     {
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = $this->getSubjectsByMajor($transferStudent->desired_major);
         return view('admin.transfer.show', compact('transferStudent', 'subjects'));
     }
 
@@ -217,6 +219,11 @@ class TransferStudentController extends Controller
 
         try {
             DB::beginTransaction();
+
+            // Check if student is eligible for approval
+            if ($request->status === 'approved' && !$transferStudent->isEligibleForApproval()) {
+                return back()->withErrors(['error' => 'Siswa belum memenuhi syarat untuk disetujui. Pastikan dokumen lengkap dan konversi nilai sudah dilakukan.']);
+            }
 
             $transferStudent->update([
                 'status' => $request->status,
@@ -237,6 +244,41 @@ class TransferStudentController extends Controller
             DB::rollBack();
             Log::error('Error updating transfer student: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui status.']);
+        }
+    }
+
+    /**
+     * Auto convert grades from original scale to 0-100
+     */
+    public function autoConvertGrades(Request $request, TransferStudent $transferStudent)
+    {
+        $request->validate([
+            'original_grades' => 'required|array',
+            'original_grades.*' => 'required',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Update original grades
+            $transferStudent->update([
+                'original_grades' => $request->original_grades,
+            ]);
+
+            // Auto convert grades
+            $success = $transferStudent->autoConvertGrades();
+
+            if (!$success) {
+                return back()->withErrors(['error' => 'Gagal melakukan konversi nilai. Pastikan skala nilai sudah dipilih.']);
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Konversi nilai berhasil dilakukan secara otomatis.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error auto converting grades: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat konversi nilai.']);
         }
     }
 
@@ -277,7 +319,8 @@ class TransferStudentController extends Controller
             'address' => $transferStudent->address,
             'parent_name' => $transferStudent->parent_name,
             'parent_phone' => $transferStudent->parent_phone,
-            'status' => 'Aktif',
+            'major_interest' => $transferStudent->desired_major, // Set major interest dari desired_major
+            'status' => 'Pindahan', // Status siswa pindahan, bukan aktif
         ]);
 
         // Create wali murid account
@@ -299,7 +342,7 @@ class TransferStudentController extends Controller
         ]);
 
         // Place student in appropriate class based on target grade and major
-        $placementSuccess = ClassPlacementService::placeTransferStudent($student, $transferStudent->target_grade, $transferStudent->target_major);
+        $placementSuccess = ClassPlacementService::placeTransferStudent($student, $transferStudent->desired_grade, $transferStudent->desired_major);
 
         if ($placementSuccess) {
             Log::info("Transfer student {$student->full_name} successfully placed in class");
@@ -374,22 +417,56 @@ class TransferStudentController extends Controller
      */
     public function showGradeConversion(TransferStudent $transferStudent)
     {
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = $this->getSubjectsByMajor($transferStudent->desired_major);
         return view('admin.transfer.grade-conversion', compact('transferStudent', 'subjects'));
     }
 
     /**
-     * Save grade conversion
+     * Save grade conversion (manual)
      */
     public function saveGradeConversion(Request $request, TransferStudent $transferStudent)
     {
         $request->validate([
             'original_grades' => 'required|array',
-            'original_grades.*' => 'required|numeric|min:0|max:100',
+            'original_grades.*' => 'required',
             'converted_grades' => 'required|array',
             'converted_grades.*' => 'required|numeric|min:0|max:100',
             'conversion_notes' => 'nullable|string',
         ]);
+
+        // Validate original grades based on grade scale
+        $gradeScale = $transferStudent->grade_scale;
+        $originalGrades = $request->original_grades;
+
+        foreach ($originalGrades as $subject => $grade) {
+            if (empty($grade)) continue;
+
+            switch ($gradeScale) {
+                case '0-4':
+                    if (!is_numeric($grade) || $grade < 0 || $grade > 4) {
+                        return back()->withErrors(['error' => "Nilai {$subject} harus antara 0-4 untuk skala 0-4"]);
+                    }
+                    break;
+                case 'A-F':
+                    $validGrades = ['A', 'A-', 'A+', 'B', 'B-', 'B+', 'C', 'C-', 'C+', 'D', 'D-', 'D+', 'E', 'F'];
+                    if (!in_array($grade, $validGrades)) {
+                        return back()->withErrors(['error' => "Nilai {$subject} harus berupa huruf A-F untuk skala A-F"]);
+                    }
+                    break;
+                case 'Predikat':
+                    $validPredikats = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang', 'Sangat Kurang'];
+                    if (!in_array($grade, $validPredikats)) {
+                        return back()->withErrors(['error' => "Nilai {$subject} harus berupa predikat yang valid"]);
+                    }
+                    break;
+                case '0-100':
+                default:
+                    if (!is_numeric($grade) || $grade < 0 || $grade > 100) {
+                        return back()->withErrors(['error' => "Nilai {$subject} harus antara 0-100"]);
+                    }
+                    break;
+            }
+        }
 
         $transferStudent->update([
             'original_grades' => $request->original_grades,
@@ -398,5 +475,48 @@ class TransferStudentController extends Controller
         ]);
 
         return back()->with('success', 'Konversi nilai berhasil disimpan.');
+    }
+
+    /**
+     * Get subjects based on major
+     */
+    private function getSubjectsByMajor($major)
+    {
+        switch ($major) {
+            case 'IPA':
+                return Subject::whereIn('name', [
+                    'Matematika',
+                    'Fisika',
+                    'Kimia',
+                    'Biologi',
+                    'Bahasa Indonesia',
+                    'Bahasa Inggris',
+                    'Pendidikan Agama',
+                    'PPKN',
+                    'Sejarah Indonesia',
+                    'Seni Budaya',
+                    'PJOK',
+                    'Prakarya'
+                ])->orderBy('name')->get();
+
+            case 'IPS':
+                return Subject::whereIn('name', [
+                    'Matematika',
+                    'Ekonomi',
+                    'Geografi',
+                    'Sejarah',
+                    'Sosiologi',
+                    'Bahasa Indonesia',
+                    'Bahasa Inggris',
+                    'Pendidikan Agama',
+                    'PPKN',
+                    'Seni Budaya',
+                    'PJOK',
+                    'Prakarya'
+                ])->orderBy('name')->get();
+
+            default:
+                return Subject::orderBy('name')->get();
+        }
     }
 }

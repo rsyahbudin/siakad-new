@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
         Route::get('transfer/{transferStudent}/download/{documentType}', [TransferStudentController::class, 'downloadDocument'])->name('transfer.download');
         Route::get('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'showGradeConversion'])->name('transfer.grade-conversion');
         Route::post('transfer/{transferStudent}/grade-conversion', [TransferStudentController::class, 'saveGradeConversion'])->name('transfer.save-grade-conversion');
+        Route::post('transfer/{transferStudent}/auto-convert-grades', [TransferStudentController::class, 'autoConvertGrades'])->name('transfer.auto-convert-grades');
 
         // Exam Schedule Routes (Admin only)
         Route::resource('exam-schedules', ExamScheduleController::class);

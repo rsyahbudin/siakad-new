@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\ClassStudent;
 use App\Models\ClassroomAssignment;
+use App\Models\TransferStudent;
 
 class Student extends Model
 {
@@ -85,6 +86,46 @@ class Student extends Model
     public function ppdbApplication()
     {
         return $this->belongsTo(PPDBApplication::class, 'ppdb_application_id');
+    }
+
+    public function transferStudent()
+    {
+        return $this->hasOne(TransferStudent::class, 'nisn', 'nisn');
+    }
+
+    public function getTransferData()
+    {
+        if ($this->status === 'Pindahan') {
+            return TransferStudent::where('nisn', $this->nisn)->first();
+        }
+        return null;
+    }
+
+    public function getMajorInterest()
+    {
+        // Prioritas: PPDB Application > major_interest field
+        if ($this->ppdbApplication && $this->ppdbApplication->desired_major) {
+            return $this->ppdbApplication->desired_major;
+        }
+
+        if ($this->major_interest) {
+            return $this->major_interest;
+        }
+
+        return null;
+    }
+
+    public function getMajorInterestSource()
+    {
+        if ($this->ppdbApplication && $this->ppdbApplication->desired_major) {
+            return 'PPDB';
+        }
+
+        if ($this->major_interest) {
+            return 'Transfer';
+        }
+
+        return null;
     }
 
     public function getActiveExtracurriculars($academicYearId = null)

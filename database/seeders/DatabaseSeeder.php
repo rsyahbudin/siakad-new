@@ -17,12 +17,10 @@ class DatabaseSeeder extends Seeder
             MajorSeeder::class,
             SubjectSeeder::class,
             TeacherSeeder::class,
-            StudentSeeder::class,
             ClassroomSeeder::class,
             SubjectSettingSeeder::class,
             ClassroomAssignmentSeeder::class,
             KepalaSekolahSeeder::class,
-            WaliMuridSeeder::class,
         ]);
     }
 }
