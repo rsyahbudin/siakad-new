@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\KepalaSekolahAccountController;
 use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\StudentExtracurricularController;
 use App\Http\Controllers\GuruExtracurricularGradeController;
+use App\Http\Controllers\AdminManagementController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -63,6 +64,9 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->m
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+
+// Dashboard routes for different roles
+Route::get('/dashboard/guru', [DashboardController::class, 'guru'])->middleware('auth')->name('dashboard.guru');
 
 // Resource index routes for admin menu (dummy controller, just for view)
 Route::middleware('auth')->group(function () {
@@ -136,6 +140,15 @@ Route::middleware('auth')->group(function () {
         Route::get('kepala-sekolah/{user}/edit', [KepalaSekolahAccountController::class, 'edit'])->name('kepsek.edit');
         Route::put('kepala-sekolah/{user}', [KepalaSekolahAccountController::class, 'update'])->name('kepsek.update');
         Route::delete('kepala-sekolah/{user}', [KepalaSekolahAccountController::class, 'destroy'])->name('kepsek.destroy');
+
+        // Admin Management Routes
+        Route::resource('management', AdminManagementController::class)->parameters(['management' => 'admin']);
+        Route::get('management/{admin}/change-password', [AdminManagementController::class, 'changePassword'])->name('management.change-password');
+        Route::put('management/{admin}/change-password', [AdminManagementController::class, 'updatePassword'])->name('management.update-password');
+        Route::get('management/profile', [AdminManagementController::class, 'profile'])->name('management.profile');
+        Route::put('management/profile', [AdminManagementController::class, 'updateProfile'])->name('management.update-profile');
+        Route::get('management/change-own-password', [AdminManagementController::class, 'changeOwnPassword'])->name('management.change-own-password');
+        Route::put('management/change-own-password', [AdminManagementController::class, 'updateOwnPassword'])->name('management.update-own-password');
     });
 
     Route::get('/siswa/{siswa}', [StudentController::class, 'show'])->name('siswa.show');

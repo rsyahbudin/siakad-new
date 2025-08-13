@@ -85,4 +85,42 @@ class DashboardController extends Controller
         }
         abort(403, 'Akses tidak diizinkan.');
     }
+
+    public function guru()
+    {
+        $user = Auth::user();
+
+        if (!$user->isTeacher()) {
+            abort(403, 'Akses hanya untuk guru.');
+        }
+
+        $teacher = $user->teacher;
+        if (!$teacher) {
+            abort(403, 'Data guru tidak ditemukan.');
+        }
+
+        $teacherStats = [
+            'total_schedules' => Schedule::where('teacher_id', $teacher->id)->count(),
+            'total_students' => Schedule::where('teacher_id', $teacher->id)
+                ->with('classroom.students')
+                ->get()
+                ->sum(function ($schedule) {
+                    return $schedule->classroom->students->count();
+                }),
+            'today_schedules' => Schedule::with(['subject', 'classroom'])
+                ->where('teacher_id', $teacher->id)
+                ->where('day', now()->isoFormat('dddd'))
+                ->orderBy('time_start')
+                ->get(),
+            'recent_grades' => Grade::whereHas('subject.schedules', function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
+                ->with(['student', 'subject'])
+                ->latest()
+                ->limit(5)
+                ->get(),
+        ];
+
+        return view('dashboard.guru', compact('teacherStats'));
+    }
 }
