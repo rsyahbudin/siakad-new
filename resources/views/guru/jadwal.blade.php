@@ -97,7 +97,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-blue-100 rounded-lg">
@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-purple-100 rounded-lg">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,9 +138,9 @@
                     <p class="text-2xl font-bold text-gray-900">{{ $totalSubjects }}</p>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-orange-100 rounded-lg">
                     <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@
                     <p class="text-2xl font-bold text-gray-900">{{ $totalSchedules * 2 }}</p>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     @if($schedules->isEmpty())
@@ -265,9 +265,9 @@
                             <div class="text-sm text-gray-900 font-medium">
                                 {{ \Carbon\Carbon::parse($jadwal->time_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->time_end)->format('H:i') }}
                             </div>
-                            <div class="text-xs text-gray-500">
+                            <!-- <div class="text-xs text-gray-500">
                                 {{ \Carbon\Carbon::parse($jadwal->time_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->time_end)->format('H:i') }}
-                            </div>
+                            </div> -->
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
