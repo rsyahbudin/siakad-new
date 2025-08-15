@@ -128,7 +128,7 @@
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ $mapel->name }}</div>
-                                    <div class="text-sm text-gray-500">ID: {{ $mapel->id }}</div>
+                                    <!-- <div class="text-sm text-gray-500">ID: {{ $mapel->id }}</div> -->
                                 </div>
                             </div>
                         </td>

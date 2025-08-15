@@ -38,6 +38,7 @@ use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\GuruPasswordController;
 use App\Http\Controllers\WaliMuridPasswordController;
 use App\Http\Controllers\KepalaSekolahPasswordController;
+use App\Http\Controllers\AcademicCalendarController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -104,6 +105,25 @@ Route::middleware('auth')->group(function () {
         Route::delete('extracurricular/{extracurricular}/remove-student/{student}', [ExtracurricularController::class, 'removeStudent'])->name('extracurricular.remove-student');
         Route::put('extracurricular/{extracurricular}/update-student/{student}', [ExtracurricularController::class, 'updateStudent'])->name('extracurricular.update-student');
         Route::put('extracurricular/{extracurricular}/update-student-status', [ExtracurricularController::class, 'updateStudentStatus'])->name('extracurricular.update-student-status');
+    });
+
+    // Academic Calendar routes (viewable by all roles, CRUD by admin only)
+    Route::get('/academic-calendar', [AcademicCalendarController::class, 'index'])->name('academic-calendar.index');
+
+    // Admin-only CRUD routes for academic calendar (specific routes first)
+    Route::middleware('check.role:admin')->group(function () {
+        Route::get('/academic-calendar/create', [AcademicCalendarController::class, 'create'])->name('academic-calendar.create');
+        Route::post('/academic-calendar', [AcademicCalendarController::class, 'store'])->name('academic-calendar.store');
+    });
+
+    // Public show route
+    Route::get('/academic-calendar/{academicCalendar}', [AcademicCalendarController::class, 'show'])->name('academic-calendar.show');
+
+    // Admin-only edit/delete routes
+    Route::middleware('check.role:admin')->group(function () {
+        Route::get('/academic-calendar/{academicCalendar}/edit', [AcademicCalendarController::class, 'edit'])->name('academic-calendar.edit');
+        Route::put('/academic-calendar/{academicCalendar}', [AcademicCalendarController::class, 'update'])->name('academic-calendar.update');
+        Route::delete('/academic-calendar/{academicCalendar}', [AcademicCalendarController::class, 'destroy'])->name('academic-calendar.destroy');
     });
 
     // Admin-only routes

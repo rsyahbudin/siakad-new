@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('title', 'Leger Nilai Kelas')
+@section('title', 'Rekap Nilai Kelas')
 @section('content')
 
 @if(session('success'))
@@ -42,7 +42,7 @@
 <div class="mb-8">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Leger Nilai Kelas</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Rekap Nilai Kelas</h1>
             <p class="text-gray-600">Rekap dan analisis nilai siswa kelas yang Anda wali</p>
         </div>
         <div class="flex items-center space-x-3">
