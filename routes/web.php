@@ -35,6 +35,9 @@ use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\StudentExtracurricularController;
 use App\Http\Controllers\GuruExtracurricularGradeController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\GuruPasswordController;
+use App\Http\Controllers\WaliMuridPasswordController;
+use App\Http\Controllers\KepalaSekolahPasswordController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -74,6 +77,13 @@ Route::middleware('auth')->group(function () {
     Route::post('tahun-ajaran/{tahun_ajaran}/set-active', [AcademicYearController::class, 'setActive'])->name('tahun-ajaran.set-active');
     Route::resource('jurusan', MajorController::class)->parameters(['jurusan' => 'jurusan']);
     Route::resource('mapel', SubjectController::class)->parameters(['mapel' => 'mapel']);
+
+    // Guru Password Change (must be before guru resource route)
+    Route::middleware('check.role:teacher')->group(function () {
+        Route::get('/guru/change-password', [GuruPasswordController::class, 'showChangePasswordForm'])->name('guru.change-password');
+        Route::post('/guru/change-password', [GuruPasswordController::class, 'changePassword'])->name('guru.change-password');
+    });
+
     Route::resource('guru', TeacherController::class)->parameters(['guru' => 'guru']);
 
     // Student routes with role-based access
@@ -156,8 +166,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('kelas', ClassroomController::class)->parameters(['kelas' => 'kelas']);
     // Guru
     Route::get('/jadwal-guru', [GuruJadwalController::class, 'index'])->name('jadwal.guru');
+    Route::get('/jadwal-guru/download-pdf', [GuruJadwalController::class, 'downloadPdf'])->name('jadwal.guru.download-pdf');
     Route::get('/input-nilai', [GuruNilaiController::class, 'index'])->name('nilai.input');
     Route::post('/input-nilai', [GuruNilaiController::class, 'store'])->name('nilai.input.store');
+
+
     // Route::get('/input-nilai/import', [GuruNilaiController::class, 'showImportForm'])->name('nilai.import.show');
     // Route::post('/input-nilai/import', [GuruNilaiController::class, 'import'])->name('nilai.import.store');
     // Route::get('/input-nilai/template', [GuruNilaiController::class, 'downloadTemplate'])->name('nilai.import.template');
@@ -194,6 +207,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/{extracurricular}/import', [GuruExtracurricularGradeController::class, 'import'])->name('import');
         });
     });
+
+
 
 
     // Siswa
@@ -288,6 +303,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/jadwal-anak', [WaliMuridController::class, 'jadwalAnak'])->name('jadwal.anak');
         Route::get('/absensi-anak', [WaliMuridController::class, 'absensiAnak'])->name('absensi.anak');
         Route::get('/jadwal-ujian-anak', [ExamScheduleController::class, 'parentSchedule'])->name('exam-schedule');
+
+        // Wali Murid Password Change
+        Route::get('/change-password', [WaliMuridPasswordController::class, 'showChangePasswordForm'])->name('change-password');
+        Route::post('/change-password', [WaliMuridPasswordController::class, 'changePassword'])->name('change-password');
     });
 });
 

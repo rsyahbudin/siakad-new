@@ -197,10 +197,10 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                         <select id="filterStatus" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Semua Status</option>
-                            <option value="upcoming">Akan Datang</option>
+                            <option value="upcoming">Belum Dilaksanakan</option>
                             <option value="tomorrow">Besok</option>
-                            <option value="ongoing">Sedang Berlangsung</option>
-                            <option value="finished">Selesai</option>
+                            <option value="ongoing">Sedang Dilaksanakan</option>
+                            <option value="finished">Telah Dilaksanakan</option>
                         </select>
                     </div>
                 </div>
@@ -344,13 +344,13 @@
                                     <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    Selesai
+                                    Telah Dilaksanakan
                                 </span>
                                 @elseif($now->between($startDateTime, $examDateTime))
                                 @php $status = 'ongoing'; @endphp
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200 animate-pulse" data-status="ongoing">
                                     <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-ping"></div>
-                                    Sedang Berlangsung
+                                    Sedang Dilaksanakan
                                 </span>
                                 @elseif($now->diffInDays($startDateTime) <= 1)
                                     @php $status='tomorrow' ; @endphp
@@ -366,7 +366,7 @@
                                         <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
-                                        Akan Datang
+                                        Belum Dilaksanakan
                                     </span>
                                     @endif
                             </td>

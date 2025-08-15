@@ -21,7 +21,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
         <!-- Total Students -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
@@ -70,8 +70,9 @@
             </div>
         </div>
 
+
         <!-- Total Schedules -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Jadwal</p>
@@ -84,7 +85,7 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <!-- PPDB & Transfer Statistics -->
@@ -126,10 +127,43 @@
         </div>
     </div>
 
+    <!-- Student Statistics by Grade Level -->
+    @if($stats['active_year'])
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Statistik Siswa per Angkatan</h3>
+            <span class="text-sm text-gray-600">Tahun Ajaran: {{ $stats['active_year']->year }}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @php
+            $gradeLabels = [
+            '10' => 'Kelas X',
+            '11' => 'Kelas XI',
+            '12' => 'Kelas XII'
+            ];
+            $gradeColors = [
+            '10' => 'bg-blue-50 text-blue-600',
+            '11' => 'bg-green-50 text-green-600',
+            '12' => 'bg-purple-50 text-purple-600'
+            ];
+            @endphp
+
+            @foreach($gradeLabels as $grade => $label)
+            <div class="text-center p-4 {{ $gradeColors[$grade] }} rounded-lg">
+                <p class="text-2xl font-bold">{{ $stats['students_by_grade']->get($grade)->total ?? 0 }}</p>
+                <p class="text-sm font-medium">{{ $label }}</p>
+                <p class="text-xs opacity-75">Siswa Aktif & Pindahan</p>
+            </div>
+            @endforeach
+        </div>
+        
+    </div>
+    @endif
+
     <!-- Recent Activities -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Grades -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <!-- <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"> -->
+    <!-- Recent Grades -->
+    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Nilai Terbaru</h3>
                 <a href="{{ route('nilai.admin') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Lihat Semua</a>
@@ -157,10 +191,10 @@
                 </div>
                 @endforelse
             </div>
-        </div>
+        </div> -->
 
-        <!-- Recent PPDB Applications -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <!-- Recent PPDB Applications -->
+    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Pendaftar PPDB Terbaru</h3>
                 <a href="{{ route('admin.ppdb.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Lihat Semua</a>
@@ -191,8 +225,8 @@
                 </div>
                 @endforelse
             </div>
-        </div>
-    </div>
+        </div> -->
+    <!-- </div> -->
 
     <!-- Quick Actions -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

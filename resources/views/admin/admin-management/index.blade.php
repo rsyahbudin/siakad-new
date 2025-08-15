@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <!-- <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Admin Aktif</p>
@@ -51,9 +51,9 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <!-- <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Admin Online</p>
@@ -65,7 +65,7 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <!-- Admin List -->
@@ -81,8 +81,8 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terakhir Login</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -103,23 +103,11 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $admin->email }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($admin->email_verified_at)
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Aktif
-                            </span>
-                            @else
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                            @endif
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $admin->created_at->format('d/m/Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            @if($admin->last_login_at)
-                            {{ \Carbon\Carbon::parse($admin->last_login_at)->diffForHumans() }}
-                            @else
-                            Belum pernah login
-                            @endif
+                            {{ $admin->updated_at->format('d/m/Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
@@ -175,7 +163,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="mt-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+    <!-- <div class="mt-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi Cepat</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <a href="{{ route('admin.management.profile') }}"
@@ -217,7 +205,7 @@
                 </div>
             </a>
         </div>
-    </div>
+    </div> -->
 </div>
 
 @if(session('success'))

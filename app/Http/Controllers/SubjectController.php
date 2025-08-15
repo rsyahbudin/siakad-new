@@ -33,7 +33,8 @@ class SubjectController extends Controller
             $query->where('major_id', $request->major_id);
         }
 
-        $subjects = $query->orderBy('name')->paginate(12);
+        $perPage = $request->get('per_page', 12);
+        $subjects = $query->orderBy('name')->paginate($perPage);
         $majors = Major::orderBy('short_name')->get();
 
         return view('master.mapel.index', compact('subjects', 'majors'));

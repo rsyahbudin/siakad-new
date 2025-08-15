@@ -77,7 +77,7 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between">
                 <div>
@@ -119,7 +119,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Today's Schedule -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">

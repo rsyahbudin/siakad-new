@@ -60,7 +60,7 @@
                 @csrf
 
                 <!-- Progress Indicator -->
-                <div class="mb-8">
+                <!-- <div class="mb-8">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-semibold text-gray-900">Progress Pendaftaran</h2>
                         <span class="text-sm text-gray-500">Langkah 1 dari 5</span>
@@ -68,7 +68,7 @@
                     <div class="w-full bg-gray-200 rounded-full h-2">
                         <div class="bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Data Siswa -->
                 <div class="space-y-6">

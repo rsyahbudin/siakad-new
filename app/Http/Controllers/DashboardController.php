@@ -10,6 +10,8 @@ use App\Models\PPDBApplication;
 use App\Models\TransferStudent;
 use App\Models\Schedule;
 use App\Models\Grade;
+use App\Models\AcademicYear;
+use App\Models\ClassStudent;
 
 class DashboardController extends Controller
 {
@@ -17,6 +19,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         if ($user->isAdmin()) {
+            // Get active academic year
+            $activeYear = AcademicYear::where('is_active', true)->first();
+
             // Get statistics for admin dashboard
             $stats = [
                 'total_students' => Student::where('status', 'Aktif')->count(),
@@ -35,6 +40,24 @@ class DashboardController extends Controller
                     ->limit(5)
                     ->get(),
             ];
+
+                        // Get student statistics by grade level for active academic year
+            if ($activeYear) {
+                $stats['students_by_grade'] = ClassStudent::join('classrooms', 'class_student.classroom_id', '=', 'classrooms.id')
+                    ->join('students', 'class_student.student_id', '=', 'students.id')
+                    ->where('class_student.academic_year_id', $activeYear->id)
+                    ->whereIn('students.status', ['Aktif', 'Pindahan'])
+                    ->selectRaw('classrooms.grade_level, COUNT(*) as total')
+                    ->groupBy('classrooms.grade_level')
+                    ->orderBy('classrooms.grade_level')
+                    ->get()
+                    ->keyBy('grade_level');
+                
+                $stats['active_year'] = $activeYear;
+            } else {
+                $stats['students_by_grade'] = collect();
+                $stats['active_year'] = null;
+            }
             return view('dashboard.admin', compact('stats'));
         } elseif ($user->isTeacher()) {
             // Get teacher-specific data

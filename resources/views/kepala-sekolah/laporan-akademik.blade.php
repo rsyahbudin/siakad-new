@@ -159,7 +159,7 @@
 
 
     <!-- Class Performance -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <!-- <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -231,7 +231,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </div> -->
 
     <!-- Subject Performance -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
