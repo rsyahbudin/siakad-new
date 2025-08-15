@@ -102,8 +102,13 @@
         }
 
         /* Responsive sidebar */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 50;
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
@@ -111,14 +116,88 @@
             .sidebar.open {
                 transform: translateX(0);
             }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+            }
+
+            .mobile-overlay.open {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .desktop-menu-btn {
+                display: none;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+
+            .desktop-menu-btn {
+                display: block;
+            }
+
+            .mobile-overlay {
+                display: none !important;
+            }
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 640px) {
+            .sidebar {
+                width: 280px;
+            }
+
+            .main-content {
+                padding: 0.5rem;
+            }
+
+            .nav-item {
+                padding: 0.75rem 1rem;
+            }
+
+            .section-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .dropdown-content {
+                margin-left: 0.5rem;
+            }
+        }
+
+        /* Tablet specific styles */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .sidebar {
+                width: 320px;
+            }
         }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay" onclick="closeSidebar()"></div>
+
     <div class="min-h-screen flex">
         <!-- Enhanced Sidebar -->
-        <aside class="sidebar w-72 bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 text-white flex flex-col relative overflow-hidden shadow-2xl border-r border-blue-700/50">
+        <aside id="sidebar" class="sidebar w-72 bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 text-white flex flex-col relative overflow-hidden shadow-2xl border-r border-blue-700/50">
             <!-- Enhanced Background Pattern -->
             <div class="absolute inset-0 opacity-5">
                 <div class="absolute top-0 -left-4 w-32 h-32 bg-white rounded-full mix-blend-multiply filter blur-xl"></div>
@@ -209,23 +288,23 @@
                                 <span class="text-sm">Kalender Akademik</span>
                             </a>
                             <a href="{{ route('guru.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('guru.index') ? 'active' : '' }} group">
-                            <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            <span class="text-sm">Guru</span>
-                        </a>
-                        <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'active' : '' }} group">
-                            <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
-                            <span class="text-sm">Siswa</span>
-                        </a>
-                        <a href="{{ route('kelas.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kelas.index') ? 'active' : '' }} group">
-                            <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <span class="text-sm">Kelas</span>
-                        </a>
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span class="text-sm">Guru</span>
+                            </a>
+                            <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                                <span class="text-sm">Siswa</span>
+                            </a>
+                            <a href="{{ route('kelas.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kelas.index') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="text-sm">Kelas</span>
+                            </a>
                         </div>
                     </li>
                     <!-- Academic Section -->
@@ -862,7 +941,25 @@
         </aside>
 
         <!-- Enhanced Main Content -->
-        <main class="flex-1 flex flex-col min-h-screen">
+        <main class="main-content flex-1 flex flex-col min-h-screen">
+
+            <!-- Mobile Header with Menu Button -->
+            <div class="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                <button id="mobileMenuBtn" class="mobile-menu-btn p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors" onclick="toggleSidebar()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <span class="font-semibold text-gray-800">SIAKAD</span>
+                </div>
+                <div class="w-8"></div> <!-- Spacer for centering -->
+            </div>
 
             <!-- Enhanced Content Area -->
             <div class="flex-1 p-2 bg-gradient-to-br from-gray-50/50 via-white to-blue-50/30 overflow-auto">
@@ -873,7 +970,7 @@
         </main>
     </div>
 
-    <!-- JavaScript for Dropdown Functionality -->
+    <!-- JavaScript for Dropdown Functionality and Mobile Responsiveness -->
     <script>
         function toggleDropdown(dropdownId) {
             const dropdown = document.getElementById(dropdownId);
@@ -896,6 +993,43 @@
                     allArrows[index].classList.remove('rotated');
                 }
             });
+        }
+
+        // Mobile sidebar functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+
+            // Prevent body scroll when sidebar is open
+            if (sidebar.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Close sidebar when clicking on a link (mobile)
+        function closeSidebarOnLinkClick() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
         }
 
         // Auto-open dropdown if current page is in that section
@@ -928,6 +1062,19 @@
                         const arrow = toggle.querySelector('svg:last-child');
                         arrow.classList.add('rotated');
                     }
+                }
+            });
+
+            // Add click event listeners to all navigation links for mobile
+            const navLinks = document.querySelectorAll('.nav-item');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeSidebarOnLinkClick);
+            });
+
+            // Close sidebar on window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 1024) {
+                    closeSidebar();
                 }
             });
         });
