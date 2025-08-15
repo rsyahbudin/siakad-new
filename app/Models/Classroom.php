@@ -75,6 +75,16 @@ class Classroom extends Model
 
     public function homeroomTeacher()
     {
-        return $this->belongsTo(Teacher::class, 'homeroom_teacher_id');
+        // Get homeroom teacher through classroom assignment for current academic year
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            return null;
+        }
+
+        $assignment = $this->classroomAssignments()
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+
+        return $assignment ? $assignment->homeroomTeacher : null;
     }
 }

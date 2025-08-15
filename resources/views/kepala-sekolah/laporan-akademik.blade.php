@@ -271,9 +271,12 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            @if($subject->teachers->count() > 0)
+                            @php
+                            $teachers = \App\Models\Teacher::where('subject_id', $subject->id)->get();
+                            @endphp
+                            @if($teachers->count() > 0)
                             <div class="flex flex-wrap gap-2">
-                                @foreach($subject->teachers as $teacher)
+                                @foreach($teachers as $teacher)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                                     {{ $teacher->full_name }}
                                 </span>

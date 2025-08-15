@@ -1,5 +1,9 @@
 @extends('layouts.dashboard')
 
+@php
+use App\Models\ClassroomAssignment;
+@endphp
+
 @section('title', 'Monitoring Kelas')
 
 @section('content')
@@ -133,9 +137,15 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($classroom->classroomAssignment && $classroom->classroomAssignment->homeroomTeacher)
-                            <div class="text-sm text-gray-900">{{ $classroom->classroomAssignment->homeroomTeacher->full_name }}</div>
-                            <div class="text-sm text-gray-500">{{ $classroom->classroomAssignment->homeroomTeacher->subject->name ?? '-' }}</div>
+                            @php
+                            $currentAssignment = ClassroomAssignment::where('classroom_id', $classroom->id)
+                            ->where('academic_year_id', $activeYear->id ?? 0)
+                            ->first();
+                            $homeroomTeacher = $currentAssignment ? $currentAssignment->homeroomTeacher : null;
+                            @endphp
+                            @if($homeroomTeacher)
+                            <div class="text-sm text-gray-900">{{ $homeroomTeacher->full_name }}</div>
+                            <div class="text-sm text-gray-500">{{ $homeroomTeacher->subject->name ?? '-' }}</div>
                             @else
                             <span class="text-sm text-gray-500">Belum ditugaskan</span>
                             @endif

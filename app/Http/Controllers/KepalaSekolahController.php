@@ -82,11 +82,11 @@ class KepalaSekolahController extends Controller
         $activeSemester = Semester::where('is_active', true)->first();
 
         // Get academic reports
-        $classrooms = Classroom::with(['students', 'homeroomTeacher'])
+        $classrooms = Classroom::with(['students'])
             ->withCount(['students as students_count'])
             ->get();
 
-        $subjects = Subject::with('teachers')->get();
+        $subjects = Subject::all();
 
         // Calculate statistics scoped to active year & semester
         $totalStudents = Student::count();
@@ -135,11 +135,17 @@ class KepalaSekolahController extends Controller
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         $semesters = Semester::orderBy('name')->get();
 
+        // Get KKM settings data (read-only for kepala sekolah)
+        $subjects = \App\Models\Subject::with('subjectSettings')->get();
+        $semesterWeights = \App\Models\SemesterWeight::first();
+
         return view('kepala-sekolah.pengaturan-sekolah', compact(
             'activeYear',
             'activeSemester',
             'academicYears',
-            'semesters'
+            'semesters',
+            'subjects',
+            'semesterWeights'
         ));
     }
 
@@ -460,7 +466,9 @@ class KepalaSekolahController extends Controller
      */
     public function monitoringKelas()
     {
-        $classrooms = Classroom::with(['students', 'homeroomTeacher', 'major'])
+        $activeYear = AcademicYear::where('is_active', true)->first();
+
+        $classrooms = Classroom::with(['students', 'major'])
             ->withCount('students')
             ->get();
 
@@ -474,79 +482,10 @@ class KepalaSekolahController extends Controller
             'avg_students' => $avgStudents,
         ];
 
-        return view('kepala-sekolah.monitoring.kelas', compact('classrooms', 'statistics'));
+        return view('kepala-sekolah.monitoring.kelas', compact('classrooms', 'statistics', 'activeYear'));
     }
 
-    /**
-     * Monitoring Nilai
-     */
-    public function monitoringNilai()
-    {
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $activeSemester = Semester::where('is_active', true)->first();
 
-        $recentGrades = Grade::with(['student', 'subject', 'classroom'])
-            ->where('academic_year_id', $activeYear->id ?? 0)
-            ->where('semester_id', $activeSemester->id ?? 0)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        // Get subject statistics
-        $subjectStats = Grade::with(['subject', 'subject.subjectSettings'])
-            ->where('academic_year_id', $activeYear->id ?? 0)
-            ->where('semester_id', $activeSemester->id ?? 0)
-            ->get()
-            ->groupBy('subject_id')
-            ->map(function ($grades, $subjectId) {
-                $subject = $grades->first()->subject;
-                $totalCount = $grades->count();
-                $passedCount = $grades->where('final_grade', '>=', $subject->subjectSettings->first()->kkm ?? 75)->count();
-
-                return (object) [
-                    'subject_name' => $subject->name,
-                    'major_name' => $subject->major->name ?? 'Umum',
-                    'average_grade' => $grades->avg('final_grade'),
-                    'highest_grade' => $grades->max('final_grade'),
-                    'lowest_grade' => $grades->min('final_grade'),
-                    'total_count' => $totalCount,
-                    'passed_count' => $passedCount,
-                ];
-            });
-
-        // Calculate grade distribution
-        $gradeDistribution = [
-            '90-100' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->whereBetween('final_grade', [90, 100])->count(),
-            '80-89' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->whereBetween('final_grade', [80, 89])->count(),
-            '70-79' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->whereBetween('final_grade', [70, 79])->count(),
-            '60-69' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->whereBetween('final_grade', [60, 69])->count(),
-            '0-59' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->whereBetween('final_grade', [0, 59])->count(),
-        ];
-
-        $statistics = [
-            'total_grades' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)->count(),
-            'average_grade' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)->avg('final_grade') ?? 0,
-            'passed_kkm' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->where('final_grade', '>=', 75)->count(),
-            'below_kkm' => Grade::where('academic_year_id', $activeYear->id ?? 0)
-                ->where('semester_id', $activeSemester->id ?? 0)
-                ->where('final_grade', '<', 75)->count(),
-        ];
-
-        return view('kepala-sekolah.monitoring.nilai', compact('recentGrades', 'subjectStats', 'statistics', 'gradeDistribution', 'activeYear', 'activeSemester'));
-    }
 
     /**
      * Pengaturan Akun (Profil dan Password) - Kepala Sekolah

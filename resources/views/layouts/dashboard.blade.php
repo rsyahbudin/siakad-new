@@ -675,65 +675,15 @@
                         </a>
                     </li>
 
-                    <!-- Laporan Section -->
-                    <li class="pt-6">
-                        <div class="section-header px-4 py-3 rounded-lg mb-3">
-                            <button class="dropdown-toggle w-full flex items-center justify-between text-xs font-semibold text-blue-300 uppercase tracking-wider" onclick="toggleDropdown('kepala-laporan')">
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                    Laporan
-                                </div>
-                                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div id="kepala-laporan" class="dropdown-content ml-4 space-y-1">
-                            <a href="{{ route('kepala.laporan.akademik') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.laporan.akademik') ? 'active' : '' }} group">
-                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                </svg>
-                                <span class="text-sm">Laporan Akademik</span>
-                            </a>
-                        </div>
-                    </li>
-
-                    <!-- Manajemen Akademik Section -->
-                    <li class="pt-6">
-                        <div class="section-header px-4 py-3 rounded-lg mb-3">
-                            <button class="dropdown-toggle w-full flex items-center justify-between text-xs font-semibold text-blue-300 uppercase tracking-wider" onclick="toggleDropdown('kepala-manajemen')">
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                    </svg>
-                                    Manajemen Akademik
-                                </div>
-                                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div id="kepala-manajemen" class="dropdown-content ml-4 space-y-1">
-                            <a href="{{ route('kepala.kenaikan-kelas') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.kenaikan-kelas*') ? 'active' : '' }} group">
-                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                </svg>
-                                <span class="text-sm">Kenaikan & Kelulusan</span>
-                            </a>
-                        </div>
-                    </li>
-
                     <!-- Monitoring Section -->
                     <li class="pt-6">
                         <div class="section-header px-4 py-3 rounded-lg mb-3">
                             <button class="dropdown-toggle w-full flex items-center justify-between text-xs font-semibold text-blue-300 uppercase tracking-wider" onclick="toggleDropdown('kepala-monitoring')">
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                     </svg>
-                                    Monitoring
+                                    Monitoring & Laporan
                                 </div>
                                 <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -741,23 +691,11 @@
                             </button>
                         </div>
                         <div id="kepala-monitoring" class="dropdown-content ml-4 space-y-1">
-                            <a href="{{ route('kepala.monitoring.ppdb') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.ppdb') ? 'active' : '' }} group">
+                            <a href="{{ route('kepala.laporan.akademik') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.laporan.akademik') ? 'active' : '' }} group">
                                 <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                 </svg>
-                                <span class="text-sm">Monitoring PPDB</span>
-                            </a>
-                            <a href="{{ route('kepala.monitoring.siswa-pindahan') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.siswa-pindahan') ? 'active' : '' }} group">
-                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                                <span class="text-sm">Siswa Pindahan</span>
-                            </a>
-                            <a href="{{ route('kepala.monitoring.jadwal-ujian') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.jadwal-ujian') ? 'active' : '' }} group">
-                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                </svg>
-                                <span class="text-sm">Jadwal Ujian</span>
+                                <span class="text-sm">Laporan Akademik</span>
                             </a>
                             <a href="{{ route('kepala.monitoring.guru') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.guru') ? 'active' : '' }} group">
                                 <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -771,11 +709,60 @@
                                 </svg>
                                 <span class="text-sm">Monitoring Kelas</span>
                             </a>
-                            <a href="{{ route('kepala.monitoring.nilai') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.nilai') ? 'active' : '' }} group">
+                            <a href="{{ route('siswa.index') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('siswa.index') ? 'active' : '' }} group">
                                 <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                                 </svg>
-                                <span class="text-sm">Monitoring Nilai</span>
+                                <span class="text-sm">Siswa</span>
+                            </a>
+                            <a href="{{ route('kepala.monitoring.siswa-pindahan') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.siswa-pindahan') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4-4m-4 4l4 4"></path>
+                                </svg>
+                                <span class="text-sm">Siswa Pindahan</span>
+                            </a>
+                            <a href="{{ route('kepala.monitoring.ppdb') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.ppdb') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span class="text-sm">Monitoring PPDB</span>
+                            </a>
+                            <a href="{{ route('kepala.monitoring.jadwal-ujian') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.monitoring.jadwal-ujian') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                <span class="text-sm">Jadwal Ujian</span>
+                            </a>
+                            <a href="{{ route('academic-calendar.index') }}" class="nav-item flex items-center px-4 py-3 rounded-xl hover:bg-white/10 {{ request()->routeIs('academic-calendar.*') ? 'bg-white/20 shadow-lg' : '' }} group">
+                                <svg class="w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-sm">Kalender Akademik</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Kenaikan & Kelulusan Section -->
+                    <li class="pt-6">
+                        <div class="section-header px-4 py-3 rounded-lg mb-3">
+                            <button class="dropdown-toggle w-full flex items-center justify-between text-xs font-semibold text-blue-300 uppercase tracking-wider" onclick="toggleDropdown('kepala-kenaikan')">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                    </svg>
+                                    Kenaikan & Kelulusan
+                                </div>
+                                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="kepala-kenaikan" class="dropdown-content ml-4 space-y-1">
+                            <a href="{{ route('kepala.kenaikan-kelas') }}" class="nav-item flex items-center px-4 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('kepala.kenaikan-kelas*') ? 'active' : '' }} group">
+                                <svg class="nav-icon w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                <span class="text-sm">Kenaikan & Kelulusan</span>
                             </a>
                         </div>
                     </li>
@@ -786,7 +773,8 @@
                             <button class="dropdown-toggle w-full flex items-center justify-between text-xs font-semibold text-blue-300 uppercase tracking-wider" onclick="toggleDropdown('kepala-pengaturan')">
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
                                     Pengaturan
                                 </div>

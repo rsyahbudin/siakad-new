@@ -440,7 +440,7 @@
                 </td>
                 <td style="width: 33.33%; text-align: center; padding: 15px; vertical-align: top;">
                     <div style="margin-bottom: 10px;">
-                        <strong>{{ strtoupper($school['address'] ? explode(',', $school['address'])[0] : '________') }}, {{ strtoupper(\Carbon\Carbon::now()->isoFormat('D MMMM YYYY')) }}</strong><br>
+                        <strong>{{ strtoupper(\Carbon\Carbon::now()->isoFormat('D MMMM YYYY')) }}</strong><br>
                         <strong>KEPALA SEKOLAH</strong>
                     </div>
                     <div style="height: 60px; margin: 20px 0;"></div>
