@@ -81,7 +81,6 @@ class AcademicCalendarController extends Controller
             'end_time' => 'nullable|date_format:H:i|after:start_time',
             'type' => 'required|in:academic,holiday,exam,meeting,other',
             'priority' => 'required|in:low,medium,high',
-            'color' => 'required|string|max:7',
             'is_all_day' => 'boolean',
         ]);
 
