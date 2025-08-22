@@ -341,9 +341,66 @@
         </table>
     </div>
 
-    <!-- 4. Data Nilai Rapor -->
+    <!-- 4. Data Pengaturan Akademik -->
     <div class="section">
-        <div class="section-title">IV. EVALUASI HASIL BELAJAR SISWA</div>
+        <div class="section-title">IV. PENGATURAN AKADEMIK</div>
+
+        @if($academicSettings['semester_weights'])
+        <div class="subsection-title">Bobot Semester untuk Nilai Akhir Tahun</div>
+        <table style="width: 100%; margin-bottom: 15px;">
+            <tbody>
+                <tr>
+                    <td style="width: 50%; padding: 6px; background-color: #f8f8f8;"><strong>Bobot Semester Ganjil</strong></td>
+                    <td style="width: 50%; text-align: center; font-weight: bold;">{{ $academicSettings['semester_weights']['ganjil_weight'] }}%</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px; background-color: #f8f8f8;"><strong>Bobot Semester Genap</strong></td>
+                    <td style="text-align: center; font-weight: bold;">{{ $academicSettings['semester_weights']['genap_weight'] }}%</td>
+                </tr>
+            </tbody>
+        </table>
+        @endif
+
+        <div class="subsection-title">Batas Maksimal Mata Pelajaran Gagal</div>
+        <table style="width: 100%; margin-bottom: 15px;">
+            <tbody>
+                <tr>
+                    <td style="width: 50%; padding: 6px; background-color: #f8f8f8;"><strong>Batas Maksimal Mapel Gagal</strong></td>
+                    <td style="width: 50%; text-align: center; font-weight: bold;">{{ $academicSettings['max_failed_subjects'] }} Mata Pelajaran</td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if(count($academicSettings['subject_settings']) > 0)
+        <div class="subsection-title">KKM dan Bobot Mata Pelajaran</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mata Pelajaran</th>
+                    <th>KKM</th>
+                    <th>Bobot Tugas (%)</th>
+                    <th>Bobot UTS (%)</th>
+                    <th>Bobot UAS (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($academicSettings['subject_settings'] as $setting)
+                <tr>
+                    <td>{{ $setting['subject_name'] }}</td>
+                    <td><strong>{{ $setting['kkm'] }}</strong></td>
+                    <td>{{ $setting['assignment_weight'] }}%</td>
+                    <td>{{ $setting['uts_weight'] }}%</td>
+                    <td>{{ $setting['uas_weight'] }}%</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
+    </div>
+
+    <!-- 5. Data Nilai Rapor -->
+    <div class="section">
+        <div class="section-title">V. EVALUASI HASIL BELAJAR SISWA</div>
 
         <table style="width: 100%; margin-bottom: 15px;">
             <tbody>
@@ -413,9 +470,9 @@
         @endif
     </div>
 
-    <!-- 5. Data Ekstrakurikuler -->
+    <!-- 6. Data Ekstrakurikuler -->
     <div class="section">
-        <div class="section-title">V. KEGIATAN EKSTRAKURIKULER</div>
+        <div class="section-title">VI. KEGIATAN EKSTRAKURIKULER</div>
 
         <div class="summary-box">
             <div class="summary-title">Total Partisipasi Ekstrakurikuler</div>
@@ -449,10 +506,10 @@
         @endif
     </div>
 
-    <!-- 6. Data Kenaikan Kelas (hanya semester genap) -->
+    <!-- 7. Data Kenaikan Kelas (hanya semester genap) -->
     @if($semester == 'Genap' && $promotionData)
     <div class="section">
-        <div class="section-title">VI. KENAIKAN KELAS DAN KELULUSAN</div>
+        <div class="section-title">VII. KENAIKAN KELAS DAN KELULUSAN</div>
 
         <table style="width: 100%; margin-bottom: 15px;">
             <tbody>

@@ -205,13 +205,78 @@
             </div>
         </div>
 
-        <!-- 4. Data Nilai Rapor -->
+        <!-- 4. Data Pengaturan Akademik -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                4. Data Pengaturan Akademik
+            </h3>
+
+            @if($academicSettings['semester_weights'])
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">Bobot Semester untuk Nilai Akhir Tahun</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-blue-600">{{ $academicSettings['semester_weights']['ganjil_weight'] }}%</div>
+                        <div class="text-sm text-blue-700">Bobot Semester Ganjil</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-green-600">{{ $academicSettings['semester_weights']['genap_weight'] }}%</div>
+                        <div class="text-sm text-green-700">Bobot Semester Genap</div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">Batas Maksimal Mata Pelajaran Gagal</h4>
+                <div class="bg-red-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-red-600">{{ $academicSettings['max_failed_subjects'] }}</div>
+                    <div class="text-sm text-red-700">Mata Pelajaran</div>
+                </div>
+            </div>
+
+            @if(count($academicSettings['subject_settings']) > 0)
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">KKM dan Bobot Mata Pelajaran</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KKM</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bobot Tugas (%)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bobot UTS (%)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bobot UAS (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($academicSettings['subject_settings'] as $setting)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $setting['subject_name'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $setting['kkm'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setting['assignment_weight'] }}%</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setting['uts_weight'] }}%</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setting['uas_weight'] }}%</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+        </div>
+
+        <!-- 5. Data Nilai Rapor -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                4. Data Nilai Rapor
+                5. Data Nilai Rapor
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -287,13 +352,13 @@
             @endif
         </div>
 
-        <!-- 5. Data Ekstrakurikuler -->
+        <!-- 6. Data Ekstrakurikuler -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                5. Data Ekstrakurikuler
+                6. Data Ekstrakurikuler
             </h3>
 
             <div class="mb-6">
@@ -331,14 +396,14 @@
             @endif
         </div>
 
-        <!-- 6. Data Kenaikan Kelas (hanya semester genap) -->
+        <!-- 7. Data Kenaikan Kelas (hanya semester genap) -->
         @if($selectedSemester == 'Genap' && $promotionData)
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                 </svg>
-                6. Data Kenaikan Kelas & Kelulusan
+                7. Data Kenaikan Kelas & Kelulusan
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

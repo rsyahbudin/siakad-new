@@ -500,10 +500,18 @@ class KepalaSekolahController extends Controller
         }
 
         if (!$selectedYear) {
-            return view('kepala-sekolah.laporan-persemester', compact('academicYears', 'selectedYear', 'selectedSemester'));
+            $academicSettings = [
+                'subject_settings' => collect(),
+                'semester_weights' => null,
+                'max_failed_subjects' => 2,
+            ];
+            return view('kepala-sekolah.laporan-persemester', compact('academicYears', 'selectedYear', 'selectedSemester', 'academicSettings'));
         }
 
         $semesterNumber = $selectedSemester === 'Ganjil' ? 1 : 2;
+
+        // Data Pengaturan Akademik
+        $academicSettings = $this->getAcademicSettings($selectedYear);
 
         // Data Siswa
         $studentData = $this->getStudentData($selectedYear, $selectedSemester);
@@ -530,6 +538,7 @@ class KepalaSekolahController extends Controller
             'academicYears',
             'selectedYear',
             'selectedSemester',
+            'academicSettings',
             'studentData',
             'teacherData',
             'attendanceData',
@@ -561,6 +570,9 @@ class KepalaSekolahController extends Controller
         // Get kepala sekolah data
         $kepalaSekolah = \App\Models\KepalaSekolah::first();
 
+        // Get academic settings data
+        $academicSettings = $this->getAcademicSettings($academicYear);
+
         // Get all data
         $studentData = $this->getStudentData($academicYear, $semester);
         $teacherData = $this->getTeacherData($academicYear, $semester);
@@ -577,6 +589,7 @@ class KepalaSekolahController extends Controller
             'semester' => $semester,
             'schoolData' => $schoolData,
             'kepalaSekolah' => $kepalaSekolah,
+            'academicSettings' => $academicSettings,
             'studentData' => $studentData,
             'teacherData' => $teacherData,
             'attendanceData' => $attendanceData,
@@ -704,6 +717,42 @@ class KepalaSekolahController extends Controller
             'transfer_students' => $transferStudents,
             'mutations_in' => $mutationsIn,
             'mutations_out' => $mutationsOut,
+        ];
+    }
+
+    private function getAcademicSettings($academicYear)
+    {
+        // Get subject settings (KKM and weights)
+        $subjectSettings = \App\Models\SubjectSetting::with('subject')
+            ->where('academic_year_id', $academicYear->id)
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($setting) {
+                return [
+                    'subject_name' => $setting->subject->name,
+                    'subject_code' => $setting->subject->code,
+                    'kkm' => $setting->kkm,
+                    'assignment_weight' => $setting->assignment_weight,
+                    'uts_weight' => $setting->uts_weight,
+                    'uas_weight' => $setting->uas_weight,
+                ];
+            });
+
+        // Get semester weights
+        $semesterWeights = \App\Models\SemesterWeight::where('academic_year_id', $academicYear->id)
+            ->where('is_active', true)
+            ->first();
+
+        // Get max failed subjects setting
+        $maxFailedSubjects = \App\Models\AppSetting::getValue('max_failed_subjects', 2);
+
+        return [
+            'subject_settings' => $subjectSettings,
+            'semester_weights' => $semesterWeights ? [
+                'ganjil_weight' => $semesterWeights->ganjil_weight,
+                'genap_weight' => $semesterWeights->genap_weight,
+            ] : null,
+            'max_failed_subjects' => $maxFailedSubjects,
         ];
     }
 
