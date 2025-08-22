@@ -282,6 +282,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('check.role:kepala_sekolah')->prefix('kepala-sekolah')->name('kepala.')->group(function () {
         Route::get('/dashboard', [KepalaSekolahController::class, 'dashboard'])->name('dashboard');
         Route::get('/laporan-akademik', [KepalaSekolahController::class, 'laporanAkademik'])->name('laporan.akademik');
+        Route::get('/laporan-persemester', [KepalaSekolahController::class, 'laporanPersemester'])->name('laporan-persemester');
+        Route::get('/download-laporan-persemester', [KepalaSekolahController::class, 'downloadLaporanPersemester'])->name('download-laporan-persemester');
         // Laporan Keuangan dihilangkan untuk Kepala Sekolah
         Route::get('/pengaturan-sekolah', [KepalaSekolahController::class, 'pengaturanSekolah'])->name('pengaturan.sekolah');
 

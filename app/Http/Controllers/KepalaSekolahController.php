@@ -21,6 +21,7 @@ use App\Models\SubjectSetting;
 use Illuminate\Support\Facades\DB;
 use App\Models\Subject;
 use App\Models\KepalaSekolah;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class KepalaSekolahController extends Controller
 {
@@ -485,6 +486,538 @@ class KepalaSekolahController extends Controller
         return view('kepala-sekolah.monitoring.kelas', compact('classrooms', 'statistics', 'activeYear'));
     }
 
+    public function laporanPersemester(Request $request)
+    {
+        $academicYears = AcademicYear::orderBy('year', 'desc')->get();
+        $selectedYearId = $request->get('academic_year_id');
+        $selectedSemester = $request->get('semester', 'Ganjil');
+
+        $selectedYear = null;
+        if ($selectedYearId) {
+            $selectedYear = AcademicYear::find($selectedYearId);
+        } else {
+            $selectedYear = AcademicYear::where('is_active', true)->first();
+        }
+
+        if (!$selectedYear) {
+            return view('kepala-sekolah.laporan-persemester', compact('academicYears', 'selectedYear', 'selectedSemester'));
+        }
+
+        $semesterNumber = $selectedSemester === 'Ganjil' ? 1 : 2;
+
+        // Data Siswa
+        $studentData = $this->getStudentData($selectedYear, $selectedSemester);
+
+        // Data Guru & Rombel
+        $teacherData = $this->getTeacherData($selectedYear, $selectedSemester);
+
+        // Data Absensi
+        $attendanceData = $this->getAttendanceData($selectedYear, $selectedSemester);
+
+        // Data Nilai Rapor
+        $gradeData = $this->getGradeData($selectedYear, $selectedSemester);
+
+        // Data Ekstrakurikuler
+        $extracurricularData = $this->getExtracurricularData($selectedYear, $selectedSemester);
+
+        // Data Kenaikan Kelas (hanya semester genap)
+        $promotionData = null;
+        if ($selectedSemester === 'Genap') {
+            $promotionData = $this->getPromotionData($selectedYear);
+        }
+
+        return view('kepala-sekolah.laporan-persemester', compact(
+            'academicYears',
+            'selectedYear',
+            'selectedSemester',
+            'studentData',
+            'teacherData',
+            'attendanceData',
+            'gradeData',
+            'extracurricularData',
+            'promotionData'
+        ));
+    }
+
+    public function downloadLaporanPersemester(Request $request)
+    {
+        $academicYearId = $request->get('academic_year_id');
+        $semester = $request->get('semester', 'Ganjil');
+        $format = $request->get('format', 'pdf');
+
+        $academicYear = AcademicYear::findOrFail($academicYearId);
+        $semesterNumber = $semester === 'Ganjil' ? 1 : 2;
+
+        // Get school data from app_settings
+        $schoolData = [
+            'name' => \App\Models\AppSetting::getValue('school_name', 'SMA Negeri 300'),
+            'npsn' => \App\Models\AppSetting::getValue('school_npsn', '1231512'),
+            'address' => \App\Models\AppSetting::getValue('school_address', 'Jl. Raya Bogor'),
+            'phone' => \App\Models\AppSetting::getValue('school_phone', '081239402132'),
+            'email' => \App\Models\AppSetting::getValue('school_email', 'sma300@gmail.com'),
+            'website' => \App\Models\AppSetting::getValue('school_website', 'https://sman300.sch.id'),
+        ];
+
+        // Get kepala sekolah data
+        $kepalaSekolah = \App\Models\KepalaSekolah::first();
+
+        // Get all data
+        $studentData = $this->getStudentData($academicYear, $semester);
+        $teacherData = $this->getTeacherData($academicYear, $semester);
+        $attendanceData = $this->getAttendanceData($academicYear, $semester);
+        $gradeData = $this->getGradeData($academicYear, $semester);
+        $extracurricularData = $this->getExtracurricularData($academicYear, $semester);
+        $promotionData = null;
+        if ($semester === 'Genap') {
+            $promotionData = $this->getPromotionData($academicYear);
+        }
+
+        $data = [
+            'academicYear' => $academicYear,
+            'semester' => $semester,
+            'schoolData' => $schoolData,
+            'kepalaSekolah' => $kepalaSekolah,
+            'studentData' => $studentData,
+            'teacherData' => $teacherData,
+            'attendanceData' => $attendanceData,
+            'gradeData' => $gradeData,
+            'extracurricularData' => $extracurricularData,
+            'promotionData' => $promotionData,
+        ];
+
+        if ($format === 'excel') {
+            return $this->downloadExcel($data);
+        } else {
+            return $this->downloadPDF($data);
+        }
+    }
+
+    private function getStudentData($academicYear, $semester)
+    {
+        // Jumlah siswa per kelas/tingkat
+        $studentsPerClass = \App\Models\Classroom::with(['classroomAssignments.classStudents.student', 'major'])
+            ->whereHas('classroomAssignments', function ($query) use ($academicYear) {
+                $query->where('academic_year_id', $academicYear->id);
+            })
+            ->get()
+            ->map(function ($classroom) {
+                $studentCount = 0;
+                $maleCount = 0;
+                $femaleCount = 0;
+
+                foreach ($classroom->classroomAssignments as $assignment) {
+                    foreach ($assignment->classStudents as $classStudent) {
+                        $studentCount++;
+                        if ($classStudent->student->gender === 'L') {
+                            $maleCount++;
+                        } else {
+                            $femaleCount++;
+                        }
+                    }
+                }
+
+                return [
+                    'classroom' => $classroom->name,
+                    'grade_level' => $classroom->grade_level,
+                    'major_name' => $classroom->major ? $classroom->major->name : 'Umum',
+                    'student_count' => $studentCount,
+                    'male_count' => $maleCount,
+                    'female_count' => $femaleCount,
+                ];
+            });
+
+        // Kelompokkan berdasarkan tingkatan dan jurusan
+        $studentsPerGradeAndMajor = $studentsPerClass->groupBy(function ($class) {
+            return $class['grade_level'] . '_' . ($class['major_name'] ?? 'Umum');
+        })->map(function ($classes, $key) {
+            $parts = explode('_', $key);
+            $gradeLevel = $parts[0];
+            $majorName = $parts[1] ?? 'Umum';
+
+            $totalStudents = $classes->sum('student_count');
+            $totalMale = $classes->sum('male_count');
+            $totalFemale = $classes->sum('female_count');
+            $classCount = $classes->count();
+
+            return [
+                'grade_level' => $gradeLevel,
+                'grade_name' => $this->getGradeName($gradeLevel),
+                'major_name' => $majorName,
+                'student_count' => $totalStudents,
+                'male_count' => $totalMale,
+                'female_count' => $totalFemale,
+                'class_count' => $classCount,
+            ];
+        })->values();
+
+        // Kelompokkan berdasarkan tingkatan saja (untuk summary)
+        $studentsPerGrade = $studentsPerClass->groupBy('grade_level')->map(function ($classes, $gradeLevel) {
+            $totalStudents = $classes->sum('student_count');
+            $totalMale = $classes->sum('male_count');
+            $totalFemale = $classes->sum('female_count');
+            $classCount = $classes->count();
+
+            return [
+                'grade_level' => $gradeLevel,
+                'grade_name' => $this->getGradeName($gradeLevel),
+                'student_count' => $totalStudents,
+                'male_count' => $totalMale,
+                'female_count' => $totalFemale,
+                'class_count' => $classCount,
+            ];
+        })->values();
+
+        // Total siswa
+        $totalStudents = $studentsPerClass->sum('student_count');
+        $totalMale = $studentsPerClass->sum('male_count');
+        $totalFemale = $studentsPerClass->sum('female_count');
+
+        // Siswa pindahan (tetap sebagai kategori terpisah)
+        $transferStudents = \App\Models\Student::where('status', 'Pindahan')
+            ->whereHas('classroomAssignments', function ($query) use ($academicYear) {
+                $query->where('classroom_assignments.academic_year_id', $academicYear->id);
+            })
+            ->count();
+
+        // Mutasi masuk - siswa baru dan pindahan yang masuk di tahun ajaran ini
+        // (berdasarkan created_at atau enrollment date di tahun ajaran ini)
+        $mutationsIn = \App\Models\ClassStudent::whereHas('classroomAssignment', function ($query) use ($academicYear) {
+            $query->where('academic_year_id', $academicYear->id);
+        })
+            ->whereHas('student', function ($query) {
+                $query->whereIn('status', ['Aktif', 'Pindahan']);
+            })
+            ->distinct('student_id')
+            ->count();
+
+        // Mutasi keluar - siswa yang keluar di tahun ajaran ini
+        $mutationsOut = \App\Models\Student::where('status', 'Keluar')
+            ->whereYear('updated_at', $academicYear->start_year) // Asumsi tahun keluar berdasarkan updated_at
+            ->count();
+
+        return [
+            'students_per_grade' => $studentsPerGrade,
+            'students_per_grade_major' => $studentsPerGradeAndMajor,
+            'total_students' => $totalStudents,
+            'total_male' => $totalMale,
+            'total_female' => $totalFemale,
+            'transfer_students' => $transferStudents,
+            'mutations_in' => $mutationsIn,
+            'mutations_out' => $mutationsOut,
+        ];
+    }
+
+    private function getGradeName($gradeLevel)
+    {
+        switch ($gradeLevel) {
+            case 10:
+                return 'X';
+            case 11:
+                return 'XI';
+            case 12:
+                return 'XII';
+            default:
+                return 'Kelas ' . $gradeLevel;
+        }
+    }
+
+    private function getTeacherData($academicYear, $semester)
+    {
+        // Jumlah guru
+        $teacherCount = \App\Models\Teacher::count();
+
+        // Mapel yang diajar
+        $subjectsTaught = \App\Models\Subject::whereHas('schedules.teacher')
+            ->distinct()
+            ->count();
+
+        // Rombongan belajar
+        $classroomCount = \App\Models\Classroom::whereHas('classroomAssignments', function ($query) use ($academicYear) {
+            $query->where('classroom_assignments.academic_year_id', $academicYear->id);
+        })->count();
+
+        return [
+            'teacher_count' => $teacherCount,
+            'subjects_taught' => $subjectsTaught,
+            'classroom_count' => $classroomCount,
+        ];
+    }
+
+    private function getAttendanceData($academicYear, $semester)
+    {
+        // Dapatkan semester yang sesuai
+        $semesterModel = \App\Models\Semester::where('academic_year_id', $academicYear->id)
+            ->where('name', $semester)
+            ->first();
+
+        if (!$semesterModel) {
+            return [
+                'overall_attendance_percentage' => 0,
+                'attendance_per_class' => []
+            ];
+        }
+
+        $semesterNumber = $semester === 'Ganjil' ? 1 : 2;
+
+        // Rekap absensi siswa per kelas
+        $attendancePerClass = \App\Models\Classroom::with(['classroomAssignments.classStudents.student.attendances'])
+            ->whereHas('classroomAssignments', function ($query) use ($academicYear) {
+                $query->where('classroom_assignments.academic_year_id', $academicYear->id);
+            })
+            ->get()
+            ->map(function ($classroom) use ($semesterNumber) {
+                $totalSick = 0;
+                $totalPermit = 0;
+                $totalAbsent = 0;
+                $totalStudents = 0;
+
+                foreach ($classroom->classroomAssignments as $assignment) {
+                    foreach ($assignment->classStudents as $classStudent) {
+                        $attendance = $classStudent->student->attendances()
+                            ->where('semester_id', $semesterNumber)
+                            ->first();
+
+                        if ($attendance) {
+                            $totalSick += $attendance->sakit;
+                            $totalPermit += $attendance->izin;
+                            $totalAbsent += $attendance->alpha;
+                        }
+                        $totalStudents++;
+                    }
+                }
+
+                $totalAttendance = $totalSick + $totalPermit + $totalAbsent;
+                $attendancePercentage = $totalStudents > 0 ? (($totalStudents - $totalAbsent) / $totalStudents) * 100 : 0;
+
+                return [
+                    'classroom' => $classroom->name,
+                    'total_students' => $totalStudents,
+                    'sick' => $totalSick,
+                    'permit' => $totalPermit,
+                    'absent' => $totalAbsent,
+                    'attendance_percentage' => round($attendancePercentage, 2),
+                ];
+            });
+
+        return [
+            'attendance_per_class' => $attendancePerClass,
+            'overall_attendance_percentage' => $attendancePerClass->avg('attendance_percentage'),
+        ];
+    }
+
+    private function getGradeData($academicYear, $semester)
+    {
+        // Dapatkan semester yang sesuai
+        $semesterModel = \App\Models\Semester::where('academic_year_id', $academicYear->id)
+            ->where('name', $semester)
+            ->first();
+
+        if (!$semesterModel) {
+            return [
+                'passed_students' => 0,
+                'failed_students' => 0,
+                'total_grades' => 0,
+                'total_subjects' => 0,
+                'total_students_with_grades' => 0,
+                'average_grade' => 0,
+                'grades_by_class' => [],
+                'grades_by_grade_level' => []
+            ];
+        }
+
+        // Nilai akhir semester per siswa
+        $grades = \App\Models\Grade::with(['student', 'subject', 'classroom'])
+            ->where('grades.academic_year_id', $academicYear->id)
+            ->where('grades.semester_id', $semesterModel->id)
+            ->get();
+
+        // Jumlah siswa tuntas/tidak tuntas KKM
+        $subjectSettings = \App\Models\SubjectSetting::where('subject_settings.academic_year_id', $academicYear->id)
+            ->where('subject_settings.is_active', true)
+            ->get()
+            ->keyBy('subject_id');
+
+        $passedStudents = 0;
+        $failedStudents = 0;
+
+        // Kelompokkan nilai per kelas
+        $gradesByClass = $grades->groupBy('classroom_id')
+            ->map(function ($classGrades, $classroomId) use ($subjectSettings) {
+                $classroom = $classGrades->first()->classroom;
+                $averageGrade = $classGrades->avg('final_grade');
+                $totalStudents = $classGrades->unique('student_id')->count();
+                $passedCount = 0;
+                $failedCount = 0;
+
+                foreach ($classGrades as $grade) {
+                    $kkm = $subjectSettings->get($grade->subject_id)?->kkm ?? 75;
+                    if ($grade->final_grade >= $kkm) {
+                        $passedCount++;
+                    } else {
+                        $failedCount++;
+                    }
+                }
+
+                return [
+                    'classroom_name' => $classroom->name,
+                    'grade_level' => $classroom->grade_level,
+                    'major_name' => $classroom->major ? $classroom->major->name : 'Umum',
+                    'average_grade' => round($averageGrade, 2),
+                    'total_students' => $totalStudents,
+                    'passed_count' => $passedCount,
+                    'failed_count' => $failedCount,
+                    'pass_percentage' => $totalStudents > 0 ? round(($passedCount / $totalStudents) * 100, 1) : 0,
+                ];
+            })
+            ->values();
+
+        // Kelompokkan nilai per tingkatan
+        $gradesByGradeLevel = $grades->groupBy(function ($grade) {
+            return $grade->classroom->grade_level;
+        })
+            ->map(function ($gradeLevelGrades, $gradeLevel) use ($subjectSettings) {
+                $averageGrade = $gradeLevelGrades->avg('final_grade');
+                $totalStudents = $gradeLevelGrades->unique('student_id')->count();
+                $passedCount = 0;
+                $failedCount = 0;
+
+                foreach ($gradeLevelGrades as $grade) {
+                    $kkm = $subjectSettings->get($grade->subject_id)?->kkm ?? 75;
+                    if ($grade->final_grade >= $kkm) {
+                        $passedCount++;
+                    } else {
+                        $failedCount++;
+                    }
+                }
+
+                return [
+                    'grade_level' => $gradeLevel,
+                    'grade_name' => $this->getGradeName($gradeLevel),
+                    'average_grade' => round($averageGrade, 2),
+                    'total_students' => $totalStudents,
+                    'passed_count' => $passedCount,
+                    'failed_count' => $failedCount,
+                    'pass_percentage' => $totalStudents > 0 ? round(($passedCount / $totalStudents) * 100, 1) : 0,
+                ];
+            })
+            ->values();
+
+        // Hitung total tuntas/tidak tuntas
+        foreach ($grades as $grade) {
+            $kkm = $subjectSettings->get($grade->subject_id)?->kkm ?? 75;
+            if ($grade->final_grade >= $kkm) {
+                $passedStudents++;
+            } else {
+                $failedStudents++;
+            }
+        }
+
+        return [
+            'grades_by_class' => $gradesByClass,
+            'grades_by_grade_level' => $gradesByGradeLevel,
+            'passed_students' => $passedStudents,
+            'failed_students' => $failedStudents,
+            'total_grades' => count($grades),
+            'total_subjects' => $grades->unique('subject_id')->count(),
+            'total_students_with_grades' => $grades->unique('student_id')->count(),
+            'average_grade' => $grades->count() > 0 ? round($grades->avg('final_grade'), 2) : 0,
+        ];
+    }
+
+    private function getExtracurricularData($academicYear, $semester)
+    {
+        // Data keikutsertaan siswa
+        $extracurriculars = \App\Models\Extracurricular::with(['students' => function ($query) use ($academicYear) {
+            $query->wherePivot('student_extracurriculars.academic_year_id', $academicYear->id);
+        }])
+            ->get()
+            ->map(function ($extracurricular) {
+                return [
+                    'name' => $extracurricular->name,
+                    'category' => $extracurricular->category,
+                    'student_count' => $extracurricular->students->count(),
+                    'students' => $extracurricular->students->map(function ($student) {
+                        return [
+                            'name' => $student->full_name,
+                            'grade' => $student->pivot->grade ?? '-',
+                            'status' => $student->pivot->status ?? 'Aktif',
+                        ];
+                    }),
+                ];
+            });
+
+        return [
+            'extracurriculars' => $extracurriculars,
+            'total_participants' => $extracurriculars->sum('student_count'),
+        ];
+    }
+
+    private function getPromotionData($academicYear)
+    {
+        // Dapatkan semester Genap
+        $semesterGenap = \App\Models\Semester::where('academic_year_id', $academicYear->id)
+            ->where('name', 'Genap')
+            ->first();
+
+        if (!$semesterGenap) {
+            return [
+                'promoted_students' => 0,
+                'retained_students' => 0,
+                'graduated_students' => 0
+            ];
+        }
+
+        // Kenaikan Kelas (kelas X & XI)
+        $promotions = \App\Models\Raport::with(['student', 'classroom'])
+            ->where('raports.academic_year_id', $academicYear->id)
+            ->where('raports.semester', 2) // Semester Genap
+            ->whereIn('raports.classroom_id', function ($query) {
+                $query->select('id')
+                    ->from('classrooms')
+                    ->whereIn('grade_level', ['X', 'XI']);
+            })
+            ->get();
+
+        $promotedStudents = $promotions->where('promotion_status', 'RECOMMENDED')->count();
+        $retainedStudents = $promotions->where('promotion_status', 'NOT_RECOMMENDED')->count();
+
+        // Kelulusan (kelas XII)
+        $graduations = \App\Models\Raport::with(['student', 'classroom'])
+            ->where('raports.academic_year_id', $academicYear->id)
+            ->where('raports.semester', 2) // Semester Genap
+            ->whereIn('raports.classroom_id', function ($query) {
+                $query->select('id')
+                    ->from('classrooms')
+                    ->where('grade_level', 'XII');
+            })
+            ->get();
+
+        $graduatedStudents = $graduations->where('promotion_status', 'RECOMMENDED')->count();
+
+        return [
+            'promoted_students' => $promotedStudents,
+            'retained_students' => $retainedStudents,
+            'graduated_students' => $graduatedStudents,
+        ];
+    }
+
+    private function downloadPDF($data)
+    {
+        $pdf = Pdf::loadView('kepala-sekolah.laporan-persemester-pdf', $data);
+
+        // Sanitize filename by removing invalid characters
+        $cleanSemester = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $data['semester']);
+        $cleanYear = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $data['academicYear']->year);
+        $filename = 'laporan_persemester_' . $cleanSemester . '_' . $cleanYear . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    private function downloadExcel($data)
+    {
+        // Implementation for Excel download will be added later
+        return response()->json(['message' => 'Excel download feature will be implemented soon']);
+    }
 
 
     /**

@@ -290,11 +290,19 @@ class StudentController extends Controller
      */
     public function destroy(Student $siswa)
     {
+        // Ubah status siswa menjadi "Keluar" alih-alih menghapus
+        $siswa->update(['status' => 'Keluar']);
+
+        // Hapus user untuk mencegah login
         $user = $siswa->user;
+        if ($user) {
+            $user->delete();
+        }
+
+        // Hapus data penempatan kelas
         ClassStudent::where('student_id', $siswa->id)->delete();
-        $siswa->delete();
-        if ($user) $user->delete();
-        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil dihapus.');
+
+        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil dikeluarkan dari sekolah.');
     }
 
     /**
